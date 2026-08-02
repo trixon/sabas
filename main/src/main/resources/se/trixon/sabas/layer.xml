@@ -42,7 +42,7 @@
             <file name="ToggleFullScreenAction.shadow_hidden"/>
             <file name="org-netbeans-core-windows-actions-ToolbarsListAction.shadow_hidden"/>
         </folder>
-        <file name="Window_hidden"/>
+        <!--<file name="Window_hidden"/>-->
     </folder>
 
     <folder name="OptionsDialog">

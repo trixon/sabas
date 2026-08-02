@@ -15,15 +15,20 @@
  */
 package se.trixon.sabas.boot;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.net.MalformedURLException;
 import java.net.URI;
+import javax.swing.JPanel;
 import org.openide.awt.HtmlBrowser;
 import org.openide.util.Exceptions;
-import org.openide.windows.IOContainer;
 import org.openide.windows.OnShowing;
 import org.openide.windows.WindowManager;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.Sabas;
+import se.trixon.sabas.ui.MainPanel;
 
 /**
  *
@@ -42,21 +47,44 @@ public class DoOnShowing implements Runnable {
             }
         });
 
-        var container = IOContainer.getDefault();
-        container.open();
-
-        var windowManager = WindowManager.getDefault();
-        var outputMode = windowManager.findMode("output");
-        var editorMode = windowManager.findMode("editor");
-
-        for (var tc : windowManager.getOpenedTopComponents(outputMode)) {
-//            editorMode.dockInto(tc);
-        }
-
-        for (var tc : windowManager.getOpenedTopComponents(editorMode)) {
-//            tc.setIcon(null);
-        }
+        initCustomEditorMode();
 
         Sabas.displaySystemInformation();
     }
+
+    private void initCustomEditorMode() {
+        try {
+            var editorPanel = (JPanel) findEditorAreaComponent(WindowManager.getDefault().getMainWindow());
+
+            if (editorPanel != null) {
+                var customPanel = new MainPanel();
+                editorPanel.setBackground(Color.RED);
+                editorPanel.setLayout(new BorderLayout());
+                editorPanel.add(customPanel, BorderLayout.CENTER);
+
+                editorPanel.validate();
+                editorPanel.repaint();
+                customPanel.postCreate();
+            }
+        } catch (Exception e) {
+            Exceptions.printStackTrace(e);
+        }
+    }
+
+    private Component findEditorAreaComponent(Container container) {
+        for (var component : container.getComponents()) {
+            if (component.getClass().getName().endsWith("EditorView$EditorAreaComponent")) {
+                return component;
+            }
+
+            if (component instanceof Container) {
+                var found = findEditorAreaComponent((Container) component);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
 }
