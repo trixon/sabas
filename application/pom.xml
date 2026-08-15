@@ -62,10 +62,6 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.netbeans.api</groupId>
-                    <artifactId>org-netbeans-modules-autoupdate-ui</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.netbeans.api</groupId>
                     <artifactId>org-netbeans-api-search</artifactId>
                 </exclusion>
                 <exclusion>
@@ -97,14 +93,6 @@
                     <artifactId>org-netbeans-swing-tabcontrol</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.netbeans.modules</groupId>
-                    <artifactId>org-netbeans-modules-autoupdate-cli</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.netbeans.api</groupId>
-                    <artifactId>org-netbeans-modules-autoupdate-services</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>org.netbeans.api</groupId>
                     <artifactId>org-netbeans-core-multiview</artifactId>
                 </exclusion>
@@ -131,6 +119,16 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>main</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>bridge_dnf0</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>bridge_apt0</artifactId>
             <version>${project.version}</version>
         </dependency>
 

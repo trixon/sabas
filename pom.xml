@@ -17,6 +17,9 @@
         <module>branding</module>
         <module>application</module>
         <module>main</module>
+        <module>bridges/dnf0</module>
+        <module>bridges/apt0</module>
+        <module>labs</module>
     </modules>
 
     <properties>

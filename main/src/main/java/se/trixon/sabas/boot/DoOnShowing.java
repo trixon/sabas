@@ -15,8 +15,6 @@
  */
 package se.trixon.sabas.boot;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.net.MalformedURLException;
@@ -26,9 +24,10 @@ import org.openide.awt.HtmlBrowser;
 import org.openide.util.Exceptions;
 import org.openide.windows.OnShowing;
 import org.openide.windows.WindowManager;
+import se.trixon.almond.nbp.Almond;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.Sabas;
-import se.trixon.sabas.ui.MainPanel;
+import se.trixon.sabas.ui.BrowserPanel;
 
 /**
  *
@@ -48,7 +47,11 @@ public class DoOnShowing implements Runnable {
         });
 
         initCustomEditorMode();
-
+//        var output = WindowManager.getDefault().findTopComponent("output");
+//        output.setHtmlDisplayName("<html><b>%s</b></html>".formatted(output.getName()));
+        Almond.hideTabs("output");
+//        Almond.hideTabs("FilterTopComponent");
+//        Almond.hideTabs("ActionsTopComponent");
         Sabas.displaySystemInformation();
     }
 
@@ -57,10 +60,11 @@ public class DoOnShowing implements Runnable {
             var editorPanel = (JPanel) findEditorAreaComponent(WindowManager.getDefault().getMainWindow());
 
             if (editorPanel != null) {
-                var customPanel = new MainPanel();
-                editorPanel.setBackground(Color.RED);
-                editorPanel.setLayout(new BorderLayout());
-                editorPanel.add(customPanel, BorderLayout.CENTER);
+                var customPanel = new BrowserPanel();
+                editorPanel.removeAll();
+//                editorPanel.setLayout(new BorderLayout());
+//                editorPanel.add(customPanel, BorderLayout.CENTER);
+                editorPanel.add(customPanel);
 
                 editorPanel.validate();
                 editorPanel.repaint();

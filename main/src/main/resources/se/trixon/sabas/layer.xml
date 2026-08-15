@@ -21,7 +21,6 @@
             <file name="Separator2.instance_hidden"/>
             <file name="Separator3.instance_hidden"/>
             <file name="Separator4.instance_hidden"/>
-            <file name="se-trixon-almond-nbp-actions-RestartAction.shadow_hidden"/>
             <file name="org-openide-actions-PageSetupAction.shadow_hidden"/>
             <file name="org-openide-actions-PrintAction.shadow_hidden"/>
             <file name="org-openide-actions-SaveAction.shadow_hidden"/>
@@ -63,6 +62,18 @@
         <file name="D-COMMA.shadow">
             <attr name="originalFile" stringvalue="Actions/Window/org-netbeans-modules-options-OptionsWindowAction.instance"/>
         </file>
+        <file name="CS-Q.shadow">
+            <attr name="originalFile" stringvalue="Actions/File/se-trixon-almond-nbp-actions-RestartAction.instance"/>
+        </file>
+        <file name="DS-X.shadow">
+            <attr name="originalFile" stringvalue="Actions/System/org-netbeans-modules-autoupdate-ui-actions-PluginManagerAction.instance"/>
+        </file>
     </folder>
     <file name="Toolbars_hidden"/>
+    <folder name="Windows2">
+        <folder name="Modes">
+            <file name="left.wsmode" url="leftWsmode.xml"/>
+            <file name="right.wsmode" url="rightWsmode.xml"/>
+        </folder>
+    </folder>
 </filesystem>

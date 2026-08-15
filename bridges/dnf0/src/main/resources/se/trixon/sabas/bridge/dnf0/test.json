@@ -1,0 +1,23 @@
+{
+    "name": "sid",
+    "epoch": "0",
+    "version": "0.0.7",
+    "release": "3.fc44",
+    "arch": "x86_64",
+    "section": "Unspecified",
+    "license": "GPL-2.0-or-later",
+    "url": "http://sid-project.github.io",
+    "summary": "Storage Instantiation Daemon (SID)",
+    "description": "Storage Instantiation Daemon (SID) aims to help with Linux storage
+            device state tracking that encompasses device layers,
+    groups and whole
+            stacks by monitoring progression of events.Based on monitored states
+            and further recorded information, it is able to trigger associated
+            actions for well - defined triggers,
+    including activation and deactivation
+            of devices and their layers in the stack.",
+            "download_size": 30660,
+    "install_size": 50770,
+    "sourcerpm": "sid-0.0.7-3.fc44.src.rpm",
+    "repo": "Fedora 44 - x86_64"
+}
