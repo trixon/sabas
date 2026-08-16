@@ -1,5 +1,5 @@
-/*
- * Copyright 2021 Patrik Karlström.
+/* 
+ * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,13 @@ import se.trixon.sabas.Sabas;
  */
 public class Options extends OptionsBase {
 
-    public static final String KEY_UI_SPLIT_POS_LEFT = "ui.splitpos.left";
-    public static final String KEY_UI_SPLIT_POS_RIGHT = "ui.splitpos.right";
-    public static final String KEY_UI_SPLIT_POS_CENTER = "ui.splitpos.center";
     public static final int DEFAULT_UI_SPLIT_POS_LEFT = SwingHelper.getUIScaled(200);
     public static final int DEFAULT_UI_SPLIT_POS_RIGHT = SwingHelper.getUIScaled(200);
+
+    public static final String KEY_PM_BRIDGE = "pm.bridge";
+    public static final String KEY_UI_SPLIT_POS_CENTER = "ui.splitpos.center";
+    public static final String KEY_UI_SPLIT_POS_LEFT = "ui.splitpos.left";
+    public static final String KEY_UI_SPLIT_POS_RIGHT = "ui.splitpos.right";
 
     public static Options getInstance() {
         return Holder.INSTANCE;

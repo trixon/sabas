@@ -15,8 +15,20 @@
  */
 package se.trixon.sabas.bridge.dnf0;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import se.trixon.sabas.core.api.Bridge;
+import se.trixon.sabas.core.api.Pkg;
 
 /**
  *
@@ -29,4 +41,59 @@ public class Dnf0Bridge extends Bridge {
         super("dnf", "in development", "Fedora 44");
     }
 
+    @Override
+    public List<Pkg> doGetPackagesAll() {
+//            "%{name}%{epoch}%{version}%{release}%{arch}%{group}%{license}%{url}%{summary}%{description}%{downloadsize}%{installsize}%{sourcerpm}%{reponame}\u001E"
+
+        var fieldSeparator = "\u001F";
+        var recordSeparator = "\u001E";
+        var querytags = List.of("name", "epoch");
+        var command = new ArrayList<String>(List.of("dnf", "repoquery", "--available", "--queryformat"));
+        command.add(querytags.stream()
+                .map(s -> "%%{%s}".formatted(s))
+                .collect(Collectors.joining(fieldSeparator)) + recordSeparator);
+//        System.out.println(String.join(" ", command));
+        var packages = new ArrayList<Pkg>();
+
+        try {
+            var process = new ProcessBuilder(command).start();
+            try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
+                scanner.useDelimiter(recordSeparator);
+
+                while (scanner.hasNext()) {
+                    var rawPackage = scanner.next();
+                    if (rawPackage.trim().isEmpty()) {
+                        continue;
+                    }
+                    var fields = StringUtils.splitPreserveAllTokens(rawPackage, fieldSeparator);
+                    var pkg = new Pkg();
+                    pkg.setName(fields[0]);
+//                    pkg.setEpoch(fields[1]);
+
+                    packages.add(pkg);
+                }
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            Exceptions.printStackTrace(e);
+        }
+
+        return packages;
+    }
+
+    @Override
+    public String doGetVersion() {
+        try {
+            String[] command = {"dnf", "--version"};
+            var process = new ProcessBuilder(command).start();
+            var result = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
+            process.waitFor();
+
+            return StringUtils.substringBefore(result, "\n\n");
+        } catch (IOException | InterruptedException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+
+        return "?";
+    }
 }

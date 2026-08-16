@@ -17,6 +17,8 @@ package se.trixon.sabas.labs;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.StringUtils;
@@ -33,11 +35,13 @@ public class Labs {
     }
 
     public void loadPackages() {
-        String[] command = {
-            "dnf", "repoquery", "--available", "--qf",
-            "%{name}%{epoch}%{version}%{release}%{arch}%{group}%{license}%{url}%{summary}%{description}%{downloadsize}%{installsize}%{sourcerpm}%{reponame}\u001E"
-        };
+//        String[] command = {
+//            "dnf", "repoquery", "--available", "--qf",
+//            "%{name}%{epoch}%{version}%{release}%{arch}%{group}%{license}%{url}%{summary}%{description}%{downloadsize}%{installsize}%{sourcerpm}%{reponame}\u001E"
+//        };
 
+        var command = new ArrayList<String>(List.of("dnf", "repoquery", "--available", "--queryformat"));
+        command.add("\u001E");
         new Thread(() -> {
             try {
                 Process process = new ProcessBuilder(command).start();
@@ -61,8 +65,8 @@ public class Labs {
 //                        String[] fields = rawPackage.split("", -1);
                         // Kontrollera att vi fick alla 14 fält vi bad om
                         if (fields.length == 14) {
-                            LinuxPackage pkg = new LinuxPackage();
-                            pkg.setName(fields[0]);
+//                            Pkg pkg = new Pkg();
+//                            pkg.setName(fields[0]);
 //                            pkg.setEpoch(fields[1]);
 //                            pkg.setVersion(fields[2]);
 //                            pkg.setRelease(fields[3]);
@@ -80,7 +84,8 @@ public class Labs {
                             // Uppdatera ditt NetBeans-gränssnitt säkert från EDT
                             SwingUtilities.invokeLater(() -> {
                                 // T.ex. minNetBeansMapp.läggTill(pkg);
-                                System.out.println("Hittade paket: " + pkg.getName());
+//                                System.out.println("Hittade paket: " + pkg.getName());
+                                System.out.println("Hittade paket: " + fields[0]);
                             });
                         }
                     }

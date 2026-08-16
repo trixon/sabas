@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,14 @@
  */
 package se.trixon.sabas.ui;
 
-import java.awt.Component;
-import org.openide.windows.WindowManager;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javax.swing.AbstractListModel;
+import javax.swing.SwingUtilities;
 import se.trixon.sabas.core.Options;
+import se.trixon.sabas.core.PkgManager;
+import se.trixon.sabas.core.api.Pkg;
+import se.trixon.sabas.ui.parts.PkgRenderer;
 
 /**
  *
@@ -26,6 +31,8 @@ import se.trixon.sabas.core.Options;
 public class BrowserPanel extends javax.swing.JPanel {
 
     private final Options mOptions = Options.getInstance();
+    private final PkgManager mPkgManager = PkgManager.getInstance();
+    private final PkgListModel mPkgListModel;
 
     /**
      * Creates new form BrowserPanel
@@ -33,14 +40,39 @@ public class BrowserPanel extends javax.swing.JPanel {
     public BrowserPanel() {
         initComponents();
         initListeners();
+        mPkgListModel = new PkgListModel(mPkgManager.getFilteredItems());
+        packagesList.setModel(mPkgListModel);
+        packagesList.setCellRenderer(new PkgRenderer());
+
+        mPkgManager.populatePackages();
     }
 
     public void postCreate() {
         restoreDividerPositions();
     }
 
+    private void displayPackageInfo(Pkg pkg) {
+        if (pkg == null) {
+            nameLabel.setText("");
+        } else {
+            nameLabel.setText(pkg.getName());
+
+        }
+    }
+
     private void initListeners() {
         Helper.setupDividerMouseListener(splitPane, Options.KEY_UI_SPLIT_POS_CENTER);
+        mPkgManager.getFilteredItems().addListener((ListChangeListener.Change<? extends Pkg> c) -> {
+            SwingUtilities.invokeLater(() -> {
+                if (mPkgListModel != null) {
+                    mPkgListModel.updateData();
+                }
+            });
+        });
+
+        mPkgManager.selectedPkgProperty().addListener((p, o, n) -> {
+            displayPackageInfo(n);
+        });
     }
 
     private void restoreDividerPositions() {
@@ -62,95 +94,73 @@ public class BrowserPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         splitPane = new javax.swing.JSplitPane();
-        packageScrollPane = new javax.swing.JScrollPane();
-        packageList = new javax.swing.JList<>();
+        packagesScrollPane = new javax.swing.JScrollPane();
+        packagesList = new javax.swing.JList<>();
         infoPanel = new javax.swing.JPanel();
         infoHeaderPanel = new javax.swing.JPanel();
+        nameLabel = new javax.swing.JLabel();
         infoTabbedPane = new javax.swing.JTabbedPane();
         jPanel2 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jPanel3 = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
 
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
 
-        packageScrollPane.setMinimumSize(new java.awt.Dimension(250, 23));
-        packageScrollPane.setPreferredSize(new java.awt.Dimension(300, 260));
+        packagesScrollPane.setMinimumSize(new java.awt.Dimension(250, 23));
+        packagesScrollPane.setPreferredSize(new java.awt.Dimension(300, 260));
 
-        packageList.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+        packagesList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        packagesList.setMinimumSize(new java.awt.Dimension(300, 160));
+        packagesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                packagesListValueChanged(evt);
+            }
         });
-        packageList.setMinimumSize(new java.awt.Dimension(300, 160));
-        packageScrollPane.setViewportView(packageList);
+        packagesScrollPane.setViewportView(packagesList);
 
-        splitPane.setLeftComponent(packageScrollPane);
+        splitPane.setLeftComponent(packagesScrollPane);
 
-        infoPanel.setBackground(new java.awt.Color(255, 255, 204));
         infoPanel.setLayout(new java.awt.BorderLayout());
 
-        infoHeaderPanel.setBackground(new java.awt.Color(204, 204, 0));
+        nameLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "NAME"); // NOI18N
 
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);
         infoHeaderPanelLayout.setHorizontalGroup(
             infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1110, Short.MAX_VALUE)
+            .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(nameLabel)
+                .addContainerGap(817, Short.MAX_VALUE))
         );
         infoHeaderPanelLayout.setVerticalGroup(
             infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 203, Short.MAX_VALUE)
+            .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(nameLabel)
+                .addContainerGap(169, Short.MAX_VALUE))
         );
 
         infoPanel.add(infoHeaderPanel, java.awt.BorderLayout.CENTER);
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jLabel1.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(jButton1, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jButton1.text")); // NOI18N
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 534, Short.MAX_VALUE)
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 285, Short.MAX_VALUE)
-        );
-
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabel1))
-                    .addComponent(jButton1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 229, Short.MAX_VALUE))
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addGap(0, 812, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton1)))
-                .addContainerGap(52, Short.MAX_VALUE))
+                .addComponent(jLabel1)
+                .addContainerGap(309, Short.MAX_VALUE))
         );
 
         infoTabbedPane.addTab("tab1", jPanel2);
@@ -175,36 +185,45 @@ public class BrowserPanel extends javax.swing.JPanel {
         add(splitPane);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-        var tc = WindowManager.getDefault().findTopComponent("output");
-        Component[] comps = tc.getComponents();
-
-        // 2. Ta bort dem från källfönstret
-        tc.removeAll();
-        tc.revalidate();
-        tc.repaint();
-
-        for (Component c : comps) {
-            jPanel3.add(c);
+    private void packagesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_packagesListValueChanged
+        if (!evt.getValueIsAdjusting()) {
+            mPkgManager.setSelectedPkg(packagesList.getSelectedValue());
         }
-
-        // 4. Uppdatera målfönstret så att det ritas om med det nya innehållet
-        jPanel3.revalidate();
-        jPanel3.repaint();
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_packagesListValueChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel infoHeaderPanel;
     private javax.swing.JPanel infoPanel;
     private javax.swing.JTabbedPane infoTabbedPane;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JList<String> packageList;
-    private javax.swing.JScrollPane packageScrollPane;
+    private javax.swing.JLabel nameLabel;
+    private javax.swing.JList<Pkg> packagesList;
+    private javax.swing.JScrollPane packagesScrollPane;
     private javax.swing.JSplitPane splitPane;
     // End of variables declaration//GEN-END:variables
+
+    private static class PkgListModel extends AbstractListModel<Pkg> {
+
+        private final ObservableList<? extends Pkg> sourceList;
+
+        public PkgListModel(ObservableList<Pkg> filteredItems) {
+            this.sourceList = filteredItems;
+        }
+
+        public void updateData() {
+            fireContentsChanged(this, 0, Math.max(0, getSize() - 1));
+        }
+
+        @Override
+        public int getSize() {
+            return sourceList.size();
+        }
+
+        @Override
+        public Pkg getElementAt(int index) {
+            return sourceList.get(index);
+        }
+    }
 }

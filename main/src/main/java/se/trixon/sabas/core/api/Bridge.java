@@ -15,20 +15,47 @@
  */
 package se.trixon.sabas.core.api;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+
 /**
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
 public class Bridge {
 
-    private String mName;
     private String mDescription;
+    private String mName;
     private String mSupports;
 
     public Bridge(String name, String description, String supports) {
         mName = name;
         mDescription = description;
         mSupports = supports;
+    }
+
+    public List<Pkg> doGetPackagesAll() {
+        return new ArrayList<>();
+    }
+
+    public String doGetVersion() {
+        return "NO-OP";
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> void executeAsync(Command command, Consumer<T> action) {
+        CompletableFuture.supplyAsync(() -> {
+            return (T) switch (command) {
+                case GET_VERSION ->
+                    doGetVersion();
+                case GET_PACKAGES_ALL ->
+                    doGetPackagesAll();
+                default ->
+                    throw new AssertionError("Unknown command: " + command);
+            };
+        }).thenAccept(action);
     }
 
     public String getDescription() {
@@ -44,15 +71,15 @@ public class Bridge {
     }
 
     public void setDescription(String description) {
-        this.mDescription = description;
+        mDescription = description;
     }
 
     public void setName(String name) {
-        this.mName = name;
+        mName = name;
     }
 
     public void setSupports(String supports) {
-        this.mSupports = supports;
+        mSupports = supports;
     }
 
 }

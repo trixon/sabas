@@ -1,5 +1,5 @@
-/*
- * Copyright 2026 pata.
+/* 
+ * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,11 @@ package se.trixon.sabas.ui;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
+import se.trixon.almond.nbp.dialogs.NbMessage;
+import se.trixon.almond.util.Dict;
+import se.trixon.sabas.core.PkgManager;
+import se.trixon.sabas.core.api.Bridge;
+import se.trixon.sabas.core.api.Command;
 
 /**
  * Top component which displays something.
@@ -41,6 +46,8 @@ import org.openide.windows.TopComponent;
 })
 public final class ActionsTopComponent extends TopComponent {
 
+    private final PkgManager mPkgManager = PkgManager.getInstance();
+
     public ActionsTopComponent() {
         initComponents();
         setName(Bundle.CTL_ActionsAction());
@@ -53,6 +60,10 @@ public final class ActionsTopComponent extends TopComponent {
         setHtmlDisplayName("<html><b>%s</b></html>".formatted(getName()));
     }
 
+    private Bridge getBridge() {
+        return mPkgManager.getBridge();
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -62,8 +73,22 @@ public final class ActionsTopComponent extends TopComponent {
     private void initComponents() {
 
         jButton1 = new javax.swing.JButton();
+        bridgeSelectorPanel1 = new se.trixon.sabas.ui.parts.BridgeSelectorPanel();
+        versionButton = new javax.swing.JButton();
 
         org.openide.awt.Mnemonics.setLocalizedText(jButton1, org.openide.util.NbBundle.getMessage(ActionsTopComponent.class, "ActionsTopComponent.jButton1.text")); // NOI18N
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(versionButton, org.openide.util.NbBundle.getMessage(ActionsTopComponent.class, "ActionsTopComponent.versionButton.text")); // NOI18N
+        versionButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                versionButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -71,20 +96,41 @@ public final class ActionsTopComponent extends TopComponent {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jButton1)
-                .addContainerGap(285, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(bridgeSelectorPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jButton1)
+                            .addComponent(versionButton))
+                        .addGap(0, 385, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addComponent(bridgeSelectorPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addComponent(jButton1)
-                .addContainerGap(256, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(versionButton)
+                .addContainerGap(230, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void versionButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_versionButtonActionPerformed
+        getBridge().executeAsync(Command.GET_VERSION, (String result) -> {
+            NbMessage.information(Dict.VERSION.toString(), result);
+        });
+    }//GEN-LAST:event_versionButtonActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        mPkgManager.populatePackages();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private se.trixon.sabas.ui.parts.BridgeSelectorPanel bridgeSelectorPanel1;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton versionButton;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
