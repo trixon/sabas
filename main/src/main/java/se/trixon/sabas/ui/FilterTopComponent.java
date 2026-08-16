@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,14 @@
  */
 package se.trixon.sabas.ui;
 
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
-import se.trixon.almond.nbp.Almond;
+import se.trixon.almond.util.StringHelper;
+import se.trixon.almond.util.swing.DelayedResetRunner;
+import se.trixon.sabas.core.PkgManager;
 
 /**
  * Top component which displays something.
@@ -42,7 +46,13 @@ import se.trixon.almond.nbp.Almond;
 })
 public final class FilterTopComponent extends TopComponent {
 
+    private final PkgManager mPkgManager = PkgManager.getInstance();
+    private final DelayedResetRunner mDelayedResetRunner;
+
     public FilterTopComponent() {
+        mDelayedResetRunner = new DelayedResetRunner(300, () -> {
+            filter();
+        });
         initComponents();
         setName(Bundle.CTL_FilterAction());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
@@ -53,6 +63,7 @@ public final class FilterTopComponent extends TopComponent {
         putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
         setHtmlDisplayName("<html><b>%s</b></html>".formatted(getName()));
 //        makeBusy(true);
+        initListeners();
     }
 
     /**
@@ -65,60 +76,39 @@ public final class FilterTopComponent extends TopComponent {
         super.componentShowing(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }
 
+    private void filter() {
+        var text = filterTextField.getText();
+
+        var filteredItems = mPkgManager.getAllItems().stream()
+                .filter(p -> StringHelper.matchesSimpleGlob(p.getName(), text, true, true))
+                .toList();
+
+        mPkgManager.getFilteredItems().setAll(filteredItems);
+    }
+
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
-        jToggleButton1 = new javax.swing.JToggleButton();
-
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.jLabel1.text")); // NOI18N
-
-        jTextField1.setText(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.jTextField1.text")); // NOI18N
-
-        org.openide.awt.Mnemonics.setLocalizedText(jToggleButton1, org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.jToggleButton1.text")); // NOI18N
-        jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton1ActionPerformed(evt);
-            }
-        });
+        filterTextField = new javax.swing.JTextField();
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(133, 133, 133)
-                        .addComponent(jLabel1))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jToggleButton1))
-                .addContainerGap(202, Short.MAX_VALUE))
+                .addComponent(filterTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(32, 32, 32)
-                .addComponent(jToggleButton1)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel1)
-                .addContainerGap(146, Short.MAX_VALUE))
+                .addComponent(filterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(262, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
-        Almond.hideTabs(this);
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jToggleButton1ActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JToggleButton jToggleButton1;
+    private javax.swing.JTextField filterTextField;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
@@ -140,5 +130,24 @@ public final class FilterTopComponent extends TopComponent {
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
+    }
+
+    private void initListeners() {
+        filterTextField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                mDelayedResetRunner.reset();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                mDelayedResetRunner.reset();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+
+        });
     }
 }

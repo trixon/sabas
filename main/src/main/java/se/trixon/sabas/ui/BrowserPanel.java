@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         packagesList.setModel(mPkgListModel);
         packagesList.setCellRenderer(new PkgRenderer());
 
-        mPkgManager.populatePackages();
+//        mPkgManager.populatePackages();
     }
 
     public void postCreate() {
@@ -64,6 +64,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         Helper.setupDividerMouseListener(splitPane, Options.KEY_UI_SPLIT_POS_CENTER);
         mPkgManager.getFilteredItems().addListener((ListChangeListener.Change<? extends Pkg> c) -> {
             SwingUtilities.invokeLater(() -> {
+                footerLabel.setText("%d/%d".formatted(mPkgManager.getFilteredItems().size(), mPkgManager.getAllItems().size()));
                 if (mPkgListModel != null) {
                     mPkgListModel.updateData();
                 }
@@ -94,8 +95,10 @@ public class BrowserPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         splitPane = new javax.swing.JSplitPane();
+        listPanel = new javax.swing.JPanel();
         packagesScrollPane = new javax.swing.JScrollPane();
         packagesList = new javax.swing.JList<>();
+        footerLabel = new javax.swing.JLabel();
         infoPanel = new javax.swing.JPanel();
         infoHeaderPanel = new javax.swing.JPanel();
         nameLabel = new javax.swing.JLabel();
@@ -105,6 +108,8 @@ public class BrowserPanel extends javax.swing.JPanel {
         jPanel1 = new javax.swing.JPanel();
 
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
+
+        listPanel.setLayout(new java.awt.BorderLayout());
 
         packagesScrollPane.setMinimumSize(new java.awt.Dimension(250, 23));
         packagesScrollPane.setPreferredSize(new java.awt.Dimension(300, 260));
@@ -118,7 +123,13 @@ public class BrowserPanel extends javax.swing.JPanel {
         });
         packagesScrollPane.setViewportView(packagesList);
 
-        splitPane.setLeftComponent(packagesScrollPane);
+        listPanel.add(packagesScrollPane, java.awt.BorderLayout.CENTER);
+
+        footerLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        org.openide.awt.Mnemonics.setLocalizedText(footerLabel, "0/0"); // NOI18N
+        listPanel.add(footerLabel, java.awt.BorderLayout.SOUTH);
+
+        splitPane.setLeftComponent(listPanel);
 
         infoPanel.setLayout(new java.awt.BorderLayout());
 
@@ -132,14 +143,14 @@ public class BrowserPanel extends javax.swing.JPanel {
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(nameLabel)
-                .addContainerGap(817, Short.MAX_VALUE))
+                .addContainerGap(967, Short.MAX_VALUE))
         );
         infoHeaderPanelLayout.setVerticalGroup(
             infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(nameLabel)
-                .addContainerGap(169, Short.MAX_VALUE))
+                .addContainerGap(36, Short.MAX_VALUE))
         );
 
         infoPanel.add(infoHeaderPanel, java.awt.BorderLayout.CENTER);
@@ -153,7 +164,7 @@ public class BrowserPanel extends javax.swing.JPanel {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
-                .addGap(0, 812, Short.MAX_VALUE))
+                .addGap(0, 962, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -169,7 +180,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1110, Short.MAX_VALUE)
+            .addGap(0, 1033, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -192,12 +203,14 @@ public class BrowserPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_packagesListValueChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel footerLabel;
     private javax.swing.JPanel infoHeaderPanel;
     private javax.swing.JPanel infoPanel;
     private javax.swing.JTabbedPane infoTabbedPane;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel listPanel;
     private javax.swing.JLabel nameLabel;
     private javax.swing.JList<Pkg> packagesList;
     private javax.swing.JScrollPane packagesScrollPane;
