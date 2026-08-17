@@ -15,25 +15,50 @@
  */
 package se.trixon.sabas.core.api;
 
+import java.time.Instant;
+
 public class Pkg {
 
+    private String mArch;
     private String mDescription;
+    private String mEpoch;
     private String mGroup;
+    private String mId;
     private String mLicense;
     private String mName;
-    private long mSize;
+    private String mPackager;
+    private String mRelease;
+    private String mRepository;
+    private long mSizeDownload;
+    private long mSizeInstall;
     private String mSummary;
+    private Instant mTimeBuild;
+    private Instant mTimeInstalled;
     private String mUrl;
+    private String mVendor;
+    private String mVersion;
 
     public Pkg() {
+    }
+
+    public String getArch() {
+        return mArch;
     }
 
     public String getDescription() {
         return mDescription;
     }
 
+    public String getEpoch() {
+        return mEpoch;
+    }
+
     public String getGroup() {
         return mGroup;
+    }
+
+    public String getId() {
+        return mId;
     }
 
     public String getLicense() {
@@ -44,24 +69,68 @@ public class Pkg {
         return mName;
     }
 
-    public long getSize() {
-        return mSize;
+    public String getPackager() {
+        return mPackager;
+    }
+
+    public String getRelease() {
+        return mRelease;
+    }
+
+    public String getRepository() {
+        return mRepository;
+    }
+
+    public long getSizeDownload() {
+        return mSizeDownload;
+    }
+
+    public long getSizeInstall() {
+        return mSizeInstall;
     }
 
     public String getSummary() {
         return mSummary;
     }
 
+    public Instant getTimeBuild() {
+        return mTimeBuild;
+    }
+
+    public Instant getTimeInstalled() {
+        return mTimeInstalled;
+    }
+
     public String getUrl() {
         return mUrl;
+    }
+
+    public String getVendor() {
+        return mVendor;
+    }
+
+    public String getVersion() {
+        return mVersion;
+    }
+
+    public void setArch(String arch) {
+        this.mArch = arch;
     }
 
     public void setDescription(String description) {
         mDescription = description;
     }
 
+    public void setEpoch(String epoch) {
+        this.mEpoch = epoch;
+    }
+
     public void setGroup(String group) {
         mGroup = group;
+    }
+
+    public void setId(String id) {
+        this.mId = id;
     }
 
     public void setLicense(String license) {
@@ -72,16 +141,48 @@ public class Pkg {
         mName = name;
     }
 
-    public void setSize(long size) {
-        mSize = size;
+    public void setPackager(String packager) {
+        this.mPackager = packager;
+    }
+
+    public void setRelease(String release) {
+        this.mRelease = release;
+    }
+
+    public void setRepository(String repository) {
+        this.mRepository = repository;
+    }
+
+    public void setSizeDownload(long sizeDownload) {
+        mSizeDownload = sizeDownload;
+    }
+
+    public void setSizeInstall(long sizeInstall) {
+        this.mSizeInstall = sizeInstall;
     }
 
     public void setSummary(String summary) {
         mSummary = summary;
     }
 
+    public void setTimeBuild(Instant timeBuild) {
+        this.mTimeBuild = timeBuild;
+    }
+
+    public void setTimeInstalled(Instant timeInstalled) {
+        this.mTimeInstalled = timeInstalled;
+    }
+
     public void setUrl(String url) {
         mUrl = url;
+    }
+
+    public void setVendor(String vendor) {
+        this.mVendor = vendor;
+    }
+
+    public void setVersion(String version) {
+        this.mVersion = version;
     }
 
 }

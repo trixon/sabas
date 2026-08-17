@@ -17,6 +17,7 @@ package se.trixon.sabas.ui;
 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import org.apache.commons.lang3.Strings;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
@@ -80,7 +81,28 @@ public final class FilterTopComponent extends TopComponent {
         var text = filterTextField.getText();
 
         var filteredItems = mPkgManager.getAllItems().stream()
-                .filter(p -> StringHelper.matchesSimpleGlob(p.getName(), text, true, true))
+                .filter(p -> {
+                    if (text.length() == 0) {
+                        return true;
+                    }
+                    var validName = StringHelper.matchesSimpleGlob(p.getName(), text, true, false);
+                    if (validName) {
+                        return true;
+                    }
+
+                    var validSummary = summaryCheckBox.isSelected() && StringHelper.matchesSimpleGlob(p.getSummary(), text, true, false);
+                    if (validSummary) {
+                        return true;
+                    }
+
+//                    var validDescription = descriptionCheckBox.isSelected() && StringHelper.matchesSimpleGlob(p.getDescription(), text, true, true);
+                    var validDescription = descriptionCheckBox.isSelected() && Strings.CI.contains(p.getDescription(), text);
+                    if (validDescription) {
+                        return true;
+                    }
+
+                    return false;
+                })
                 .toList();
 
         mPkgManager.getFilteredItems().setAll(filteredItems);
@@ -90,25 +112,62 @@ public final class FilterTopComponent extends TopComponent {
     private void initComponents() {
 
         filterTextField = new javax.swing.JTextField();
+        summaryCheckBox = new javax.swing.JCheckBox();
+        descriptionCheckBox = new javax.swing.JCheckBox();
+
+        org.openide.awt.Mnemonics.setLocalizedText(summaryCheckBox, org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.summaryCheckBox.text")); // NOI18N
+        summaryCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                summaryCheckBoxActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(descriptionCheckBox, org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.descriptionCheckBox.text")); // NOI18N
+        descriptionCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                descriptionCheckBoxActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(filterTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(filterTextField)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(summaryCheckBox)
+                            .addComponent(descriptionCheckBox))
+                        .addGap(0, 246, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(filterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(262, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(summaryCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(descriptionCheckBox)
+                .addContainerGap(182, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void summaryCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_summaryCheckBoxActionPerformed
+        mDelayedResetRunner.reset();
+    }//GEN-LAST:event_summaryCheckBoxActionPerformed
+
+    private void descriptionCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_descriptionCheckBoxActionPerformed
+        mDelayedResetRunner.reset();
+    }//GEN-LAST:event_descriptionCheckBoxActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBox descriptionCheckBox;
     private javax.swing.JTextField filterTextField;
+    private javax.swing.JCheckBox summaryCheckBox;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {

@@ -46,8 +46,8 @@ public class PkgRenderer extends javax.swing.JPanel implements ListCellRenderer<
 
         if (pkg != null) {
             jLabel1.setText(pkg.getName());
-            jLabel2.setText("group");
-            jLabel3.setText("desc");
+            jLabel2.setText(pkg.getSummary());
+            jLabel3.setText(pkg.getVersion());
         }
 
         setEnabled(list.isEnabled());
@@ -68,6 +68,7 @@ public class PkgRenderer extends javax.swing.JPanel implements ListCellRenderer<
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
 
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 4, 4, 4));
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.PAGE_AXIS));
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.jLabel1.text")); // NOI18N

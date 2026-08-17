@@ -15,6 +15,7 @@
  */
 package se.trixon.sabas.ui;
 
+import java.util.List;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javax.swing.AbstractListModel;
@@ -44,7 +45,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         packagesList.setModel(mPkgListModel);
         packagesList.setCellRenderer(new PkgRenderer());
 
-//        mPkgManager.populatePackages();
+        mPkgManager.populatePackages();
     }
 
     public void postCreate() {
@@ -53,10 +54,44 @@ public class BrowserPanel extends javax.swing.JPanel {
 
     private void displayPackageInfo(Pkg pkg) {
         if (pkg == null) {
-            nameLabel.setText("");
+            List.of(
+                    idLabel,
+                    nameLabel,
+                    summaryLabel,
+                    versionLabel,
+                    sizeDownloadLabel,
+                    sizeInstallLabel,
+                    vendorLabel,
+                    urlLabel,
+                    repositoryLabel,
+                    packagerLabel,
+                    releaseLabel,
+                    archLabel,
+                    buildTimeLabel,
+                    installedTimeLabel,
+                    licenseLabel
+            ).forEach(label -> label.setText(""));
+            descriptionLogPanel.clear();
         } else {
+            idLabel.setText(pkg.getId());
             nameLabel.setText(pkg.getName());
-
+            summaryLabel.setText(pkg.getSummary());
+            descriptionLogPanel.clear();
+            descriptionLogPanel.println(pkg.getDescription());
+            descriptionLogPanel.scrollToTop();
+            versionLabel.setText(pkg.getVersion());
+            licenseLabel.setText(pkg.getLicense());
+            sizeDownloadLabel.setText(formatSize(pkg.getSizeDownload()));
+            sizeInstallLabel.setText(formatSize(pkg.getSizeInstall()));
+            vendorLabel.setText(pkg.getVendor());
+            urlLabel.setText(pkg.getUrl());
+            urlLabel.setUri(pkg.getUrl());
+            repositoryLabel.setText(pkg.getRepository());
+            packagerLabel.setText(pkg.getPackager());
+            releaseLabel.setText(pkg.getRelease());
+            archLabel.setText(pkg.getArch());
+            buildTimeLabel.setText(pkg.getTimeBuild().toString());
+            installedTimeLabel.setText(pkg.getTimeInstalled().toString());
         }
     }
 
@@ -102,9 +137,25 @@ public class BrowserPanel extends javax.swing.JPanel {
         infoPanel = new javax.swing.JPanel();
         infoHeaderPanel = new javax.swing.JPanel();
         nameLabel = new javax.swing.JLabel();
+        summaryLabel = new javax.swing.JLabel();
+        versionLabel = new javax.swing.JLabel();
+        licenseLabel = new javax.swing.JLabel();
+        sizeInstallHeaderLabel = new javax.swing.JLabel();
+        sizeInstallLabel = new javax.swing.JLabel();
+        sizeDownloadHeaderLabel = new javax.swing.JLabel();
+        sizeDownloadLabel = new javax.swing.JLabel();
+        vendorLabel = new javax.swing.JLabel();
+        urlLabel = new se.trixon.almond.util.swing.UriLabel();
+        repositoryLabel = new javax.swing.JLabel();
+        packagerLabel = new javax.swing.JLabel();
+        releaseLabel = new javax.swing.JLabel();
+        archLabel = new javax.swing.JLabel();
+        installedTimeLabel = new javax.swing.JLabel();
+        buildTimeLabel = new javax.swing.JLabel();
+        idLabel = new javax.swing.JLabel();
         infoTabbedPane = new javax.swing.JTabbedPane();
+        descriptionLogPanel = new se.trixon.almond.util.swing.LogPanel();
         jPanel2 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
 
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
@@ -136,55 +187,150 @@ public class BrowserPanel extends javax.swing.JPanel {
         nameLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "NAME"); // NOI18N
 
+        org.openide.awt.Mnemonics.setLocalizedText(summaryLabel, "SUMMARY"); // NOI18N
+
+        versionLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(versionLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.versionLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(licenseLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.licenseLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(sizeInstallHeaderLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeInstallHeaderLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(sizeInstallLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeInstallLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(sizeDownloadHeaderLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeDownloadHeaderLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(sizeDownloadLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeDownloadLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(vendorLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.vendorLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.urlLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(repositoryLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.repositoryLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(packagerLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.packagerLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(releaseLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.releaseLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(archLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.archLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(installedTimeLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.installedTimeLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(buildTimeLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.buildTimeLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(idLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.idLabel.text")); // NOI18N
+
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);
         infoHeaderPanelLayout.setHorizontalGroup(
             infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(nameLabel)
-                .addContainerGap(967, Short.MAX_VALUE))
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                        .addComponent(nameLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 538, Short.MAX_VALUE)
+                        .addComponent(versionLabel))
+                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                        .addComponent(licenseLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(sizeInstallLabel))
+                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                        .addComponent(summaryLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(sizeInstallHeaderLabel))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, infoHeaderPanelLayout.createSequentialGroup()
+                        .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(sizeDownloadLabel))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, infoHeaderPanelLayout.createSequentialGroup()
+                        .addComponent(vendorLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(sizeDownloadHeaderLabel))
+                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                        .addComponent(packagerLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(archLabel))
+                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                        .addComponent(repositoryLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(releaseLabel))
+                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                        .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(installedTimeLabel)
+                            .addComponent(buildTimeLabel)
+                            .addComponent(idLabel))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         infoHeaderPanelLayout.setVerticalGroup(
             infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(nameLabel)
-                .addContainerGap(36, Short.MAX_VALUE))
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(nameLabel)
+                    .addComponent(versionLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(summaryLabel)
+                    .addComponent(sizeInstallHeaderLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(licenseLabel)
+                    .addComponent(sizeInstallLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(sizeDownloadHeaderLabel)
+                    .addComponent(vendorLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(sizeDownloadLabel)
+                    .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(repositoryLabel)
+                    .addComponent(releaseLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(packagerLabel)
+                    .addComponent(archLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(installedTimeLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buildTimeLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 102, Short.MAX_VALUE)
+                .addComponent(idLabel)
+                .addGap(76, 76, 76))
         );
 
         infoPanel.add(infoHeaderPanel, java.awt.BorderLayout.CENTER);
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jLabel1.text")); // NOI18N
+        infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
+        infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.descriptionLogPanel.TabConstraints.tabTitle"), descriptionLogPanel); // NOI18N
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addGap(0, 962, Short.MAX_VALUE))
+            .addGap(0, 698, Short.MAX_VALUE)
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addContainerGap(309, Short.MAX_VALUE))
+            .addGap(0, 97, Short.MAX_VALUE)
         );
 
-        infoTabbedPane.addTab("tab1", jPanel2);
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jPanel2.TabConstraints.tabTitle"), jPanel2); // NOI18N
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1033, Short.MAX_VALUE)
+            .addGap(0, 698, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 343, Short.MAX_VALUE)
+            .addGap(0, 97, Short.MAX_VALUE)
         );
 
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jPanel1.TabConstraints.tabTitle"), jPanel1); // NOI18N
@@ -202,19 +348,54 @@ public class BrowserPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_packagesListValueChanged
 
+    private String formatSize(long bytes) {
+        if (bytes <= 0) {
+            return "0 B";
+        }
+
+        final long KiB = 1024L;
+        final long MiB = KiB * 1024L;
+        final long GiB = MiB * 1024L;
+
+        if (bytes >= GiB) {
+            return String.format("%.2f GiB", (double) bytes / GiB);
+        } else if (bytes >= MiB) {
+            return String.format("%.2f MiB", (double) bytes / MiB);
+        } else if (bytes >= KiB) {
+            return String.format("%.2f KiB", (double) bytes / KiB);
+        } else {
+            return bytes + " B";
+        }
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel archLabel;
+    private javax.swing.JLabel buildTimeLabel;
+    private se.trixon.almond.util.swing.LogPanel descriptionLogPanel;
     private javax.swing.JLabel footerLabel;
+    private javax.swing.JLabel idLabel;
     private javax.swing.JPanel infoHeaderPanel;
     private javax.swing.JPanel infoPanel;
     private javax.swing.JTabbedPane infoTabbedPane;
-    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel installedTimeLabel;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JLabel licenseLabel;
     private javax.swing.JPanel listPanel;
     private javax.swing.JLabel nameLabel;
+    private javax.swing.JLabel packagerLabel;
     private javax.swing.JList<Pkg> packagesList;
     private javax.swing.JScrollPane packagesScrollPane;
+    private javax.swing.JLabel releaseLabel;
+    private javax.swing.JLabel repositoryLabel;
+    private javax.swing.JLabel sizeDownloadHeaderLabel;
+    private javax.swing.JLabel sizeDownloadLabel;
+    private javax.swing.JLabel sizeInstallHeaderLabel;
+    private javax.swing.JLabel sizeInstallLabel;
     private javax.swing.JSplitPane splitPane;
+    private javax.swing.JLabel summaryLabel;
+    private se.trixon.almond.util.swing.UriLabel urlLabel;
+    private javax.swing.JLabel vendorLabel;
+    private javax.swing.JLabel versionLabel;
     // End of variables declaration//GEN-END:variables
 
     private static class PkgListModel extends AbstractListModel<Pkg> {
