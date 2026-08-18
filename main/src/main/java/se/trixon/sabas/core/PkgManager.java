@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@ import org.openide.util.Lookup;
 import se.trixon.sabas.core.api.Bridge;
 import se.trixon.sabas.core.api.Command;
 import se.trixon.sabas.core.api.Pkg;
+import se.trixon.sabas.core.api.PkgDictionary;
 
 /**
  *
@@ -69,6 +70,7 @@ public class PkgManager {
     }
 
     public void populatePackages() {
+        PkgDictionary.getInstance().clear();
         getBridge().executeAsync(Command.GET_PACKAGES_ALL, (List<Pkg> packages) -> {
             mAllItems.setAll(packages);
             mFilteredItems.setAll(packages);

@@ -30,7 +30,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import se.trixon.sabas.core.api.Bridge;
+import se.trixon.sabas.core.api.DictionarySection;
 import se.trixon.sabas.core.api.Pkg;
+import se.trixon.sabas.core.api.PkgDictionary;
 
 /**
  *
@@ -94,7 +96,7 @@ public class Dnf0Bridge extends Bridge {
                 .collect(Collectors.joining(fieldSeparator)) + recordSeparator);
         System.out.println(String.join(" ", command));
         var packages = new HashMap<String, Pkg>();
-
+        PkgDictionary dict = PkgDictionary.getInstance();
         try {
             var process = new ProcessBuilder(command).start();
             try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
@@ -127,19 +129,19 @@ public class Dnf0Bridge extends Bridge {
                     var pkg = new Pkg();
                     pkg.setId(fields[full_nevraIndex]);
                     pkg.setName(fields[nameIndex]);
-                    pkg.setGroup(fields[groupIndex].intern());
+                    pkg.setGroupId(dict.getId(DictionarySection.GROUP, fields[groupIndex]));
                     pkg.setVersion(fields[versionIndex]);
-                    pkg.setArch(fields[archIndex].intern());
+                    pkg.setArchId(dict.getId(DictionarySection.ARCH, fields[archIndex]));
                     pkg.setSummary(fields[summaryIndex]);
                     pkg.setDescription(fields[descriptionIndex]);
-                    pkg.setLicense(fields[licenseIndex].intern());
+                    pkg.setLicenseId(dict.getId(DictionarySection.LICENSE, fields[licenseIndex]));
                     pkg.setEpoch(fields[epochIndex]);
                     pkg.setSizeDownload(Long.parseLong(fields[downloadsizeIndex]));
                     pkg.setSizeInstall(Long.parseLong(fields[installsizeIndex]));
                     pkg.setUrl(fields[urlIndex]);
-                    pkg.setVendor(fields[vendorIndex].intern());
-                    pkg.setRepository(fields[reponameIndex].intern());
-                    pkg.setPackager(fields[packagerIndex].intern());
+                    pkg.setVendorId(dict.getId(DictionarySection.VENDOR, fields[vendorIndex]));
+                    pkg.setRepositoryId(dict.getId(DictionarySection.REPOSITORY, fields[reponameIndex]));
+                    pkg.setPackagerId(dict.getId(DictionarySection.PACKAGER, fields[packagerIndex]));
                     pkg.setRelease(fields[releaseIndex]);
                     pkg.setTimeBuild(Long.parseLong(fields[buildtimeIndex]));
                     pkg.setTimeInstalled(Long.parseLong(fields[installtimeIndex]));

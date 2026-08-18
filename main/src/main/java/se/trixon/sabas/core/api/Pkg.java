@@ -19,32 +19,38 @@ import java.time.Instant;
 
 public class Pkg {
 
-    private String mArch;
+    private static final PkgDictionary DICTIONARY = PkgDictionary.getInstance();
+
+    private int mArchId;
     private String mDescription;
     private String mEpoch;
-    private String mGroup;
+    private int mGroupId;
     private String mId;
     private boolean mInstalled;
-    private String mLicense;
+    private int mLicenseId;
     private String mName;
     private boolean mOrphaned;
-    private String mPackager;
+    private int mPackagerId;
     private String mRelease;
-    private String mRepository;
+    private int mRepositoryId;
     private long mSizeDownload;
     private long mSizeInstall;
     private String mSummary;
     private long mTimeBuild;
     private long mTimeInstalled;
     private String mUrl;
-    private String mVendor;
+    private int mVendorId;
     private String mVersion;
 
     public Pkg() {
     }
 
     public String getArch() {
-        return mArch;
+        return DICTIONARY.getString(DictionarySection.ARCH, mArchId);
+    }
+
+    public int getArchId() {
+        return mArchId;
     }
 
     public String getDescription() {
@@ -56,7 +62,11 @@ public class Pkg {
     }
 
     public String getGroup() {
-        return mGroup;
+        return DICTIONARY.getString(DictionarySection.GROUP, mGroupId);
+    }
+
+    public int getGroupId() {
+        return mGroupId;
     }
 
     public String getId() {
@@ -64,7 +74,11 @@ public class Pkg {
     }
 
     public String getLicense() {
-        return mLicense;
+        return DICTIONARY.getString(DictionarySection.LICENSE, mLicenseId);
+    }
+
+    public int getLicenseId() {
+        return mLicenseId;
     }
 
     public String getName() {
@@ -72,7 +86,11 @@ public class Pkg {
     }
 
     public String getPackager() {
-        return mPackager;
+        return DICTIONARY.getString(DictionarySection.PACKAGER, mPackagerId);
+    }
+
+    public int getPackagerId() {
+        return mPackagerId;
     }
 
     public String getRelease() {
@@ -80,7 +98,11 @@ public class Pkg {
     }
 
     public String getRepository() {
-        return mRepository;
+        return DICTIONARY.getString(DictionarySection.REPOSITORY, mRepositoryId);
+    }
+
+    public int getRepositoryId() {
+        return mRepositoryId;
     }
 
     public long getSizeDownload() {
@@ -116,7 +138,11 @@ public class Pkg {
     }
 
     public String getVendor() {
-        return mVendor;
+        return DICTIONARY.getString(DictionarySection.VENDOR, mVendorId);
+    }
+
+    public int getVendorId() {
+        return mVendorId;
     }
 
     public String getVersion() {
@@ -131,8 +157,8 @@ public class Pkg {
         return mOrphaned;
     }
 
-    public void setArch(String arch) {
-        this.mArch = arch;
+    public void setArchId(int archId) {
+        mArchId = archId;
     }
 
     public void setDescription(String description) {
@@ -140,23 +166,23 @@ public class Pkg {
     }
 
     public void setEpoch(String epoch) {
-        this.mEpoch = epoch;
+        mEpoch = epoch;
     }
 
-    public void setGroup(String group) {
-        mGroup = group;
+    public void setGroupId(int groupId) {
+        mGroupId = groupId;
     }
 
     public void setId(String id) {
-        this.mId = id;
+        mId = id;
     }
 
     public void setInstalled(boolean installed) {
-        this.mInstalled = installed;
+        mInstalled = installed;
     }
 
-    public void setLicense(String license) {
-        mLicense = license;
+    public void setLicenseId(int licenseId) {
+        mLicenseId = licenseId;
     }
 
     public void setName(String name) {
@@ -164,19 +190,19 @@ public class Pkg {
     }
 
     public void setOrphaned(boolean orphaned) {
-        this.mOrphaned = orphaned;
+        mOrphaned = orphaned;
     }
 
-    public void setPackager(String packager) {
-        this.mPackager = packager;
+    public void setPackagerId(int packagerId) {
+        mPackagerId = packagerId;
     }
 
     public void setRelease(String release) {
-        this.mRelease = release;
+        mRelease = release;
     }
 
-    public void setRepository(String repository) {
-        this.mRepository = repository;
+    public void setRepositoryId(int repositoryId) {
+        mRepositoryId = repositoryId;
     }
 
     public void setSizeDownload(long sizeDownload) {
@@ -184,7 +210,7 @@ public class Pkg {
     }
 
     public void setSizeInstall(long sizeInstall) {
-        this.mSizeInstall = sizeInstall;
+        mSizeInstall = sizeInstall;
     }
 
     public void setSummary(String summary) {
@@ -192,23 +218,23 @@ public class Pkg {
     }
 
     public void setTimeBuild(long timeBuild) {
-        this.mTimeBuild = timeBuild;
+        mTimeBuild = timeBuild;
     }
 
     public void setTimeInstalled(long timeInstalled) {
-        this.mTimeInstalled = timeInstalled;
+        mTimeInstalled = timeInstalled;
     }
 
     public void setUrl(String url) {
         mUrl = url;
     }
 
-    public void setVendor(String vendor) {
-        this.mVendor = vendor;
+    public void setVendorId(int vendorId) {
+        mVendorId = vendorId;
     }
 
     public void setVersion(String version) {
-        this.mVersion = version;
+        mVersion = version;
     }
 
 }
