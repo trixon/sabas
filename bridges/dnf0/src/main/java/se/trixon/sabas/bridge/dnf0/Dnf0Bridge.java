@@ -19,8 +19,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -44,8 +45,27 @@ public class Dnf0Bridge extends Bridge {
 
     @Override
     public List<Pkg> doGetPackagesAll() {
-//            "%{name}%{epoch}%{version}%{release}%{arch}%{group}%{license}%{url}%{summary}%{description}%{downloadsize}%{installsize}%{sourcerpm}%{reponame}\u001E"
+        var installedPackages = getPackages(List.of("dnf", "repoquery", "--installed", "--queryformat"));
+        var availablePackages = getPackages(List.of("dnf", "repoquery", "--available", "--queryformat"));
+        for (var entry : installedPackages.entrySet()) {
+            var id = entry.getKey();
+            var pkg = entry.getValue();
+            pkg.setInstalled(true);
 
+            if (!availablePackages.containsKey(id)) {
+                pkg.setOrphaned(true);
+                availablePackages.put(id, pkg);
+            }
+
+            availablePackages.get(id).setTimeInstalled(pkg.getTimeInstalled());
+        }
+
+        return availablePackages.values().stream()
+                .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
+    private HashMap<String, Pkg> getPackages(List<String> args) {
         var fieldSeparator = "\u001F";
         var recordSeparator = "\u001E";
         var querytags = List.of(
@@ -68,13 +88,12 @@ public class Dnf0Bridge extends Bridge {
                 "buildtime",
                 "epoch"
         );
-        var command = new ArrayList<String>(List.of("dnf", "repoquery", "--queryformat"));
-//        var command = new ArrayList<String>(List.of("dnf", "repoquery", "--installed", "--available", "--queryformat"));
+        var command = new ArrayList<String>(args);
         command.add(querytags.stream()
                 .map(s -> "%%{%s}".formatted(s))
                 .collect(Collectors.joining(fieldSeparator)) + recordSeparator);
         System.out.println(String.join(" ", command));
-        var packages = new ArrayList<Pkg>();
+        var packages = new HashMap<String, Pkg>();
 
         try {
             var process = new ProcessBuilder(command).start();
@@ -108,24 +127,24 @@ public class Dnf0Bridge extends Bridge {
                     var pkg = new Pkg();
                     pkg.setId(fields[full_nevraIndex]);
                     pkg.setName(fields[nameIndex]);
-                    pkg.setGroup(fields[groupIndex]);
+                    pkg.setGroup(fields[groupIndex].intern());
                     pkg.setVersion(fields[versionIndex]);
-                    pkg.setArch(fields[archIndex]);
+                    pkg.setArch(fields[archIndex].intern());
                     pkg.setSummary(fields[summaryIndex]);
                     pkg.setDescription(fields[descriptionIndex]);
-                    pkg.setLicense(fields[licenseIndex]);
+                    pkg.setLicense(fields[licenseIndex].intern());
                     pkg.setEpoch(fields[epochIndex]);
                     pkg.setSizeDownload(Long.parseLong(fields[downloadsizeIndex]));
                     pkg.setSizeInstall(Long.parseLong(fields[installsizeIndex]));
                     pkg.setUrl(fields[urlIndex]);
-                    pkg.setVendor(fields[vendorIndex]);
-                    pkg.setRepository(fields[reponameIndex]);
-                    pkg.setPackager(fields[packagerIndex]);
+                    pkg.setVendor(fields[vendorIndex].intern());
+                    pkg.setRepository(fields[reponameIndex].intern());
+                    pkg.setPackager(fields[packagerIndex].intern());
                     pkg.setRelease(fields[releaseIndex]);
-                    pkg.setTimeBuild(Instant.ofEpochSecond(Long.parseLong(fields[buildtimeIndex])));
-                    pkg.setTimeInstalled(Instant.ofEpochSecond(Long.parseLong(fields[installtimeIndex])));
+                    pkg.setTimeBuild(Long.parseLong(fields[buildtimeIndex]));
+                    pkg.setTimeInstalled(Long.parseLong(fields[installtimeIndex]));
 
-                    packages.add(pkg);
+                    packages.put(pkg.getId(), pkg);
                 }
             }
             process.waitFor();

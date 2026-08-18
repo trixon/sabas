@@ -24,16 +24,18 @@ public class Pkg {
     private String mEpoch;
     private String mGroup;
     private String mId;
+    private boolean mInstalled;
     private String mLicense;
     private String mName;
+    private boolean mOrphaned;
     private String mPackager;
     private String mRelease;
     private String mRepository;
     private long mSizeDownload;
     private long mSizeInstall;
     private String mSummary;
-    private Instant mTimeBuild;
-    private Instant mTimeInstalled;
+    private long mTimeBuild;
+    private long mTimeInstalled;
     private String mUrl;
     private String mVendor;
     private String mVersion;
@@ -93,12 +95,20 @@ public class Pkg {
         return mSummary;
     }
 
-    public Instant getTimeBuild() {
+    public long getTimeBuild() {
         return mTimeBuild;
     }
 
-    public Instant getTimeInstalled() {
+    public Instant getTimeBuildInstant() {
+        return Instant.ofEpochSecond(mTimeBuild);
+    }
+
+    public long getTimeInstalled() {
         return mTimeInstalled;
+    }
+
+    public Instant getTimeInstalledInstant() {
+        return Instant.ofEpochSecond(mTimeInstalled);
     }
 
     public String getUrl() {
@@ -111,6 +121,14 @@ public class Pkg {
 
     public String getVersion() {
         return mVersion;
+    }
+
+    public boolean isInstalled() {
+        return mInstalled;
+    }
+
+    public boolean isOrphaned() {
+        return mOrphaned;
     }
 
     public void setArch(String arch) {
@@ -133,12 +151,20 @@ public class Pkg {
         this.mId = id;
     }
 
+    public void setInstalled(boolean installed) {
+        this.mInstalled = installed;
+    }
+
     public void setLicense(String license) {
         mLicense = license;
     }
 
     public void setName(String name) {
         mName = name;
+    }
+
+    public void setOrphaned(boolean orphaned) {
+        this.mOrphaned = orphaned;
     }
 
     public void setPackager(String packager) {
@@ -165,11 +191,11 @@ public class Pkg {
         mSummary = summary;
     }
 
-    public void setTimeBuild(Instant timeBuild) {
+    public void setTimeBuild(long timeBuild) {
         this.mTimeBuild = timeBuild;
     }
 
-    public void setTimeInstalled(Instant timeInstalled) {
+    public void setTimeInstalled(long timeInstalled) {
         this.mTimeInstalled = timeInstalled;
     }
 

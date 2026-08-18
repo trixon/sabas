@@ -15,7 +15,7 @@
  */
 package se.trixon.sabas.core;
 
-import java.util.ArrayList;
+import java.util.List;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -69,9 +69,9 @@ public class PkgManager {
     }
 
     public void populatePackages() {
-        getBridge().executeAsync(Command.GET_PACKAGES_ALL, (ArrayList<Pkg> packages) -> {
+        getBridge().executeAsync(Command.GET_PACKAGES_ALL, (List<Pkg> packages) -> {
             mAllItems.setAll(packages);
-            mFilteredItems.setAll(packages);//TODO Implement filter and remove this
+            mFilteredItems.setAll(packages);
         });
     }
 

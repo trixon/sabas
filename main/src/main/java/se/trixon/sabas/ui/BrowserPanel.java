@@ -15,6 +15,8 @@
  */
 package se.trixon.sabas.ui;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -34,6 +36,8 @@ public class BrowserPanel extends javax.swing.JPanel {
     private final Options mOptions = Options.getInstance();
     private final PkgManager mPkgManager = PkgManager.getInstance();
     private final PkgListModel mPkgListModel;
+    private DateTimeFormatter mFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+            .withZone(ZoneId.systemDefault());
 
     /**
      * Creates new form BrowserPanel
@@ -90,8 +94,8 @@ public class BrowserPanel extends javax.swing.JPanel {
             packagerLabel.setText(pkg.getPackager());
             releaseLabel.setText(pkg.getRelease());
             archLabel.setText(pkg.getArch());
-            buildTimeLabel.setText(pkg.getTimeBuild().toString());
-            installedTimeLabel.setText(pkg.getTimeInstalled().toString());
+            buildTimeLabel.setText(mFormatter.format(pkg.getTimeBuildInstant()));
+            installedTimeLabel.setText(mFormatter.format(pkg.getTimeInstalledInstant()));
         }
     }
 
@@ -186,39 +190,54 @@ public class BrowserPanel extends javax.swing.JPanel {
 
         nameLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "NAME"); // NOI18N
+        nameLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.nameLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(summaryLabel, "SUMMARY"); // NOI18N
+        summaryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.summaryLabel.toolTipText")); // NOI18N
 
         versionLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         org.openide.awt.Mnemonics.setLocalizedText(versionLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.versionLabel.text")); // NOI18N
+        versionLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.versionLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(licenseLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.licenseLabel.text")); // NOI18N
+        licenseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.licenseLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(sizeInstallHeaderLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeInstallHeaderLabel.text")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(sizeInstallLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeInstallLabel.text")); // NOI18N
+        sizeInstallLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeInstallLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(sizeDownloadHeaderLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeDownloadHeaderLabel.text")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(sizeDownloadLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeDownloadLabel.text")); // NOI18N
+        sizeDownloadLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeDownloadLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(vendorLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.vendorLabel.text")); // NOI18N
+        vendorLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.vendorLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.urlLabel.text")); // NOI18N
+        urlLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.urlLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(repositoryLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.repositoryLabel.text")); // NOI18N
+        repositoryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.repositoryLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(packagerLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.packagerLabel.text")); // NOI18N
+        packagerLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.packagerLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(releaseLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.releaseLabel.text")); // NOI18N
+        releaseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.releaseLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(archLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.archLabel.text")); // NOI18N
+        archLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.archLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(installedTimeLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.installedTimeLabel.text")); // NOI18N
+        installedTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.installedTimeLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(buildTimeLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.buildTimeLabel.text")); // NOI18N
+        buildTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.buildTimeLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(idLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.idLabel.text")); // NOI18N
+        idLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.idLabel.toolTipText")); // NOI18N
 
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);
