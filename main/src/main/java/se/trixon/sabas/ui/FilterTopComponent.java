@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,15 @@
  */
 package se.trixon.sabas.ui;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import javafx.collections.ListChangeListener;
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
 import org.apache.commons.lang3.Strings;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.util.NbBundle.Messages;
@@ -24,6 +31,9 @@ import org.openide.windows.TopComponent;
 import se.trixon.almond.util.StringHelper;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.sabas.core.PkgManager;
+import se.trixon.sabas.core.api.DictionarySection;
+import se.trixon.sabas.core.api.Pkg;
+import se.trixon.sabas.core.api.PkgDictionary;
 
 /**
  * Top component which displays something.
@@ -49,6 +59,11 @@ public final class FilterTopComponent extends TopComponent {
 
     private final PkgManager mPkgManager = PkgManager.getInstance();
     private final DelayedResetRunner mDelayedResetRunner;
+    private final Set<Integer> mSelectedGroupIds = new HashSet<>();
+    private final Set<Integer> mSelectedArchIds = new HashSet<>();
+    private final Set<Integer> mSelectedRepositoryIds = new HashSet<>();
+    private final Set<Integer> mSelectedVendorIds = new HashSet<>();
+    private final Set<Integer> mSelectedPackagerIds = new HashSet<>();
 
     public FilterTopComponent() {
         mDelayedResetRunner = new DelayedResetRunner(300, () -> {
@@ -65,6 +80,15 @@ public final class FilterTopComponent extends TopComponent {
         setHtmlDisplayName("<html><b>%s</b></html>".formatted(getName()));
 //        makeBusy(true);
         initListeners();
+        var map = Map.of(
+                "Group", 0,
+                "Arch", 1,
+                "Vendor", 2,
+                "Packager", 3,
+                "Repository", 4
+        );
+
+        tabbedPane.putClientProperty("JTabbedPane.tabRotation", "auto");
     }
 
     /**
@@ -77,10 +101,19 @@ public final class FilterTopComponent extends TopComponent {
         super.componentShowing(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }
 
+    private boolean filterList(Set<Integer> set, int id) {
+        return set.isEmpty() || set.contains(-1) || set.contains(id);
+    }
+
     private void filter() {
         var text = filterTextField.getText();
 
         var filteredItems = mPkgManager.getAllItems().stream()
+                .filter(p -> filterList(mSelectedArchIds, p.getArchId()))
+                .filter(p -> filterList(mSelectedRepositoryIds, p.getRepositoryId()))
+                .filter(p -> filterList(mSelectedVendorIds, p.getVendorId()))
+                .filter(p -> filterList(mSelectedPackagerIds, p.getPackagerId()))
+                .filter(p -> filterList(mSelectedGroupIds, p.getGroupId()))
                 .filter(p -> {
                     if (text.length() == 0) {
                         return true;
@@ -114,6 +147,17 @@ public final class FilterTopComponent extends TopComponent {
         filterTextField = new javax.swing.JTextField();
         summaryCheckBox = new javax.swing.JCheckBox();
         descriptionCheckBox = new javax.swing.JCheckBox();
+        tabbedPane = new javax.swing.JTabbedPane();
+        groupScrollPane = new javax.swing.JScrollPane();
+        groupList = new javax.swing.JList<>();
+        archScrollPane = new javax.swing.JScrollPane();
+        archList = new javax.swing.JList<>();
+        repositoryScrollPane = new javax.swing.JScrollPane();
+        repositoryList = new javax.swing.JList<>();
+        vendorScrollPane = new javax.swing.JScrollPane();
+        vendorList = new javax.swing.JList<>();
+        packagerScrollPane = new javax.swing.JScrollPane();
+        packagerList = new javax.swing.JList<>();
 
         org.openide.awt.Mnemonics.setLocalizedText(summaryCheckBox, org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.summaryCheckBox.text")); // NOI18N
         summaryCheckBox.addActionListener(new java.awt.event.ActionListener() {
@@ -129,6 +173,28 @@ public final class FilterTopComponent extends TopComponent {
             }
         });
 
+        tabbedPane.setTabPlacement(javax.swing.JTabbedPane.LEFT);
+
+        groupScrollPane.setViewportView(groupList);
+
+        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.groupScrollPane.TabConstraints.tabTitle"), groupScrollPane); // NOI18N
+
+        archScrollPane.setViewportView(archList);
+
+        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.archScrollPane.TabConstraints.tabTitle"), archScrollPane); // NOI18N
+
+        repositoryScrollPane.setViewportView(repositoryList);
+
+        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.repositoryScrollPane.TabConstraints.tabTitle"), repositoryScrollPane); // NOI18N
+
+        vendorScrollPane.setViewportView(vendorList);
+
+        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.vendorScrollPane.TabConstraints.tabTitle"), vendorScrollPane); // NOI18N
+
+        packagerScrollPane.setViewportView(packagerList);
+
+        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.packagerScrollPane.TabConstraints.tabTitle"), packagerScrollPane); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -139,9 +205,12 @@ public final class FilterTopComponent extends TopComponent {
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(summaryCheckBox)
-                            .addComponent(descriptionCheckBox))
-                        .addGap(0, 246, Short.MAX_VALUE)))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(summaryCheckBox)
+                                .addGap(18, 18, 18)
+                                .addComponent(descriptionCheckBox)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 806, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -149,12 +218,48 @@ public final class FilterTopComponent extends TopComponent {
             .addGroup(layout.createSequentialGroup()
                 .addComponent(filterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(summaryCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(descriptionCheckBox)
-                .addContainerGap(182, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(summaryCheckBox)
+                    .addComponent(descriptionCheckBox))
+                .addGap(18, 18, 18)
+                .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void listSelection(ListSelectionEvent event, DictionarySection dictionarySection, Set<Integer> set, JList<String> list) {
+        if (!event.getValueIsAdjusting()) {
+            var selectedTexts = list.getSelectedValuesList();
+            set.clear();
+            for (var text : selectedTexts) {
+                int id = PkgDictionary.getInstance().getId(dictionarySection, text);
+                if (id == -1) {
+                    break;
+                }
+                set.add(id);
+            }
+            mDelayedResetRunner.reset();
+        }
+    }
+
+    private void populateLists() {
+        populateLists(groupList, DictionarySection.GROUP);
+        populateLists(archList, DictionarySection.ARCH);
+        populateLists(repositoryList, DictionarySection.REPOSITORY);
+        populateLists(vendorList, DictionarySection.VENDOR);
+        populateLists(packagerList, DictionarySection.PACKAGER);
+    }
+
+    private void populateLists(JList list, DictionarySection dictionarySection) {
+        var model = new DefaultListModel<String>();
+        model.addElement("*");
+
+        var allItems = PkgDictionary.getInstance().getAllValuesSorted(dictionarySection);
+        model.addAll(allItems);
+
+        list.setModel(model);
+        list.setSelectedIndex(0);
+    }
 
     private void summaryCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_summaryCheckBoxActionPerformed
         mDelayedResetRunner.reset();
@@ -165,9 +270,20 @@ public final class FilterTopComponent extends TopComponent {
     }//GEN-LAST:event_descriptionCheckBoxActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JList<String> archList;
+    private javax.swing.JScrollPane archScrollPane;
     private javax.swing.JCheckBox descriptionCheckBox;
     private javax.swing.JTextField filterTextField;
+    private javax.swing.JList<String> groupList;
+    private javax.swing.JScrollPane groupScrollPane;
+    private javax.swing.JList<String> packagerList;
+    private javax.swing.JScrollPane packagerScrollPane;
+    private javax.swing.JList<String> repositoryList;
+    private javax.swing.JScrollPane repositoryScrollPane;
     private javax.swing.JCheckBox summaryCheckBox;
+    private javax.swing.JTabbedPane tabbedPane;
+    private javax.swing.JList<String> vendorList;
+    private javax.swing.JScrollPane vendorScrollPane;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
@@ -208,5 +324,30 @@ public final class FilterTopComponent extends TopComponent {
             }
 
         });
+
+        mPkgManager.getAllItems().addListener((ListChangeListener.Change<? extends Pkg> c) -> {
+            populateLists();
+        });
+
+        groupList.addListSelectionListener(event -> {
+            listSelection(event, DictionarySection.GROUP, mSelectedGroupIds, groupList);
+        });
+
+        archList.addListSelectionListener(event -> {
+            listSelection(event, DictionarySection.ARCH, mSelectedArchIds, archList);
+        });
+
+        repositoryList.addListSelectionListener(event -> {
+            listSelection(event, DictionarySection.REPOSITORY, mSelectedRepositoryIds, repositoryList);
+        });
+
+        vendorList.addListSelectionListener(event -> {
+            listSelection(event, DictionarySection.VENDOR, mSelectedVendorIds, vendorList);
+        });
+
+        packagerList.addListSelectionListener(event -> {
+            listSelection(event, DictionarySection.PACKAGER, mSelectedPackagerIds, packagerList);
+        });
     }
+
 }

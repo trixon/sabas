@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.apache.commons.lang3.Strings;
+import org.netbeans.api.progress.ProgressHandle;
+import org.openide.util.Cancellable;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import se.trixon.sabas.core.api.Bridge;
 import se.trixon.sabas.core.api.Command;
@@ -71,9 +74,23 @@ public class PkgManager {
 
     public void populatePackages() {
         PkgDictionary.getInstance().clear();
+
+        Cancellable canceller = () -> {
+            getBridge().abortCurrentOperation();
+            return true;
+        };
+        var progressHandle = ProgressHandle.createHandle("Loading packages", canceller);
+        progressHandle.start();
+
         getBridge().executeAsync(Command.GET_PACKAGES_ALL, (List<Pkg> packages) -> {
             mAllItems.setAll(packages);
             mFilteredItems.setAll(packages);
+        }).whenComplete((Void result, Throwable exception) -> {
+            progressHandle.finish();
+            PkgDictionary.getInstance().debugPrint();
+            if (exception != null) {
+                Exceptions.printStackTrace(exception);
+            }
         });
     }
 

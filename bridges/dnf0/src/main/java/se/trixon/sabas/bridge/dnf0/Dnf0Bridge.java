@@ -98,8 +98,8 @@ public class Dnf0Bridge extends Bridge {
         var packages = new HashMap<String, Pkg>();
         PkgDictionary dict = PkgDictionary.getInstance();
         try {
-            var process = new ProcessBuilder(command).start();
-            try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
+            mCurrentProcess = new ProcessBuilder(command).start();
+            try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(mCurrentProcess.getInputStream(), "UTF-8")))) {
                 scanner.useDelimiter(recordSeparator);
                 int full_nevraIndex = querytags.indexOf("full_nevra");
                 int nameIndex = querytags.indexOf("name");
@@ -126,22 +126,26 @@ public class Dnf0Bridge extends Bridge {
                         continue;
                     }
                     var fields = StringUtils.splitPreserveAllTokens(rawPackage, fieldSeparator);
+                    if (fields.length < querytags.size()) {
+                        break;
+                    }
+
                     var pkg = new Pkg();
                     pkg.setId(fields[full_nevraIndex]);
                     pkg.setName(fields[nameIndex]);
-                    pkg.setGroupId(dict.getId(DictionarySection.GROUP, fields[groupIndex]));
+                    pkg.setGroupId(dict.getOrCreateId(DictionarySection.GROUP, fields[groupIndex]));
                     pkg.setVersion(fields[versionIndex]);
-                    pkg.setArchId(dict.getId(DictionarySection.ARCH, fields[archIndex]));
+                    pkg.setArchId(dict.getOrCreateId(DictionarySection.ARCH, fields[archIndex]));
                     pkg.setSummary(fields[summaryIndex]);
                     pkg.setDescription(fields[descriptionIndex]);
-                    pkg.setLicenseId(dict.getId(DictionarySection.LICENSE, fields[licenseIndex]));
+                    pkg.setLicenseId(dict.getOrCreateId(DictionarySection.LICENSE, fields[licenseIndex]));
                     pkg.setEpoch(fields[epochIndex]);
                     pkg.setSizeDownload(Long.parseLong(fields[downloadsizeIndex]));
                     pkg.setSizeInstall(Long.parseLong(fields[installsizeIndex]));
                     pkg.setUrl(fields[urlIndex]);
-                    pkg.setVendorId(dict.getId(DictionarySection.VENDOR, fields[vendorIndex]));
-                    pkg.setRepositoryId(dict.getId(DictionarySection.REPOSITORY, fields[reponameIndex]));
-                    pkg.setPackagerId(dict.getId(DictionarySection.PACKAGER, fields[packagerIndex]));
+                    pkg.setVendorId(dict.getOrCreateId(DictionarySection.VENDOR, fields[vendorIndex]));
+                    pkg.setRepositoryId(dict.getOrCreateId(DictionarySection.REPOSITORY, fields[reponameIndex]));
+                    pkg.setPackagerId(dict.getOrCreateId(DictionarySection.PACKAGER, fields[packagerIndex]));
                     pkg.setRelease(fields[releaseIndex]);
                     pkg.setTimeBuild(Long.parseLong(fields[buildtimeIndex]));
                     pkg.setTimeInstalled(Long.parseLong(fields[installtimeIndex]));
@@ -149,7 +153,7 @@ public class Dnf0Bridge extends Bridge {
                     packages.put(pkg.getId(), pkg);
                 }
             }
-            process.waitFor();
+            mCurrentProcess.waitFor();
         } catch (IOException | InterruptedException e) {
             Exceptions.printStackTrace(e);
         }

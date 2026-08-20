@@ -52,6 +52,14 @@ public class PkgDictionary {
         }
     }
 
+    public void debugPrint() {
+        for (var section : DictionarySection.values()) {
+            System.out.println();
+            System.out.println(section.name());
+            System.out.println(String.join(", ", getAllValuesSorted(section)));
+        }
+    }
+
     public synchronized List<String> getAllValuesSorted(DictionarySection section) {
         var values = new ArrayList<>(mIdToStringMap.get(section).values());
         Collections.sort(values, String.CASE_INSENSITIVE_ORDER);
@@ -60,6 +68,14 @@ public class PkgDictionary {
     }
 
     public synchronized int getId(DictionarySection section, String value) {
+        if (value == null || value.strip().isEmpty()) {
+            return -1;
+        }
+
+        return mStringToIdMap.get(section).getOrDefault(value, -1);
+    }
+
+    public synchronized int getOrCreateId(DictionarySection section, String value) {
         if (value == null || value.strip().isEmpty()) {
             return -1;
         }

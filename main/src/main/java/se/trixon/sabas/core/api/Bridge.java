@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,8 @@ import java.util.function.Consumer;
  */
 public class Bridge {
 
+    protected volatile Process mCurrentProcess = null;
+
     private String mDescription;
     private String mName;
     private String mSupports;
@@ -34,6 +36,12 @@ public class Bridge {
         mName = name;
         mDescription = description;
         mSupports = supports;
+    }
+
+    public void abortCurrentOperation() {
+        if (mCurrentProcess != null && mCurrentProcess.isAlive()) {
+            mCurrentProcess.destroyForcibly();
+        }
     }
 
     public List<Pkg> doGetPackagesAll() {
@@ -45,8 +53,8 @@ public class Bridge {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> void executeAsync(Command command, Consumer<T> action) {
-        CompletableFuture.supplyAsync(() -> {
+    public <T> CompletableFuture<Void> executeAsync(Command command, Consumer<T> action) {
+        return CompletableFuture.supplyAsync(() -> {
             return (T) switch (command) {
                 case GET_VERSION ->
                     doGetVersion();

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -248,7 +248,7 @@ public class BrowserPanel extends javax.swing.JPanel {
                 .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                         .addComponent(nameLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 538, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(versionLabel))
                     .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                         .addComponent(licenseLabel)
@@ -275,11 +275,11 @@ public class BrowserPanel extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(releaseLabel))
                     .addGroup(infoHeaderPanelLayout.createSequentialGroup()
-                        .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(installedTimeLabel)
-                            .addComponent(buildTimeLabel)
-                            .addComponent(idLabel))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addComponent(idLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(installedTimeLabel)
+                        .addGap(18, 18, 18)
+                        .addComponent(buildTimeLabel)))
                 .addContainerGap())
         );
         infoHeaderPanelLayout.setVerticalGroup(
@@ -314,15 +314,14 @@ public class BrowserPanel extends javax.swing.JPanel {
                     .addComponent(packagerLabel)
                     .addComponent(archLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(installedTimeLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buildTimeLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 102, Short.MAX_VALUE)
-                .addComponent(idLabel)
-                .addGap(76, 76, 76))
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(installedTimeLabel)
+                    .addComponent(buildTimeLabel)
+                    .addComponent(idLabel))
+                .addContainerGap())
         );
 
-        infoPanel.add(infoHeaderPanel, java.awt.BorderLayout.CENTER);
+        infoPanel.add(infoHeaderPanel, java.awt.BorderLayout.NORTH);
 
         infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
         infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
@@ -332,11 +331,11 @@ public class BrowserPanel extends javax.swing.JPanel {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 698, Short.MAX_VALUE)
+            .addGap(0, 748, Short.MAX_VALUE)
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 97, Short.MAX_VALUE)
+            .addGap(0, 113, Short.MAX_VALUE)
         );
 
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jPanel2.TabConstraints.tabTitle"), jPanel2); // NOI18N
@@ -345,16 +344,16 @@ public class BrowserPanel extends javax.swing.JPanel {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 698, Short.MAX_VALUE)
+            .addGap(0, 748, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 97, Short.MAX_VALUE)
+            .addGap(0, 113, Short.MAX_VALUE)
         );
 
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jPanel1.TabConstraints.tabTitle"), jPanel1); // NOI18N
 
-        infoPanel.add(infoTabbedPane, java.awt.BorderLayout.PAGE_END);
+        infoPanel.add(infoTabbedPane, java.awt.BorderLayout.CENTER);
 
         splitPane.setRightComponent(infoPanel);
 
