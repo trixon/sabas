@@ -16,6 +16,7 @@
 package se.trixon.sabas.ui;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javafx.collections.ListChangeListener;
@@ -147,6 +148,7 @@ public final class FilterTopComponent extends TopComponent {
         filterTextField = new javax.swing.JTextField();
         summaryCheckBox = new javax.swing.JCheckBox();
         descriptionCheckBox = new javax.swing.JCheckBox();
+        resetButton = new javax.swing.JButton();
         tabbedPane = new javax.swing.JTabbedPane();
         groupScrollPane = new javax.swing.JScrollPane();
         groupList = new javax.swing.JList<>();
@@ -170,6 +172,13 @@ public final class FilterTopComponent extends TopComponent {
         descriptionCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 descriptionCheckBoxActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(resetButton, org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.resetButton.text")); // NOI18N
+        resetButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                resetButtonActionPerformed(evt);
             }
         });
 
@@ -209,8 +218,9 @@ public final class FilterTopComponent extends TopComponent {
                                 .addComponent(summaryCheckBox)
                                 .addGap(18, 18, 18)
                                 .addComponent(descriptionCheckBox)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 806, Short.MAX_VALUE))))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(resetButton))
+                            .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 706, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -220,9 +230,10 @@ public final class FilterTopComponent extends TopComponent {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(summaryCheckBox)
-                    .addComponent(descriptionCheckBox))
+                    .addComponent(descriptionCheckBox)
+                    .addComponent(resetButton))
                 .addGap(18, 18, 18)
-                .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)
+                .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -269,6 +280,21 @@ public final class FilterTopComponent extends TopComponent {
         mDelayedResetRunner.reset();
     }//GEN-LAST:event_descriptionCheckBoxActionPerformed
 
+    private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed
+        filterTextField.setText("");
+        List.of(
+                summaryCheckBox,
+                descriptionCheckBox)
+                .forEach(cb -> cb.setSelected(false));
+
+        List.of(archList,
+                groupList,
+                packagerList,
+                repositoryList,
+                vendorList)
+                .forEach(list -> list.setSelectedIndex(0));
+    }//GEN-LAST:event_resetButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList<String> archList;
     private javax.swing.JScrollPane archScrollPane;
@@ -280,6 +306,7 @@ public final class FilterTopComponent extends TopComponent {
     private javax.swing.JScrollPane packagerScrollPane;
     private javax.swing.JList<String> repositoryList;
     private javax.swing.JScrollPane repositoryScrollPane;
+    private javax.swing.JButton resetButton;
     private javax.swing.JCheckBox summaryCheckBox;
     private javax.swing.JTabbedPane tabbedPane;
     private javax.swing.JList<String> vendorList;

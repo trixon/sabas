@@ -103,7 +103,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         Helper.setupDividerMouseListener(splitPane, Options.KEY_UI_SPLIT_POS_CENTER);
         mPkgManager.getFilteredItems().addListener((ListChangeListener.Change<? extends Pkg> c) -> {
             SwingUtilities.invokeLater(() -> {
-                footerLabel.setText("%d/%d".formatted(mPkgManager.getFilteredItems().size(), mPkgManager.getAllItems().size()));
+                updateFooter();
                 if (mPkgListModel != null) {
                     mPkgListModel.updateData();
                 }
@@ -113,6 +113,19 @@ public class BrowserPanel extends javax.swing.JPanel {
         mPkgManager.selectedPkgProperty().addListener((p, o, n) -> {
             displayPackageInfo(n);
         });
+    }
+
+    private void updateFooter() {
+        var selected = "";
+        var selectedIndex = packagesList.getSelectedIndex();
+        if (selectedIndex != -1) {
+            selected = "@%,d/".formatted(selectedIndex + 1);
+        }
+        footerLabel.setText("%s%,d/%,d".formatted(
+                selected,
+                mPkgManager.getFilteredItems().size(),
+                mPkgManager.getAllItems().size()
+        ));
     }
 
     private void restoreDividerPositions() {
@@ -363,6 +376,7 @@ public class BrowserPanel extends javax.swing.JPanel {
     private void packagesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_packagesListValueChanged
         if (!evt.getValueIsAdjusting()) {
             mPkgManager.setSelectedPkg(packagesList.getSelectedValue());
+            updateFooter();
         }
     }//GEN-LAST:event_packagesListValueChanged
 
