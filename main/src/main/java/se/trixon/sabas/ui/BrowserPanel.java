@@ -101,11 +101,15 @@ public class BrowserPanel extends javax.swing.JPanel {
 
     private void initListeners() {
         Helper.setupDividerMouseListener(splitPane, Options.KEY_UI_SPLIT_POS_CENTER);
+
         mPkgManager.getFilteredItems().addListener((ListChangeListener.Change<? extends Pkg> c) -> {
             SwingUtilities.invokeLater(() -> {
                 updateFooter();
                 if (mPkgListModel != null) {
                     mPkgListModel.updateData();
+                    if (mPkgListModel.getSize() > 0) {
+                        packagesList.setSelectedIndex(0);
+                    }
                 }
             });
         });

@@ -15,6 +15,7 @@
  */
 package se.trixon.sabas.ui;
 
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import javax.swing.JList;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.util.NbBundle.Messages;
@@ -35,6 +37,7 @@ import se.trixon.sabas.core.PkgManager;
 import se.trixon.sabas.core.api.DictionarySection;
 import se.trixon.sabas.core.api.Pkg;
 import se.trixon.sabas.core.api.PkgDictionary;
+import se.trixon.sabas.core.api.PkgStatus;
 
 /**
  * Top component which displays something.
@@ -65,6 +68,7 @@ public final class FilterTopComponent extends TopComponent {
     private final Set<Integer> mSelectedRepositoryIds = new HashSet<>();
     private final Set<Integer> mSelectedVendorIds = new HashSet<>();
     private final Set<Integer> mSelectedPackagerIds = new HashSet<>();
+    private Set<PkgStatus> mSelectedStatuses;
 
     public FilterTopComponent() {
         mDelayedResetRunner = new DelayedResetRunner(300, () -> {
@@ -107,39 +111,57 @@ public final class FilterTopComponent extends TopComponent {
     }
 
     private void filter() {
-        var text = filterTextField.getText();
-
-        var filteredItems = mPkgManager.getAllItems().stream()
-                .filter(p -> filterList(mSelectedArchIds, p.getArchId()))
-                .filter(p -> filterList(mSelectedRepositoryIds, p.getRepositoryId()))
-                .filter(p -> filterList(mSelectedVendorIds, p.getVendorId()))
-                .filter(p -> filterList(mSelectedPackagerIds, p.getPackagerId()))
-                .filter(p -> filterList(mSelectedGroupIds, p.getGroupId()))
+        var filterStream = mPkgManager.getAllItems().stream()
                 .filter(p -> {
-                    if (text.length() == 0) {
+                    if (mSelectedStatuses.isEmpty() || mSelectedStatuses.contains(PkgStatus.ALL)) {
                         return true;
                     }
-                    var validName = StringHelper.matchesSimpleGlob(p.getName(), text, true, false);
-                    if (validName) {
+                    if (p.isUpgradable() && mSelectedStatuses.contains(PkgStatus.UPGRADABLE)) {
+                        return true;
+                    }
+                    if (p.isOrphaned() && mSelectedStatuses.contains(PkgStatus.ORPHANED)) {
+                        return true;
+                    }
+                    if (p.isInstalled() && mSelectedStatuses.contains(PkgStatus.INSTALLED)) {
                         return true;
                     }
 
-                    var validSummary = summaryCheckBox.isSelected() && StringHelper.matchesSimpleGlob(p.getSummary(), text, true, false);
-                    if (validSummary) {
-                        return true;
-                    }
-
-//                    var validDescription = descriptionCheckBox.isSelected() && StringHelper.matchesSimpleGlob(p.getDescription(), text, true, true);
-                    var validDescription = descriptionCheckBox.isSelected() && Strings.CI.contains(p.getDescription(), text);
-                    if (validDescription) {
+                    if (!p.isInstalled() && mSelectedStatuses.contains(PkgStatus.AVAILABLE)) {
                         return true;
                     }
 
                     return false;
                 })
-                .toList();
+                .filter(p -> filterList(mSelectedArchIds, p.getArchId()))
+                .filter(p -> filterList(mSelectedRepositoryIds, p.getRepositoryId()))
+                .filter(p -> filterList(mSelectedVendorIds, p.getVendorId()))
+                .filter(p -> filterList(mSelectedPackagerIds, p.getPackagerId()))
+                .filter(p -> filterList(mSelectedGroupIds, p.getGroupId()));
 
-        mPkgManager.getFilteredItems().setAll(filteredItems);
+        var text = filterTextField.getText();
+        if (StringUtils.isNotBlank(text)) {
+            filterStream = filterStream.filter(p -> {
+                var validName = StringHelper.matchesSimpleGlob(p.getName(), text, true, false);
+                if (validName) {
+                    return true;
+                }
+
+                var validSummary = summaryCheckBox.isSelected() && StringHelper.matchesSimpleGlob(p.getSummary(), text, true, false);
+                if (validSummary) {
+                    return true;
+                }
+
+//                    var validDescription = descriptionCheckBox.isSelected() && StringHelper.matchesSimpleGlob(p.getDescription(), text, true, true);
+                var validDescription = descriptionCheckBox.isSelected() && Strings.CI.contains(p.getDescription(), text);
+                if (validDescription) {
+                    return true;
+                }
+
+                return false;
+            });
+        }
+
+        mPkgManager.getFilteredItems().setAll(filterStream.toList());
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -160,6 +182,8 @@ public final class FilterTopComponent extends TopComponent {
         vendorList = new javax.swing.JList<>();
         packagerScrollPane = new javax.swing.JScrollPane();
         packagerList = new javax.swing.JList<>();
+        statusScrollPane = new javax.swing.JScrollPane();
+        statusList = new javax.swing.JList<>();
 
         org.openide.awt.Mnemonics.setLocalizedText(summaryCheckBox, org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.summaryCheckBox.text")); // NOI18N
         summaryCheckBox.addActionListener(new java.awt.event.ActionListener() {
@@ -204,6 +228,15 @@ public final class FilterTopComponent extends TopComponent {
 
         tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.packagerScrollPane.TabConstraints.tabTitle"), packagerScrollPane); // NOI18N
 
+        statusList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                statusListValueChanged(evt);
+            }
+        });
+        statusScrollPane.setViewportView(statusList);
+
+        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.statusScrollPane.TabConstraints.tabTitle"), statusScrollPane); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -220,7 +253,7 @@ public final class FilterTopComponent extends TopComponent {
                                 .addComponent(descriptionCheckBox)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(resetButton))
-                            .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 706, Short.MAX_VALUE))))
+                            .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 841, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -259,6 +292,10 @@ public final class FilterTopComponent extends TopComponent {
         populateLists(repositoryList, DictionarySection.REPOSITORY);
         populateLists(vendorList, DictionarySection.VENDOR);
         populateLists(packagerList, DictionarySection.PACKAGER);
+        var statusModel = new DefaultListModel<PkgStatus>();
+        statusModel.addAll(List.of(PkgStatus.values()));
+        statusList.setModel(statusModel);
+        statusList.setSelectedIndex(0);
     }
 
     private void populateLists(JList list, DictionarySection dictionarySection) {
@@ -287,13 +324,25 @@ public final class FilterTopComponent extends TopComponent {
                 descriptionCheckBox)
                 .forEach(cb -> cb.setSelected(false));
 
-        List.of(archList,
+        List.of(statusList,
+                archList,
                 groupList,
                 packagerList,
                 repositoryList,
                 vendorList)
                 .forEach(list -> list.setSelectedIndex(0));
     }//GEN-LAST:event_resetButtonActionPerformed
+
+    private void statusListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_statusListValueChanged
+        if (!evt.getValueIsAdjusting()) {
+            if (statusList.getSelectedValuesList().isEmpty()) {
+                mSelectedStatuses.clear();
+            } else {
+                mSelectedStatuses = EnumSet.copyOf(statusList.getSelectedValuesList());
+            }
+            mDelayedResetRunner.reset();
+        }
+    }//GEN-LAST:event_statusListValueChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList<String> archList;
@@ -307,6 +356,8 @@ public final class FilterTopComponent extends TopComponent {
     private javax.swing.JList<String> repositoryList;
     private javax.swing.JScrollPane repositoryScrollPane;
     private javax.swing.JButton resetButton;
+    private javax.swing.JList<PkgStatus> statusList;
+    private javax.swing.JScrollPane statusScrollPane;
     private javax.swing.JCheckBox summaryCheckBox;
     private javax.swing.JTabbedPane tabbedPane;
     private javax.swing.JList<String> vendorList;

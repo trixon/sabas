@@ -38,9 +38,11 @@ public class Pkg {
     private String mSummary;
     private long mTimeBuild;
     private long mTimeInstalled;
+    private boolean mUpgradable;
     private String mUrl;
     private int mVendorId;
     private String mVersion;
+    private String mVersionNew;
 
     public Pkg() {
     }
@@ -149,12 +151,20 @@ public class Pkg {
         return mVersion;
     }
 
+    public String getVersionNew() {
+        return mVersionNew;
+    }
+
     public boolean isInstalled() {
         return mInstalled;
     }
 
     public boolean isOrphaned() {
         return mOrphaned;
+    }
+
+    public boolean isUpgradable() {
+        return mUpgradable;
     }
 
     public void setArchId(int archId) {
@@ -225,6 +235,10 @@ public class Pkg {
         mTimeInstalled = timeInstalled;
     }
 
+    public void setUpgradable(boolean upgradable) {
+        mUpgradable = upgradable;
+    }
+
     public void setUrl(String url) {
         mUrl = url;
     }
@@ -235,6 +249,10 @@ public class Pkg {
 
     public void setVersion(String version) {
         mVersion = version;
+    }
+
+    public void setVersionNew(String versionNew) {
+        mVersionNew = versionNew;
     }
 
 }

@@ -49,17 +49,37 @@ public class Dnf0Bridge extends Bridge {
     public List<Pkg> doGetPackagesAll() {
         var installedPackages = getPackages(List.of("dnf", "repoquery", "--installed", "--queryformat"));
         var availablePackages = getPackages(List.of("dnf", "repoquery", "--available", "--queryformat"));
+        var upgradablePackages = getPackages(List.of("dnf", "repoquery", "--upgrades", "--queryformat"));
+
+        var onlineByName = new HashMap<String, Pkg>();
+        for (var pkg : availablePackages.values()) {
+            onlineByName.put(pkg.getName(), pkg);
+        }
+
         for (var entry : installedPackages.entrySet()) {
-            var id = entry.getKey();
-            var pkg = entry.getValue();
-            pkg.setInstalled(true);
+            var installedPkg = entry.getValue();
+            var mainPkg = onlineByName.get(installedPkg.getName());
 
-            if (!availablePackages.containsKey(id)) {
-                pkg.setOrphaned(true);
-                availablePackages.put(id, pkg);
+            if (mainPkg != null) {
+                mainPkg.setInstalled(true);
+                mainPkg.setTimeInstalled(installedPkg.getTimeInstalled());
+                mainPkg.setOrphaned(false);
+            } else {
+                installedPkg.setInstalled(true);
+                installedPkg.setOrphaned(true);
+                availablePackages.put(entry.getKey(), installedPkg);
+                onlineByName.put(installedPkg.getName(), installedPkg);
             }
+        }
 
-            availablePackages.get(id).setTimeInstalled(pkg.getTimeInstalled());
+        for (var entry : upgradablePackages.entrySet()) {
+            var upgradePkg = entry.getValue();
+            var mainPkg = onlineByName.get(upgradePkg.getName());
+
+            if (mainPkg != null && mainPkg.isInstalled()) {
+                mainPkg.setUpgradable(true);
+                mainPkg.setVersionNew(upgradePkg.getVersion());
+            }
         }
 
         return availablePackages.values().stream()
