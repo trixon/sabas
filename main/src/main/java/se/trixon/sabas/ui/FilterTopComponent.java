@@ -172,8 +172,9 @@ public final class FilterTopComponent extends TopComponent {
         descriptionCheckBox = new javax.swing.JCheckBox();
         resetButton = new javax.swing.JButton();
         tabbedPane = new javax.swing.JTabbedPane();
-        groupScrollPane = new javax.swing.JScrollPane();
-        groupList = new javax.swing.JList<>();
+        propertiesPanel = new javax.swing.JPanel();
+        statusScrollPane = new javax.swing.JScrollPane();
+        statusList = new javax.swing.JList<>();
         archScrollPane = new javax.swing.JScrollPane();
         archList = new javax.swing.JList<>();
         repositoryScrollPane = new javax.swing.JScrollPane();
@@ -182,8 +183,8 @@ public final class FilterTopComponent extends TopComponent {
         vendorList = new javax.swing.JList<>();
         packagerScrollPane = new javax.swing.JScrollPane();
         packagerList = new javax.swing.JList<>();
-        statusScrollPane = new javax.swing.JScrollPane();
-        statusList = new javax.swing.JList<>();
+        groupScrollPane = new javax.swing.JScrollPane();
+        groupList = new javax.swing.JList<>();
 
         org.openide.awt.Mnemonics.setLocalizedText(summaryCheckBox, org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.summaryCheckBox.text")); // NOI18N
         summaryCheckBox.addActionListener(new java.awt.event.ActionListener() {
@@ -206,27 +207,9 @@ public final class FilterTopComponent extends TopComponent {
             }
         });
 
-        tabbedPane.setTabPlacement(javax.swing.JTabbedPane.LEFT);
+        propertiesPanel.setLayout(new javax.swing.BoxLayout(propertiesPanel, javax.swing.BoxLayout.PAGE_AXIS));
 
-        groupScrollPane.setViewportView(groupList);
-
-        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.groupScrollPane.TabConstraints.tabTitle"), groupScrollPane); // NOI18N
-
-        archScrollPane.setViewportView(archList);
-
-        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.archScrollPane.TabConstraints.tabTitle"), archScrollPane); // NOI18N
-
-        repositoryScrollPane.setViewportView(repositoryList);
-
-        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.repositoryScrollPane.TabConstraints.tabTitle"), repositoryScrollPane); // NOI18N
-
-        vendorScrollPane.setViewportView(vendorList);
-
-        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.vendorScrollPane.TabConstraints.tabTitle"), vendorScrollPane); // NOI18N
-
-        packagerScrollPane.setViewportView(packagerList);
-
-        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.packagerScrollPane.TabConstraints.tabTitle"), packagerScrollPane); // NOI18N
+        statusScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.statusScrollPane.border.title"))); // NOI18N
 
         statusList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
@@ -235,7 +218,33 @@ public final class FilterTopComponent extends TopComponent {
         });
         statusScrollPane.setViewportView(statusList);
 
-        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.statusScrollPane.TabConstraints.tabTitle"), statusScrollPane); // NOI18N
+        propertiesPanel.add(statusScrollPane);
+
+        archScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.archScrollPane.border.title"))); // NOI18N
+        archScrollPane.setViewportView(archList);
+
+        propertiesPanel.add(archScrollPane);
+
+        repositoryScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.repositoryScrollPane.border.title"))); // NOI18N
+        repositoryScrollPane.setViewportView(repositoryList);
+
+        propertiesPanel.add(repositoryScrollPane);
+
+        vendorScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.vendorScrollPane.border.title"))); // NOI18N
+        vendorScrollPane.setViewportView(vendorList);
+
+        propertiesPanel.add(vendorScrollPane);
+
+        packagerScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.packagerScrollPane.border.title"))); // NOI18N
+        packagerScrollPane.setViewportView(packagerList);
+
+        propertiesPanel.add(packagerScrollPane);
+
+        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.propertiesPanel.TabConstraints.tabTitle"), propertiesPanel); // NOI18N
+
+        groupScrollPane.setViewportView(groupList);
+
+        tabbedPane.addTab(org.openide.util.NbBundle.getMessage(FilterTopComponent.class, "FilterTopComponent.groupScrollPane.TabConstraints.tabTitle"), groupScrollPane); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -353,6 +362,7 @@ public final class FilterTopComponent extends TopComponent {
     private javax.swing.JScrollPane groupScrollPane;
     private javax.swing.JList<String> packagerList;
     private javax.swing.JScrollPane packagerScrollPane;
+    private javax.swing.JPanel propertiesPanel;
     private javax.swing.JList<String> repositoryList;
     private javax.swing.JScrollPane repositoryScrollPane;
     private javax.swing.JButton resetButton;
