@@ -24,6 +24,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -41,56 +45,90 @@ import se.trixon.sabas.core.api.PkgDictionary;
 @ServiceProvider(service = Bridge.class)
 public class Dnf0Bridge extends Bridge {
 
+    private final ExecutorService mDnfExecutor = Executors.newFixedThreadPool(3);
+
     public Dnf0Bridge() {
         super("dnf", "in development", "Fedora 44");
     }
 
     @Override
     public List<Pkg> doGetPackagesAll() {
-        var installedPackages = getPackages(List.of("dnf", "repoquery", "--installed", "--queryformat"));
-        var availablePackages = getPackages(List.of("dnf", "repoquery", "--available", "--queryformat"));
-        var upgradablePackages = getPackages(List.of("dnf", "repoquery", "--upgrades", "--queryformat"));
+        CompletableFuture<HashMap<String, Pkg>> installedFuture
+                = CompletableFuture.supplyAsync(() -> getPackages(List.of("dnf", "repoquery", "--installed", "--queryformat")), mDnfExecutor);
 
-        var onlineByName = new HashMap<String, Pkg>();
-        for (var pkg : availablePackages.values()) {
-            onlineByName.put(pkg.getName(), pkg);
-        }
+        CompletableFuture<HashMap<String, Pkg>> availableFuture
+                = CompletableFuture.supplyAsync(() -> getPackages(List.of("dnf", "repoquery", "--available", "--queryformat")), mDnfExecutor);
 
-        for (var entry : installedPackages.entrySet()) {
-            var installedPkg = entry.getValue();
-            var mainPkg = onlineByName.get(installedPkg.getName());
+        CompletableFuture<HashMap<String, Pkg>> upgradableFuture
+                = CompletableFuture.supplyAsync(() -> getPackages(List.of("dnf", "repoquery", "--upgrades", "--queryformat")), mDnfExecutor);
 
-            if (mainPkg != null) {
-                mainPkg.setInstalled(true);
-                mainPkg.setTimeInstalled(installedPkg.getTimeInstalled());
-                mainPkg.setOrphaned(false);
-            } else {
-                installedPkg.setInstalled(true);
-                installedPkg.setOrphaned(true);
-                availablePackages.put(entry.getKey(), installedPkg);
-                onlineByName.put(installedPkg.getName(), installedPkg);
+        try {
+            CompletableFuture.allOf(installedFuture, availableFuture, upgradableFuture).join();
+
+            var installedPackages = installedFuture.get();
+            var availablePackages = availableFuture.get();
+            var upgradablePackages = upgradableFuture.get();
+
+            var onlineByName = new HashMap<String, Pkg>();
+            for (var pkg : availablePackages.values()) {
+                onlineByName.put(pkg.getName(), pkg);
             }
-        }
 
-        for (var entry : upgradablePackages.entrySet()) {
-            var upgradePkg = entry.getValue();
-            var mainPkg = onlineByName.get(upgradePkg.getName());
+            for (var entry : installedPackages.entrySet()) {
+                var installedPkg = entry.getValue();
+                var mainPkg = onlineByName.get(installedPkg.getName());
 
-            if (mainPkg != null && mainPkg.isInstalled()) {
-                mainPkg.setUpgradable(true);
-                mainPkg.setVersionNew(upgradePkg.getVersion());
+                if (mainPkg != null) {
+                    mainPkg.setInstalled(true);
+                    mainPkg.setTimeInstalled(installedPkg.getTimeInstalled());
+                    mainPkg.setOrphaned(false);
+                } else {
+                    installedPkg.setInstalled(true);
+                    installedPkg.setOrphaned(true);
+                    availablePackages.put(entry.getKey(), installedPkg);
+                    onlineByName.put(installedPkg.getName(), installedPkg);
+                }
             }
+
+            for (var entry : upgradablePackages.entrySet()) {
+                var upgradePkg = entry.getValue();
+                var mainPkg = onlineByName.get(upgradePkg.getName());
+
+                if (mainPkg != null && mainPkg.isInstalled()) {
+                    mainPkg.setUpgradable(true);
+                    mainPkg.setVersionNew(upgradePkg.getVersion());
+                }
+            }
+
+            return availablePackages.values().stream()
+                    .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
+                    .toList();
+        } catch (InterruptedException | ExecutionException e) {
+            Exceptions.printStackTrace(e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public String doGetVersion() {
+        try {
+            String[] command = {"dnf", "--version"};
+            var process = new ProcessBuilder(command).start();
+            var result = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
+            process.waitFor();
+
+            return StringUtils.substringBefore(result, "\n\n");
+        } catch (IOException | InterruptedException ex) {
+            Exceptions.printStackTrace(ex);
         }
 
-        return availablePackages.values().stream()
-                .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
-                .toList();
+        return "?";
     }
 
     private HashMap<String, Pkg> getPackages(List<String> args) {
         var fieldSeparator = "\u001F";
         var recordSeparator = "\u001E";
-        var querytags = List.of(
+        final var querytags = List.of(
                 "full_nevra",
                 "name",
                 "group",
@@ -117,28 +155,30 @@ public class Dnf0Bridge extends Bridge {
         System.out.println(String.join(" ", command));
         var packages = new HashMap<String, Pkg>();
         PkgDictionary dict = PkgDictionary.getInstance();
+        Process process = null;
         try {
-            mCurrentProcess = new ProcessBuilder(command).start();
-            try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(mCurrentProcess.getInputStream(), "UTF-8")))) {
+            process = new ProcessBuilder(command).start();
+            mActiveProcesses.add(process);
+            try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
                 scanner.useDelimiter(recordSeparator);
-                int full_nevraIndex = querytags.indexOf("full_nevra");
-                int nameIndex = querytags.indexOf("name");
-                int groupIndex = querytags.indexOf("group");
-                int versionIndex = querytags.indexOf("version");
-                int archIndex = querytags.indexOf("arch");
-                int summaryIndex = querytags.indexOf("summary");
-                int descriptionIndex = querytags.indexOf("description");
-                int licenseIndex = querytags.indexOf("license");
-                int epochIndex = querytags.indexOf("epoch");
-                int downloadsizeIndex = querytags.indexOf("downloadsize");
-                int installsizeIndex = querytags.indexOf("installsize");
-                int urlIndex = querytags.indexOf("url");
-                int vendorIndex = querytags.indexOf("vendor");
-                int reponameIndex = querytags.indexOf("reponame");
-                int packagerIndex = querytags.indexOf("packager");
-                int releaseIndex = querytags.indexOf("release");
-                int installtimeIndex = querytags.indexOf("installtime");
-                int buildtimeIndex = querytags.indexOf("buildtime");
+                final int full_nevraIndex = querytags.indexOf("full_nevra");
+                final int nameIndex = querytags.indexOf("name");
+                final int groupIndex = querytags.indexOf("group");
+                final int versionIndex = querytags.indexOf("version");
+                final int archIndex = querytags.indexOf("arch");
+                final int summaryIndex = querytags.indexOf("summary");
+                final int descriptionIndex = querytags.indexOf("description");
+                final int licenseIndex = querytags.indexOf("license");
+                final int epochIndex = querytags.indexOf("epoch");
+                final int downloadsizeIndex = querytags.indexOf("downloadsize");
+                final int installsizeIndex = querytags.indexOf("installsize");
+                final int urlIndex = querytags.indexOf("url");
+                final int vendorIndex = querytags.indexOf("vendor");
+                final int reponameIndex = querytags.indexOf("reponame");
+                final int packagerIndex = querytags.indexOf("packager");
+                final int releaseIndex = querytags.indexOf("release");
+                final int installtimeIndex = querytags.indexOf("installtime");
+                final int buildtimeIndex = querytags.indexOf("buildtime");
 
                 while (scanner.hasNext()) {
                     var rawPackage = scanner.next();
@@ -173,28 +213,14 @@ public class Dnf0Bridge extends Bridge {
                     packages.put(pkg.getId(), pkg);
                 }
             }
-            mCurrentProcess.waitFor();
+            process.waitFor();
         } catch (IOException | InterruptedException e) {
             Exceptions.printStackTrace(e);
+        } finally {
+            mActiveProcesses.remove(process);
         }
 
         return packages;
-    }
-
-    @Override
-    public String doGetVersion() {
-        try {
-            String[] command = {"dnf", "--version"};
-            var process = new ProcessBuilder(command).start();
-            var result = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
-            process.waitFor();
-
-            return StringUtils.substringBefore(result, "\n\n");
-        } catch (IOException | InterruptedException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-
-        return "?";
     }
 }
 /*

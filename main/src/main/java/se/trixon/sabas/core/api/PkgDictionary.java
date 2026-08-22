@@ -18,9 +18,10 @@ package se.trixon.sabas.core.api;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -28,7 +29,7 @@ import java.util.Map;
  */
 public class PkgDictionary {
 
-    private final Map<DictionarySection, Integer> counters = new EnumMap<>(DictionarySection.class);
+    private final Map<DictionarySection, AtomicInteger> mCounters = new EnumMap<>(DictionarySection.class);
     private final Map<DictionarySection, Map<Integer, String>> mIdToStringMap = new EnumMap<>(DictionarySection.class);
     private final Map<DictionarySection, Map<String, Integer>> mStringToIdMap = new EnumMap<>(DictionarySection.class);
 
@@ -38,9 +39,9 @@ public class PkgDictionary {
 
     private PkgDictionary() {
         for (var section : DictionarySection.values()) {
-            mStringToIdMap.put(section, new HashMap<>());
-            mIdToStringMap.put(section, new HashMap<>());
-            counters.put(section, 0);
+            mStringToIdMap.put(section, new ConcurrentHashMap<>());
+            mIdToStringMap.put(section, new ConcurrentHashMap<>());
+            mCounters.put(section, new AtomicInteger(0));
         }
     }
 
@@ -48,7 +49,7 @@ public class PkgDictionary {
         for (var section : DictionarySection.values()) {
             mStringToIdMap.get(section).clear();
             mIdToStringMap.get(section).clear();
-            counters.put(section, 0);
+            mCounters.get(section).set(0);
         }
     }
 
@@ -75,7 +76,7 @@ public class PkgDictionary {
         return mStringToIdMap.get(section).getOrDefault(value, -1);
     }
 
-    public synchronized int getOrCreateId(DictionarySection section, String value) {
+    public int getOrCreateId(DictionarySection section, String value) {
         if (value == null || value.strip().isEmpty()) {
             return -1;
         }
@@ -84,9 +85,8 @@ public class PkgDictionary {
         var idToString = mIdToStringMap.get(section);
 
         return stringToId.computeIfAbsent(value, key -> {
-            int currentId = counters.get(section);
+            int currentId = mCounters.get(section).getAndIncrement();
             idToString.put(currentId, key);
-            counters.put(section, currentId + 1);
 
             return currentId;
         });

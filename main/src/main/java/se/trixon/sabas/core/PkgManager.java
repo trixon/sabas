@@ -25,6 +25,7 @@ import org.netbeans.api.progress.ProgressHandle;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.core.api.Bridge;
 import se.trixon.sabas.core.api.Command;
 import se.trixon.sabas.core.api.Pkg;
@@ -82,6 +83,8 @@ public class PkgManager {
         var progressHandle = ProgressHandle.createHandle("Loading packages", canceller);
         progressHandle.start();
 
+        var start = System.currentTimeMillis();
+
         getBridge().executeAsync(Command.GET_PACKAGES_ALL, (List<Pkg> packages) -> {
             mAllItems.setAll(packages);
             mFilteredItems.setAll(packages);
@@ -91,6 +94,7 @@ public class PkgManager {
             if (exception != null) {
                 Exceptions.printStackTrace(exception);
             }
+            System.out.println("Loadin in " + SystemHelper.age(start));
         });
     }
 

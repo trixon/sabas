@@ -17,7 +17,9 @@ package se.trixon.sabas.core.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -26,8 +28,7 @@ import java.util.function.Consumer;
  */
 public class Bridge {
 
-    protected volatile Process mCurrentProcess = null;
-
+    protected final Set<Process> mActiveProcesses = ConcurrentHashMap.newKeySet();
     private String mDescription;
     private String mName;
     private String mSupports;
@@ -39,9 +40,10 @@ public class Bridge {
     }
 
     public void abortCurrentOperation() {
-        if (mCurrentProcess != null && mCurrentProcess.isAlive()) {
-            mCurrentProcess.destroyForcibly();
-        }
+        mActiveProcesses.stream()
+                .filter(p -> p != null && p.isAlive())
+                .forEach(p -> p.destroyForcibly());
+        mActiveProcesses.clear();
     }
 
     public List<Pkg> doGetPackagesAll() {
