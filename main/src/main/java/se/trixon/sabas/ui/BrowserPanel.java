@@ -15,9 +15,9 @@
  */
 package se.trixon.sabas.ui;
 
+import java.awt.CardLayout;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javax.swing.AbstractListModel;
@@ -57,26 +57,10 @@ public class BrowserPanel extends javax.swing.JPanel {
     }
 
     private void displayPackageInfo(Pkg pkg) {
-        if (pkg == null) {
-            List.of(
-                    idLabel,
-                    nameLabel,
-                    summaryLabel,
-                    versionLabel,
-                    sizeDownloadLabel,
-                    sizeInstallLabel,
-                    vendorLabel,
-                    urlLabel,
-                    repositoryLabel,
-                    packagerLabel,
-                    releaseLabel,
-                    archLabel,
-                    buildTimeLabel,
-                    installedTimeLabel,
-                    licenseLabel
-            ).forEach(label -> label.setText(""));
-            descriptionLogPanel.clear();
-        } else {
+        var cardLayout = (CardLayout) (cardPanel.getLayout());
+        cardLayout.show(cardPanel, pkg == null ? "empty" : "info");
+
+        if (pkg != null) {
             idLabel.setText(pkg.getId());
             nameLabel.setText(pkg.getName());
             summaryLabel.setText(pkg.getSummary());
@@ -155,7 +139,9 @@ public class BrowserPanel extends javax.swing.JPanel {
         packagesScrollPane = new javax.swing.JScrollPane();
         packagesList = new javax.swing.JList<>();
         footerLabel = new javax.swing.JLabel();
-        infoPanel = new javax.swing.JPanel();
+        cardPanel = new javax.swing.JPanel();
+        emptyCardPanel = new javax.swing.JPanel();
+        infoCardPanel = new javax.swing.JPanel();
         infoHeaderPanel = new javax.swing.JPanel();
         nameLabel = new javax.swing.JLabel();
         summaryLabel = new javax.swing.JLabel();
@@ -203,7 +189,22 @@ public class BrowserPanel extends javax.swing.JPanel {
 
         splitPane.setLeftComponent(listPanel);
 
-        infoPanel.setLayout(new java.awt.BorderLayout());
+        cardPanel.setLayout(new java.awt.CardLayout());
+
+        javax.swing.GroupLayout emptyCardPanelLayout = new javax.swing.GroupLayout(emptyCardPanel);
+        emptyCardPanel.setLayout(emptyCardPanelLayout);
+        emptyCardPanelLayout.setHorizontalGroup(
+            emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 698, Short.MAX_VALUE)
+        );
+        emptyCardPanelLayout.setVerticalGroup(
+            emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 444, Short.MAX_VALUE)
+        );
+
+        cardPanel.add(emptyCardPanel, "empty");
+
+        infoCardPanel.setLayout(new java.awt.BorderLayout());
 
         nameLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "NAME"); // NOI18N
@@ -273,7 +274,7 @@ public class BrowserPanel extends javax.swing.JPanel {
                         .addComponent(sizeInstallLabel))
                     .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                         .addComponent(summaryLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 468, Short.MAX_VALUE)
                         .addComponent(sizeInstallHeaderLabel))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, infoHeaderPanelLayout.createSequentialGroup()
                         .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -338,7 +339,7 @@ public class BrowserPanel extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
-        infoPanel.add(infoHeaderPanel, java.awt.BorderLayout.NORTH);
+        infoCardPanel.add(infoHeaderPanel, java.awt.BorderLayout.NORTH);
 
         infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
         infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
@@ -370,9 +371,11 @@ public class BrowserPanel extends javax.swing.JPanel {
 
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jPanel1.TabConstraints.tabTitle"), jPanel1); // NOI18N
 
-        infoPanel.add(infoTabbedPane, java.awt.BorderLayout.CENTER);
+        infoCardPanel.add(infoTabbedPane, java.awt.BorderLayout.CENTER);
 
-        splitPane.setRightComponent(infoPanel);
+        cardPanel.add(infoCardPanel, "info");
+
+        splitPane.setRightComponent(cardPanel);
 
         add(splitPane);
     }// </editor-fold>//GEN-END:initComponents
@@ -406,11 +409,13 @@ public class BrowserPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel archLabel;
     private javax.swing.JLabel buildTimeLabel;
+    private javax.swing.JPanel cardPanel;
     private se.trixon.almond.util.swing.LogPanel descriptionLogPanel;
+    private javax.swing.JPanel emptyCardPanel;
     private javax.swing.JLabel footerLabel;
     private javax.swing.JLabel idLabel;
+    private javax.swing.JPanel infoCardPanel;
     private javax.swing.JPanel infoHeaderPanel;
-    private javax.swing.JPanel infoPanel;
     private javax.swing.JTabbedPane infoTabbedPane;
     private javax.swing.JLabel installedTimeLabel;
     private javax.swing.JPanel jPanel1;
