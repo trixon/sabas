@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.Dict;
+import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.core.PkgManager;
 import se.trixon.sabas.core.api.Bridge;
 import se.trixon.sabas.core.api.Command;
@@ -58,6 +59,8 @@ public final class ActionsTopComponent extends TopComponent {
         putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
         setHtmlDisplayName("<html><b>%s</b></html>".formatted(getName()));
+
+        initListeners();
     }
 
     private Bridge getBridge() {
@@ -72,14 +75,14 @@ public final class ActionsTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jButton1 = new javax.swing.JButton();
         bridgeSelectorPanel1 = new se.trixon.sabas.ui.parts.BridgeSelectorPanel();
+        reloadButton = new javax.swing.JButton();
         versionButton = new javax.swing.JButton();
 
-        org.openide.awt.Mnemonics.setLocalizedText(jButton1, org.openide.util.NbBundle.getMessage(ActionsTopComponent.class, "ActionsTopComponent.jButton1.text")); // NOI18N
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        org.openide.awt.Mnemonics.setLocalizedText(reloadButton, org.openide.util.NbBundle.getMessage(ActionsTopComponent.class, "ActionsTopComponent.reloadButton.text")); // NOI18N
+        reloadButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                reloadButtonActionPerformed(evt);
             }
         });
 
@@ -100,7 +103,7 @@ public final class ActionsTopComponent extends TopComponent {
                     .addComponent(bridgeSelectorPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton1)
+                            .addComponent(reloadButton)
                             .addComponent(versionButton))
                         .addGap(0, 385, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -110,12 +113,19 @@ public final class ActionsTopComponent extends TopComponent {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addComponent(bridgeSelectorPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(jButton1)
+                .addComponent(reloadButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(versionButton)
                 .addContainerGap(230, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void initListeners() {
+        mPkgManager.longTaskRunningProperty().addListener((p, o, n) -> {
+//            makeBusy(n);
+            SwingHelper.enableComponents(this, !n);
+        });
+    }
 
     private void versionButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_versionButtonActionPerformed
         getBridge().executeAsync(Command.GET_VERSION, (String result) -> {
@@ -123,13 +133,13 @@ public final class ActionsTopComponent extends TopComponent {
         });
     }//GEN-LAST:event_versionButtonActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void reloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reloadButtonActionPerformed
         mPkgManager.populatePackages();
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_reloadButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private se.trixon.sabas.ui.parts.BridgeSelectorPanel bridgeSelectorPanel1;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton reloadButton;
     private javax.swing.JButton versionButton;
     // End of variables declaration//GEN-END:variables
     @Override

@@ -181,6 +181,7 @@ public class Dnf0Bridge extends Bridge {
                 final int buildtimeIndex = querytags.indexOf("buildtime");
 
                 while (scanner.hasNext()) {
+//                    Thread.sleep(1);
                     var rawPackage = scanner.next();
                     if (rawPackage.trim().isEmpty()) {
                         continue;

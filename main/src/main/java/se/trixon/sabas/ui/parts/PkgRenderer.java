@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,11 @@
  */
 package se.trixon.sabas.ui.parts;
 
-import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+import se.trixon.almond.util.GraphicsHelper;
 import se.trixon.sabas.core.api.Pkg;
 
 /**
@@ -36,22 +37,24 @@ public class PkgRenderer extends javax.swing.JPanel implements ListCellRenderer<
 
     @Override
     public Component getListCellRendererComponent(JList<? extends Pkg> list, Pkg pkg, int index, boolean isSelected, boolean cellHasFocus) {
-        Color bg = isSelected ? list.getSelectionBackground() : list.getBackground();
-        Color fg = isSelected ? list.getSelectionForeground() : list.getForeground();
+        var bg = isSelected ? list.getSelectionBackground() : (index & 1) == 0 ? list.getBackground() : GraphicsHelper.getZebraStripe(list.getBackground());
+        var fg = isSelected ? list.getSelectionForeground() : list.getForeground();
         setBackground(bg);
-
-        jLabel1.setForeground(fg);
-        jLabel2.setForeground(isSelected ? fg : Color.GRAY);
-        jLabel3.setForeground(isSelected ? fg : Color.DARK_GRAY);
+        label1.setForeground(fg);
+        label2.setForeground(fg);
+        label3.setForeground(fg);
 
         if (pkg != null) {
-            jLabel1.setText(pkg.getName());
-            jLabel2.setText(pkg.getSummary());
-            jLabel3.setText(pkg.getVersion());
+            label1.setText(pkg.getName());
+            label2.setText(pkg.getVersion());
+            label3.setText(pkg.getSummary());
         }
 
         setEnabled(list.isEnabled());
+        label1.setFont(list.getFont().deriveFont(Font.BOLD));
+        label3.setFont(list.getFont().deriveFont(Font.ITALIC));
         setFont(list.getFont());
+
         return this;
     }
 
@@ -64,26 +67,26 @@ public class PkgRenderer extends javax.swing.JPanel implements ListCellRenderer<
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
+        label1 = new javax.swing.JLabel();
+        label2 = new javax.swing.JLabel();
+        label3 = new javax.swing.JLabel();
 
         setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 4, 4, 4));
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.PAGE_AXIS));
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.jLabel1.text")); // NOI18N
-        add(jLabel1);
+        org.openide.awt.Mnemonics.setLocalizedText(label1, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.label1.text")); // NOI18N
+        add(label1);
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.jLabel2.text")); // NOI18N
-        add(jLabel2);
+        org.openide.awt.Mnemonics.setLocalizedText(label2, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.label2.text")); // NOI18N
+        add(label2);
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel3, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.jLabel3.text")); // NOI18N
-        add(jLabel3);
+        org.openide.awt.Mnemonics.setLocalizedText(label3, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.label3.text")); // NOI18N
+        add(label3);
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel label1;
+    private javax.swing.JLabel label2;
+    private javax.swing.JLabel label3;
     // End of variables declaration//GEN-END:variables
 }

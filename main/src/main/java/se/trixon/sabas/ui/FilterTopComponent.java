@@ -18,7 +18,6 @@ package se.trixon.sabas.ui;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javafx.collections.ListChangeListener;
 import javax.swing.DefaultListModel;
@@ -33,11 +32,13 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.util.StringHelper;
 import se.trixon.almond.util.swing.DelayedResetRunner;
+import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.core.PkgManager;
 import se.trixon.sabas.core.api.DictionarySection;
 import se.trixon.sabas.core.api.Pkg;
 import se.trixon.sabas.core.api.PkgDictionary;
 import se.trixon.sabas.core.api.PkgStatus;
+import se.trixon.sabas.ui.parts.ZebraListCellRenderer;
 
 /**
  * Top component which displays something.
@@ -83,15 +84,15 @@ public final class FilterTopComponent extends TopComponent {
         putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
         setHtmlDisplayName("<html><b>%s</b></html>".formatted(getName()));
-//        makeBusy(true);
+
+        var zebraRenderer = new ZebraListCellRenderer();
+        archList.setCellRenderer(zebraRenderer);
+        statusList.setCellRenderer(zebraRenderer);
+        vendorList.setCellRenderer(zebraRenderer);
+        packagerList.setCellRenderer(zebraRenderer);
+        repositoryList.setCellRenderer(zebraRenderer);
+
         initListeners();
-        var map = Map.of(
-                "Group", 0,
-                "Arch", 1,
-                "Vendor", 2,
-                "Packager", 3,
-                "Repository", 4
-        );
 
         tabbedPane.putClientProperty("JTabbedPane.tabRotation", "auto");
     }
@@ -274,8 +275,8 @@ public final class FilterTopComponent extends TopComponent {
                     .addComponent(summaryCheckBox)
                     .addComponent(descriptionCheckBox)
                     .addComponent(resetButton))
-                .addGap(18, 18, 18)
-                .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 448, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -307,7 +308,7 @@ public final class FilterTopComponent extends TopComponent {
         statusList.setSelectedIndex(0);
     }
 
-    private void populateLists(JList list, DictionarySection dictionarySection) {
+    private void populateLists(JList<String> list, DictionarySection dictionarySection) {
         var model = new DefaultListModel<String>();
         model.addElement("*");
 
@@ -436,6 +437,12 @@ public final class FilterTopComponent extends TopComponent {
         packagerList.addListSelectionListener(event -> {
             listSelection(event, DictionarySection.PACKAGER, mSelectedPackagerIds, packagerList);
         });
+
+        mPkgManager.longTaskRunningProperty().addListener((p, o, n) -> {
+//            makeBusy(n);
+            SwingHelper.enableComponents(this, !n);
+        });
+
     }
 
 }

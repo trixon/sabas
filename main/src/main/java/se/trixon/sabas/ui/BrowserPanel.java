@@ -22,6 +22,8 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javax.swing.AbstractListModel;
 import javax.swing.SwingUtilities;
+import org.apache.commons.lang3.StringUtils;
+import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.core.Options;
 import se.trixon.sabas.core.PkgManager;
 import se.trixon.sabas.core.api.Pkg;
@@ -61,14 +63,19 @@ public class BrowserPanel extends javax.swing.JPanel {
         cardLayout.show(cardPanel, pkg == null ? "empty" : "info");
 
         if (pkg != null) {
+            int maxLicenseLength = 60;
             idLabel.setText(pkg.getId());
             nameLabel.setText(pkg.getName());
             summaryLabel.setText(pkg.getSummary());
             descriptionLogPanel.clear();
             descriptionLogPanel.println(pkg.getDescription());
+            if (pkg.getLicense().length() > maxLicenseLength) {
+                descriptionLogPanel.println("\n FULL LICENSE");
+                descriptionLogPanel.println("\n" + pkg.getLicense());
+            }
             descriptionLogPanel.scrollToTop();
             versionLabel.setText(pkg.getVersion());
-            licenseLabel.setText(pkg.getLicense());
+            licenseLabel.setText(StringUtils.abbreviate(pkg.getLicense(), maxLicenseLength));
             sizeDownloadLabel.setText(formatSize(pkg.getSizeDownload()));
             sizeInstallLabel.setText(formatSize(pkg.getSizeInstall()));
             vendorLabel.setText(pkg.getVendor());
@@ -88,18 +95,23 @@ public class BrowserPanel extends javax.swing.JPanel {
 
         mPkgManager.getFilteredItems().addListener((ListChangeListener.Change<? extends Pkg> c) -> {
             SwingUtilities.invokeLater(() -> {
-                updateFooter();
                 if (mPkgListModel != null) {
+                    packagesList.clearSelection();
                     mPkgListModel.updateData();
                     if (mPkgListModel.getSize() > 0) {
                         packagesList.setSelectedIndex(0);
                     }
                 }
+                updateFooter();
             });
         });
 
         mPkgManager.selectedPkgProperty().addListener((p, o, n) -> {
             displayPackageInfo(n);
+        });
+
+        mPkgManager.longTaskRunningProperty().addListener((p, o, n) -> {
+            SwingHelper.enableComponents(this, !n);
         });
     }
 

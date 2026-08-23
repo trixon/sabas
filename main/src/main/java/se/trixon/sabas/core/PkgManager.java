@@ -16,7 +16,9 @@
 package se.trixon.sabas.core;
 
 import java.util.List;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,6 +44,7 @@ public class PkgManager {
     private final ObjectProperty<Bridge> mBridgeProperty = new SimpleObjectProperty<>();
     private final ObservableList<Pkg> mFilteredItemsRaw = FXCollections.observableArrayList();
     private final ObservableList<Pkg> mFilteredItems = FXCollections.synchronizedObservableList(mFilteredItemsRaw);
+    private final BooleanProperty mLongTaskRunningProperty = new SimpleBooleanProperty();
     private final Options mOptions = Options.getInstance();
     private final ObjectProperty<Pkg> mSelectedPkgProperty = new SimpleObjectProperty<>();
 
@@ -73,7 +76,16 @@ public class PkgManager {
         return mSelectedPkgProperty.get();
     }
 
+    public boolean isLongTaskRunning() {
+        return mLongTaskRunningProperty.get();
+    }
+
+    public BooleanProperty longTaskRunningProperty() {
+        return mLongTaskRunningProperty;
+    }
+
     public void populatePackages() {
+        mLongTaskRunningProperty.set(true);
         PkgDictionary.getInstance().clear();
 
         Cancellable canceller = () -> {
@@ -95,6 +107,7 @@ public class PkgManager {
                 Exceptions.printStackTrace(exception);
             }
             System.out.println("Loadin in " + SystemHelper.age(start));
+            mLongTaskRunningProperty.set(false);
         });
     }
 

@@ -68,8 +68,8 @@
                   <Component id="descriptionCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="resetButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="tabbedPane" pref="436" max="32767" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="tabbedPane" pref="448" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
