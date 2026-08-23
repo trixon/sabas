@@ -115,6 +115,19 @@ public class Pkg {
         return mSizeInstall;
     }
 
+    public String getStatus() {
+        var status = "Available";
+        if (mUpgradable) {
+            status = "Upgradable to version %s".formatted(getVersionNew());
+        } else if (mOrphaned) {
+            status = "Orphaned";
+        } else if (mInstalled) {
+            status = "Installed";
+        }
+
+        return status;
+    }
+
     public String getSummary() {
         return mSummary;
     }
