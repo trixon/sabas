@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,6 +47,8 @@ public class DoOnShowing implements Runnable {
         });
 
         initCustomEditorMode();
+        Almond.openTopComponent("ActionsTopComponent");
+        Almond.openAndActivateTopComponent("FilterTopComponent");
 //        var output = WindowManager.getDefault().findTopComponent("output");
 //        output.setHtmlDisplayName("<html><b>%s</b></html>".formatted(output.getName()));
         Almond.hideTabs("output");
