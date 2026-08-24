@@ -43,6 +43,15 @@ public class Pkg {
     private int mVendorId;
     private String mVersion;
     private String mVersionNew;
+    private Details mDetails;
+
+    public Details getDetails() {
+        return mDetails;
+    }
+
+    public void setDetails(Details details) {
+        this.mDetails = details;
+    }
 
     public Pkg() {
     }
@@ -268,4 +277,34 @@ public class Pkg {
         mVersionNew = versionNew;
     }
 
+    public static class Details {
+
+        private String mFiles;
+        private String mProvides;
+        private String mRequires;
+
+        public String getFiles() {
+            return mFiles;
+        }
+
+        public String getProvides() {
+            return mProvides;
+        }
+
+        public String getRequires() {
+            return mRequires;
+        }
+
+        public void setFiles(String files) {
+            mFiles = files;
+        }
+
+        public void setProvides(String provides) {
+            mProvides = provides;
+        }
+
+        public void setRequires(String requires) {
+            mRequires = requires;
+        }
+    }
 }

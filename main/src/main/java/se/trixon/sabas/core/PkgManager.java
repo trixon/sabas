@@ -16,12 +16,14 @@
 package se.trixon.sabas.core;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.Strings;
 import org.netbeans.api.progress.ProgressHandle;
 import org.openide.util.Cancellable;
@@ -42,6 +44,7 @@ public class PkgManager {
     private final ObservableList<Pkg> mAllItemsRaw = FXCollections.observableArrayList();
     private final ObservableList<Pkg> mAllItems = FXCollections.synchronizedObservableList(mAllItemsRaw);
     private final ObjectProperty<Bridge> mBridgeProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<Pkg> mDetailedPkgProperty = new SimpleObjectProperty<>();
     private final ObservableList<Pkg> mFilteredItemsRaw = FXCollections.observableArrayList();
     private final ObservableList<Pkg> mFilteredItems = FXCollections.synchronizedObservableList(mFilteredItemsRaw);
     private final BooleanProperty mLongTaskRunningProperty = new SimpleBooleanProperty();
@@ -60,12 +63,20 @@ public class PkgManager {
         return mBridgeProperty;
     }
 
+    public ObjectProperty<Pkg> detailedPkgProperty() {
+        return mDetailedPkgProperty;
+    }
+
     public ObservableList<Pkg> getAllItems() {
         return mAllItems;
     }
 
     public Bridge getBridge() {
         return mBridgeProperty.get();
+    }
+
+    public Pkg getDetailedPkg() {
+        return mDetailedPkgProperty.get();
     }
 
     public ObservableList<Pkg> getFilteredItems() {
@@ -82,6 +93,43 @@ public class PkgManager {
 
     public BooleanProperty longTaskRunningProperty() {
         return mLongTaskRunningProperty;
+    }
+
+    public void populatePackage(Pkg pkg) {
+        if (pkg.getDetails() != null) {
+            mDetailedPkgProperty.set(pkg);
+            return;
+        }
+
+        Cancellable canceller = () -> {
+            getBridge().abortCurrentOperation();
+            return true;
+        };
+
+        var progressHandle = ProgressHandle.createHandle("Get package details", canceller);
+        progressHandle.start();
+
+        var start = System.currentTimeMillis();
+
+        CompletableFuture.supplyAsync(() -> {
+            return getBridge().doGetPackageDetails(pkg);
+        }).whenComplete((details, exception) -> {
+            progressHandle.finish();
+
+            if (exception != null) {
+                Exceptions.printStackTrace(exception);
+                return;
+            }
+
+            if (details != null) {
+                pkg.setDetails(details);
+            }
+
+            SwingUtilities.invokeLater(() -> {
+                mDetailedPkgProperty.set(pkg);
+                System.out.println("Package details loaded in " + SystemHelper.age(start));
+            });
+        });
     }
 
     public void populatePackages() {
@@ -106,7 +154,7 @@ public class PkgManager {
             if (exception != null) {
                 Exceptions.printStackTrace(exception);
             }
-            System.out.println("Loadin in " + SystemHelper.age(start));
+            System.out.println("Loaded in " + SystemHelper.age(start));
             mLongTaskRunningProperty.set(false);
         });
     }

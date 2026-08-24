@@ -48,7 +48,61 @@ public class Dnf0Bridge extends Bridge {
     private final ExecutorService mDnfExecutor = Executors.newFixedThreadPool(3);
 
     public Dnf0Bridge() {
-        super("dnf", "in development", "Fedora 44");
+        super("dnf5", "in development", "Fedora 44");
+    }
+
+    @Override
+    public Pkg.Details doGetPackageDetails(Pkg pkg) {
+//        System.out.println(pkg.getId());
+        final var querytags = List.of(
+                "files",
+                "requires",
+                "provides"
+        );
+
+        var command = new ArrayList<>(List.of("dnf", "repoquery", "--available", "--installed", pkg.getName(), "--queryformat"));
+        command.add(querytags.stream()
+                .map(s -> "%%{%s}".formatted(s))
+                .collect(Collectors.joining(mFieldSeparator)) + mRecordSeparator);
+        System.out.println(String.join(" ", command));
+
+        String files = "";
+        String requires = "";
+        String provides = "";
+
+        Process process = null;
+        try {
+            process = new ProcessBuilder(command).start();
+            mActiveProcesses.add(process);
+
+            try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
+                scanner.useDelimiter(mRecordSeparator);
+//                Thread.sleep(5_000);
+                if (scanner.hasNext()) {
+                    var rawRecord = scanner.next();
+                    var fields = StringUtils.splitPreserveAllTokens(rawRecord, mFieldSeparator);
+                    if (fields.length >= querytags.size()) {
+                        files = fields[0];
+                        requires = fields[1];
+                        provides = fields[2];
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            //
+        } finally {
+            if (process != null) {
+                mActiveProcesses.remove(process);
+            }
+        }
+
+        var details = new Pkg.Details();
+        details.setFiles(stripDuplicateRowss(files));
+        details.setProvides(stripDuplicateRowss(provides));
+        details.setRequires(stripDuplicateRowss(requires));
+
+        return details;
     }
 
     @Override
@@ -126,8 +180,6 @@ public class Dnf0Bridge extends Bridge {
     }
 
     private HashMap<String, Pkg> getPackages(List<String> args) {
-        var fieldSeparator = "\u001F";
-        var recordSeparator = "\u001E";
         final var querytags = List.of(
                 "full_nevra",
                 "name",
@@ -151,7 +203,7 @@ public class Dnf0Bridge extends Bridge {
         var command = new ArrayList<String>(args);
         command.add(querytags.stream()
                 .map(s -> "%%{%s}".formatted(s))
-                .collect(Collectors.joining(fieldSeparator)) + recordSeparator);
+                .collect(Collectors.joining(mFieldSeparator)) + mRecordSeparator);
         System.out.println(String.join(" ", command));
         var packages = new HashMap<String, Pkg>();
         PkgDictionary dict = PkgDictionary.getInstance();
@@ -160,7 +212,7 @@ public class Dnf0Bridge extends Bridge {
             process = new ProcessBuilder(command).start();
             mActiveProcesses.add(process);
             try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
-                scanner.useDelimiter(recordSeparator);
+                scanner.useDelimiter(mRecordSeparator);
                 final int full_nevraIndex = querytags.indexOf("full_nevra");
                 final int nameIndex = querytags.indexOf("name");
                 final int groupIndex = querytags.indexOf("group");
@@ -186,7 +238,7 @@ public class Dnf0Bridge extends Bridge {
                     if (rawPackage.trim().isEmpty()) {
                         continue;
                     }
-                    var fields = StringUtils.splitPreserveAllTokens(rawPackage, fieldSeparator);
+                    var fields = StringUtils.splitPreserveAllTokens(rawPackage, mFieldSeparator);
                     if (fields.length < querytags.size()) {
                         break;
                     }
@@ -227,28 +279,25 @@ public class Dnf0Bridge extends Bridge {
 /*
 
 --- Phase 2
-files
+depends
+recommends
+conflicts
+enhances
+obsoletes
+suggests
 
 --- Untested
-conflicts
 debug_name
-depends
-enhances
 evr
 
 
-obsoletes
 prereq_ignoreinst
-provides
 reason
-recommends
 regular_requires
-requires
 requires_pre
 source_debug_name
 source_name
 sourcerpm
-suggests
 
 supplements
 

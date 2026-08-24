@@ -16,11 +16,16 @@
 package se.trixon.sabas.core.api;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
+import se.trixon.sabas.core.api.Pkg.Details;
 
 /**
  *
@@ -29,6 +34,9 @@ import java.util.function.Consumer;
 public class Bridge {
 
     protected final Set<Process> mActiveProcesses = ConcurrentHashMap.newKeySet();
+    protected final String mFieldSeparator = "\u001F";
+    protected final String mRecordSeparator = "\u001E";
+
     private String mDescription;
     private String mName;
     private String mSupports;
@@ -44,6 +52,10 @@ public class Bridge {
                 .filter(p -> p != null && p.isAlive())
                 .forEach(p -> p.destroyForcibly());
         mActiveProcesses.clear();
+    }
+
+    public Details doGetPackageDetails(Pkg pkg) {
+        return null;
     }
 
     public List<Pkg> doGetPackagesAll() {
@@ -92,4 +104,11 @@ public class Bridge {
         mSupports = supports;
     }
 
+    protected String stripDuplicateRowss(String s) {
+        return Arrays.stream(StringUtils.split(s, "\n"))
+                .map(String::trim)
+                .collect(Collectors.toCollection(LinkedHashSet::new))
+                .stream()
+                .collect(Collectors.joining("\n"));
+    }
 }

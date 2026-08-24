@@ -23,6 +23,7 @@ import javafx.collections.ObservableList;
 import javax.swing.AbstractListModel;
 import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.StringUtils;
+import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.core.Options;
 import se.trixon.sabas.core.PkgManager;
@@ -38,8 +39,9 @@ public class BrowserPanel extends javax.swing.JPanel {
     private final Options mOptions = Options.getInstance();
     private final PkgManager mPkgManager = PkgManager.getInstance();
     private final PkgListModel mPkgListModel;
-    private DateTimeFormatter mFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    private final DateTimeFormatter mFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             .withZone(ZoneId.systemDefault());
+    private final DelayedResetRunner mDetailsDelayedResetRunner = new DelayedResetRunner(100, () -> mPkgManager.populatePackage(mPkgManager.getSelectedPkg()));
 
     /**
      * Creates new form BrowserPanel
@@ -93,6 +95,27 @@ public class BrowserPanel extends javax.swing.JPanel {
                 installedTimeLabel.setText(mFormatter.format(pkg.getTimeInstalledInstant()));
             }
             statusLabel.setText(pkg.getStatus());
+
+            if (pkg.getDetails() == null) {
+                filesLogPanel.getTextArea().setText("");
+                providesLogPanel.getTextArea().setText("");
+                requiresLogPanel.getTextArea().setText("");
+                mDetailsDelayedResetRunner.reset();
+            } else {
+                displayPackageInfoDetails(pkg);
+            }
+        }
+    }
+
+    private void displayPackageInfoDetails(Pkg pkg) {
+        var details = pkg.getDetails();
+        if (details != null) {
+            filesLogPanel.getTextArea().setText(details.getFiles());
+            providesLogPanel.getTextArea().setText(details.getProvides());
+            requiresLogPanel.getTextArea().setText(details.getRequires());
+            filesLogPanel.scrollToTop();
+            providesLogPanel.scrollToTop();
+            requiresLogPanel.scrollToTop();
         }
     }
 
@@ -114,6 +137,13 @@ public class BrowserPanel extends javax.swing.JPanel {
 
         mPkgManager.selectedPkgProperty().addListener((p, o, n) -> {
             displayPackageInfo(n);
+        });
+
+        mPkgManager.detailedPkgProperty().addListener((p, o, n) -> {
+            if (mPkgManager.getSelectedPkg() == mPkgManager.getDetailedPkg()) {
+                displayPackageInfoDetails(n);
+            }
+
         });
 
         mPkgManager.longTaskRunningProperty().addListener((p, o, n) -> {
@@ -184,8 +214,9 @@ public class BrowserPanel extends javax.swing.JPanel {
         statusLabel = new javax.swing.JLabel();
         infoTabbedPane = new javax.swing.JTabbedPane();
         descriptionLogPanel = new se.trixon.almond.util.swing.LogPanel();
-        jPanel2 = new javax.swing.JPanel();
-        jPanel1 = new javax.swing.JPanel();
+        filesLogPanel = new se.trixon.almond.util.swing.LogPanel();
+        requiresLogPanel = new se.trixon.almond.util.swing.LogPanel();
+        providesLogPanel = new se.trixon.almond.util.swing.LogPanel();
 
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
 
@@ -396,32 +427,9 @@ public class BrowserPanel extends javax.swing.JPanel {
         infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
         infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.descriptionLogPanel.TabConstraints.tabTitle"), descriptionLogPanel); // NOI18N
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 698, Short.MAX_VALUE)
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 179, Short.MAX_VALUE)
-        );
-
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jPanel2.TabConstraints.tabTitle"), jPanel2); // NOI18N
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 698, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 179, Short.MAX_VALUE)
-        );
-
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.jPanel1.TabConstraints.tabTitle"), jPanel1); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.filesLogPanel.TabConstraints.tabTitle"), filesLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.requiresLogPanel.TabConstraints.tabTitle"), requiresLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.providesLogPanel.TabConstraints.tabTitle"), providesLogPanel); // NOI18N
 
         infoCardPanel.add(infoTabbedPane, java.awt.BorderLayout.CENTER);
 
@@ -466,6 +474,7 @@ public class BrowserPanel extends javax.swing.JPanel {
     private se.trixon.almond.util.swing.LogPanel descriptionLogPanel;
     private javax.swing.JPanel emptyCardPanel;
     private javax.swing.JLabel epochLabel;
+    private se.trixon.almond.util.swing.LogPanel filesLogPanel;
     private javax.swing.JLabel footerLabel;
     private javax.swing.JLabel idLabel;
     private javax.swing.JPanel infoCardPanel;
@@ -473,17 +482,17 @@ public class BrowserPanel extends javax.swing.JPanel {
     private javax.swing.JTabbedPane infoTabbedPane;
     private javax.swing.JLabel installSeparatorLabel;
     private javax.swing.JLabel installedTimeLabel;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel licenseLabel;
     private javax.swing.JPanel listPanel;
     private javax.swing.JLabel nameLabel;
     private javax.swing.JLabel packagerLabel;
     private javax.swing.JList<Pkg> packagesList;
     private javax.swing.JScrollPane packagesScrollPane;
+    private se.trixon.almond.util.swing.LogPanel providesLogPanel;
     private javax.swing.JLabel releaseLabel;
     private javax.swing.JLabel releaseSeparatorLabel;
     private javax.swing.JLabel repositoryLabel;
+    private se.trixon.almond.util.swing.LogPanel requiresLogPanel;
     private javax.swing.JLabel sizeDownloadLabel;
     private javax.swing.JLabel sizeInstallLabel;
     private javax.swing.JSplitPane splitPane;
