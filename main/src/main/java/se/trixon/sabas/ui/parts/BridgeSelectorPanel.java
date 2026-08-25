@@ -19,7 +19,7 @@ import java.beans.Beans;
 import javax.swing.DefaultComboBoxModel;
 import org.openide.util.Lookup;
 import se.trixon.sabas.core.PkgManager;
-import se.trixon.sabas.core.api.Bridge;
+import se.trixon.sabas.api.Bridge;
 
 /**
  *

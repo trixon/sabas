@@ -34,10 +34,10 @@ import se.trixon.almond.util.StringHelper;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.core.PkgManager;
-import se.trixon.sabas.core.api.DictionarySection;
-import se.trixon.sabas.core.api.Pkg;
-import se.trixon.sabas.core.api.PkgDictionary;
-import se.trixon.sabas.core.api.PkgStatus;
+import se.trixon.sabas.api.DictionarySection;
+import se.trixon.sabas.api.Pkg;
+import se.trixon.sabas.api.PkgDictionary;
+import se.trixon.sabas.api.PkgStatus;
 import se.trixon.sabas.ui.parts.ZebraListCellRenderer;
 
 /**

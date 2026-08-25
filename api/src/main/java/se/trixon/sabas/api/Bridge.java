@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.trixon.sabas.core.api;
+package se.trixon.sabas.api;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
-import se.trixon.sabas.core.api.Pkg.Details;
+import se.trixon.sabas.api.Pkg.Details;
 
 /**
  *

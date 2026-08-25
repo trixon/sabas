@@ -29,11 +29,12 @@ import org.netbeans.api.progress.ProgressHandle;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.SystemHelper;
-import se.trixon.sabas.core.api.Bridge;
-import se.trixon.sabas.core.api.Command;
-import se.trixon.sabas.core.api.Pkg;
-import se.trixon.sabas.core.api.PkgDictionary;
+import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.Command;
+import se.trixon.sabas.api.Pkg;
+import se.trixon.sabas.api.PkgDictionary;
 
 /**
  *
@@ -133,6 +134,10 @@ public class PkgManager {
     }
 
     public void populatePackages() {
+        if (getBridge() == null) {
+            NbMessage.error("No bride selected", "Select a bridge in order to communicate with the backend.");
+            return;
+        }
         mLongTaskRunningProperty.set(true);
         PkgDictionary.getInstance().clear();
 

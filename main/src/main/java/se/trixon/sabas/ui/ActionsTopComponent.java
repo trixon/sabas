@@ -21,9 +21,9 @@ import org.openide.windows.TopComponent;
 import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.swing.SwingHelper;
+import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.Command;
 import se.trixon.sabas.core.PkgManager;
-import se.trixon.sabas.core.api.Bridge;
-import se.trixon.sabas.core.api.Command;
 
 /**
  * Top component which displays something.

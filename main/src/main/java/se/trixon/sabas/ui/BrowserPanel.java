@@ -25,9 +25,9 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.StringUtils;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
+import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.core.Options;
 import se.trixon.sabas.core.PkgManager;
-import se.trixon.sabas.core.api.Pkg;
 import se.trixon.sabas.ui.parts.PkgRenderer;
 
 /**
@@ -52,8 +52,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         mPkgListModel = new PkgListModel(mPkgManager.getFilteredItems());
         packagesList.setModel(mPkgListModel);
         packagesList.setCellRenderer(new PkgRenderer());
-
-        mPkgManager.populatePackages();
+        SwingUtilities.invokeLater(() -> mPkgManager.populatePackages());
     }
 
     public void postCreate() {

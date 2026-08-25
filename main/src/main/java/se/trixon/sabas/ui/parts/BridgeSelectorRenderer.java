@@ -19,7 +19,7 @@ import java.awt.Color;
 import java.awt.Component;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
-import se.trixon.sabas.core.api.Bridge;
+import se.trixon.sabas.api.Bridge;
 
 /**
  *

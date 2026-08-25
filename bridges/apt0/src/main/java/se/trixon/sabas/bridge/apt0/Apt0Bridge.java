@@ -16,7 +16,7 @@
 package se.trixon.sabas.bridge.apt0;
 
 import org.openide.util.lookup.ServiceProvider;
-import se.trixon.sabas.core.api.Bridge;
+import se.trixon.sabas.api.Bridge;
 
 /**
  *

@@ -33,10 +33,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
-import se.trixon.sabas.core.api.Bridge;
-import se.trixon.sabas.core.api.DictionarySection;
-import se.trixon.sabas.core.api.Pkg;
-import se.trixon.sabas.core.api.PkgDictionary;
+import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.DictionarySection;
+import se.trixon.sabas.api.Pkg;
+import se.trixon.sabas.api.PkgDictionary;
 
 /**
  *

@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,27 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.trixon.sabas.core.api;
+package se.trixon.sabas.api;
 
-/**
- *
- * @author Patrik Karlström <patrik@trixon.se>
- */
-public enum PkgStatus {
-    ALL("*"),
-    AVAILABLE("Available"),
-    INSTALLED("Installed"),
-    UPGRADABLE("Upgradable"),
-    ORPHANED("Orphaned");
-    private final String mTitle;
-
-    private PkgStatus(String title) {
-        mTitle = title;
-    }
-
-    @Override
-    public String toString() {
-        return mTitle;
-    }
-
+public enum DictionarySection {
+    ARCH,
+    GROUP,
+    LICENSE,
+    PACKAGER,
+    REPOSITORY,
+    VENDOR
 }

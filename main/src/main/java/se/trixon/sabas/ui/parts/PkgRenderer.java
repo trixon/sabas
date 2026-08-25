@@ -20,7 +20,7 @@ import java.awt.Font;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import se.trixon.almond.util.GraphicsHelper;
-import se.trixon.sabas.core.api.Pkg;
+import se.trixon.sabas.api.Pkg;
 
 /**
  *
