@@ -1,2 +1,2 @@
-# sabas
-SABAS — Sabas Administers Broad Application Sets
+# SABAS
+SABAS — Artifact Browsing, At Spead
