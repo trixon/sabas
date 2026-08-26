@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -50,17 +51,17 @@ public class Dnf0Bridge extends Bridge {
     }
 
     @Override
-    public String onCacheClear() {
-        return execute(List.of("dnf", "clean", "expire-cache"));
+    public String onCacheClear(Set<Process> processes) {
+        return execute(List.of("dnf", "clean", "expire-cache"), processes);
     }
 
     @Override
-    public String onCacheUpdate() {
-        return execute(List.of("dnf", "makecache"));
+    public String onCacheUpdate(Set<Process> processes) {
+        return execute(List.of("dnf", "makecache"), processes);
     }
 
     @Override
-    public Pkg.Details onGetPackageDetails(Pkg pkg) {
+    public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
 //        System.out.println(pkg.getId());
         final var querytags = List.of(
                 "files",
@@ -81,11 +82,11 @@ public class Dnf0Bridge extends Bridge {
         Process process = null;
         try {
             process = new ProcessBuilder(command).start();
-            mActiveProcesses.add(process);
+            processes.add(process);
 
             try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
                 scanner.useDelimiter(mRecordSeparator);
-//                Thread.sleep(5_000);
+                Thread.sleep(25_000);
                 if (scanner.hasNext()) {
                     var rawRecord = scanner.next();
                     var fields = StringUtils.splitPreserveAllTokens(rawRecord, mFieldSeparator);
@@ -101,7 +102,7 @@ public class Dnf0Bridge extends Bridge {
             //
         } finally {
             if (process != null) {
-                mActiveProcesses.remove(process);
+                processes.remove(process);
             }
         }
 
@@ -114,15 +115,15 @@ public class Dnf0Bridge extends Bridge {
     }
 
     @Override
-    public List<Pkg> onGetPackagesAll() {
+    public List<Pkg> onGetPackagesAll(Set<Process> processes) {
         CompletableFuture<HashMap<String, Pkg>> installedFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(List.of("dnf", "repoquery", "--cacheonly", "--installed", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--cacheonly", "--installed", "--queryformat")), mDnfExecutor);
 
         CompletableFuture<HashMap<String, Pkg>> availableFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(List.of("dnf", "repoquery", "--cacheonly", "--available", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--cacheonly", "--available", "--queryformat")), mDnfExecutor);
 
         CompletableFuture<HashMap<String, Pkg>> upgradableFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(List.of("dnf", "repoquery", "--cacheonly", "--upgrades", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--cacheonly", "--upgrades", "--queryformat")), mDnfExecutor);
 
         try {
             CompletableFuture.allOf(installedFuture, availableFuture, upgradableFuture).join();
@@ -172,11 +173,11 @@ public class Dnf0Bridge extends Bridge {
     }
 
     @Override
-    public String onGetVersion() {
-        return StringUtils.substringBefore(execute(List.of("dnf", "--version")), "\n\n");
+    public String onGetVersion(Set<Process> processes) {
+        return StringUtils.substringBefore(execute(List.of("dnf", "--version"), processes), "\n\n");
     }
 
-    private HashMap<String, Pkg> getPackages(List<String> args) {
+    private HashMap<String, Pkg> getPackages(Set<Process> processes, List<String> args) {
         final var querytags = List.of(
                 "full_nevra",
                 "name",
@@ -207,7 +208,7 @@ public class Dnf0Bridge extends Bridge {
         Process process = null;
         try {
             process = new ProcessBuilder(command).start();
-            mActiveProcesses.add(process);
+            processes.add(process);
             try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
                 scanner.useDelimiter(mRecordSeparator);
                 final int full_nevraIndex = querytags.indexOf("full_nevra");
@@ -267,7 +268,7 @@ public class Dnf0Bridge extends Bridge {
         } catch (IOException | InterruptedException e) {
             Exceptions.printStackTrace(e);
         } finally {
-            mActiveProcesses.remove(process);
+            processes.remove(process);
         }
 
         return packages;

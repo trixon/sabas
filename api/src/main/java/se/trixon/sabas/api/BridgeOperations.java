@@ -17,6 +17,7 @@ package se.trixon.sabas.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -24,23 +25,23 @@ import java.util.List;
  */
 public interface BridgeOperations {
 
-    default public String onCacheClear() {
+    default public String onCacheClear(Set<Process> processes) {
         return "NO-OP";
     }
 
-    default public String onCacheUpdate() {
+    default public String onCacheUpdate(Set<Process> processes) {
         return "NO-OP";
     }
 
-    default public Pkg.Details onGetPackageDetails(Pkg pkg) {
+    default public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
         return null;
     }
 
-    default public List<Pkg> onGetPackagesAll() {
+    default public List<Pkg> onGetPackagesAll(Set<Process> processes) {
         return new ArrayList<>();
     }
 
-    default public String onGetVersion() {
+    default public String onGetVersion(Set<Process> processes) {
         return "NO-OP";
     }
 

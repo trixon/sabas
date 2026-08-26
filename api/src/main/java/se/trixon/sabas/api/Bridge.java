@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +31,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class Bridge implements BridgeOperations {
 
-    protected final Set<Process> mActiveProcesses = ConcurrentHashMap.newKeySet();
     protected final String mFieldSeparator = "\u001F";
     protected final String mRecordSeparator = "\u001E";
 
@@ -46,28 +44,25 @@ public class Bridge implements BridgeOperations {
         mSupports = supports;
     }
 
-    public void abortCurrentOperation() {
-        mActiveProcesses.stream()
-                .filter(p -> p != null && p.isAlive())
-                .forEach(p -> p.destroyForcibly());
-        mActiveProcesses.clear();
-    }
-
-    public String execute(List command) {
+    public String execute(List command, Set<Process> processes) {
         System.out.println(String.join(" ", command));
         String output = null;
         Process process = null;
         try {
             process = new ProcessBuilder(command).start();
-            mActiveProcesses.add(process);
+            processes.add(process);
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
             output = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
             process.waitFor();
         } catch (IOException | InterruptedException e) {
-            //
+            output = null;
         } finally {
             if (process != null) {
-                mActiveProcesses.remove(process);
+                processes.remove(process);
             }
+            Thread.interrupted();
         }
 
         return output;

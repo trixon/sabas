@@ -16,7 +16,10 @@
 package se.trixon.sabas.core;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -71,29 +74,29 @@ public class PkgManager {
 
         mLongTaskRunningProperty.set(true);
 
-        Cancellable canceller = () -> {
-            getBridge().abortCurrentOperation();
-            return true;
-        };
-        var progressHandle = ProgressHandle.createHandle("Clearing cache", canceller);
+        var threadRef = new AtomicReference<Thread>();
+        var processes = ConcurrentHashMap.<Process>newKeySet();
+        var progressHandle = ProgressHandle.createHandle("Clearing cache", createCanceller(processes, threadRef));
         progressHandle.start();
 
         var start = System.currentTimeMillis();
 
-        CompletableFuture.supplyAsync(() -> getBridge().onCacheClear())
-                .whenComplete((String s, Throwable ex) -> {
-                    progressHandle.finish();
-                    SwingUtilities.invokeLater(() -> {
-                        if (ex != null) {
-                            Exceptions.printStackTrace(ex);
-                            mLongTaskRunningProperty.set(false);
-                            return;
-                        }
-                        System.out.println(s);
-                        System.out.println("Cleared in " + SystemHelper.age(start));
-                        mLongTaskRunningProperty.set(false);
-                    });
-                });
+        CompletableFuture.supplyAsync(() -> {
+            threadRef.set(Thread.currentThread());
+            return getBridge().onCacheClear(processes);
+        }).whenComplete((string, ex) -> {
+            progressHandle.finish();
+            SwingUtilities.invokeLater(() -> {
+                if (ex != null) {
+                    Exceptions.printStackTrace(ex);
+                    mLongTaskRunningProperty.set(false);
+                    return;
+                }
+                System.out.println(string);
+                System.out.println("Cleared in " + SystemHelper.age(start));
+                mLongTaskRunningProperty.set(false);
+            });
+        });
     }
 
     public void cacheUpdate() {
@@ -102,30 +105,28 @@ public class PkgManager {
         }
 
         mLongTaskRunningProperty.set(true);
-
-        Cancellable canceller = () -> {
-            getBridge().abortCurrentOperation();
-            return true;
-        };
-        var progressHandle = ProgressHandle.createHandle("Updating cache", canceller);
+        var threadRef = new AtomicReference<Thread>();
+        var processes = ConcurrentHashMap.<Process>newKeySet();
+        var progressHandle = ProgressHandle.createHandle("Updating cache", createCanceller(processes, threadRef));
         progressHandle.start();
 
         var start = System.currentTimeMillis();
 
-        CompletableFuture.supplyAsync(() -> getBridge().onCacheUpdate())
-                .whenComplete((String s, Throwable ex) -> {
-                    progressHandle.finish();
-                    SwingUtilities.invokeLater(() -> {
-                        if (ex != null) {
-                            Exceptions.printStackTrace(ex);
-                            mLongTaskRunningProperty.set(false);
-                            return;
-                        }
-                        System.out.println(s);
-                        System.out.println("Updated in " + SystemHelper.age(start));
-//                        mLongTaskRunningProperty.set(false);
-                    });
-                }).thenRunAsync(() -> populatePackages());
+        CompletableFuture.supplyAsync(() -> {
+            threadRef.set(Thread.currentThread());
+            return getBridge().onCacheUpdate(processes);
+        }).whenComplete((string, ex) -> {
+            progressHandle.finish();
+            SwingUtilities.invokeLater(() -> {
+                if (ex != null) {
+                    Exceptions.printStackTrace(ex);
+                    mLongTaskRunningProperty.set(false);
+                    return;
+                }
+                System.out.println(string);
+                System.out.println("Updated in " + SystemHelper.age(start));
+            });
+        }).thenRunAsync(() -> populatePackages());
     }
 
     public ObjectProperty<Pkg> detailedPkgProperty() {
@@ -137,7 +138,9 @@ public class PkgManager {
             return;
         }
 
-        CompletableFuture.supplyAsync(() -> getBridge().onGetVersion())
+        var processes = ConcurrentHashMap.<Process>newKeySet();
+
+        CompletableFuture.supplyAsync(() -> getBridge().onGetVersion(processes))
                 .whenComplete((String version, Throwable ex) -> {
                     SwingUtilities.invokeLater(() -> {
                         if (ex != null) {
@@ -182,18 +185,16 @@ public class PkgManager {
             return;
         }
 
-        Cancellable canceller = () -> {
-            getBridge().abortCurrentOperation();
-            return true;
-        };
-
-        var progressHandle = ProgressHandle.createHandle("Get package details", canceller);
+        var threadRef = new AtomicReference<Thread>();
+        var processes = ConcurrentHashMap.<Process>newKeySet();
+        var progressHandle = ProgressHandle.createHandle("Get package details", createCanceller(processes, threadRef));
         progressHandle.start();
 
         var start = System.currentTimeMillis();
 
         CompletableFuture.supplyAsync(() -> {
-            return getBridge().onGetPackageDetails(pkg);
+            threadRef.set(Thread.currentThread());
+            return getBridge().onGetPackageDetails(processes, pkg);
         }).whenComplete((details, exception) -> {
             progressHandle.finish();
 
@@ -221,29 +222,31 @@ public class PkgManager {
         mLongTaskRunningProperty.set(true);
         PkgDictionary.getInstance().clear();
 
-        Cancellable canceller = () -> {
-            getBridge().abortCurrentOperation();
-            return true;
-        };
-        var progressHandle = ProgressHandle.createHandle("Loading packages", canceller);
+        var threadRef = new AtomicReference<Thread>();
+        var processes = ConcurrentHashMap.<Process>newKeySet();
+        var progressHandle = ProgressHandle.createHandle("Loading packages", createCanceller(processes, threadRef));
         progressHandle.start();
 
         var start = System.currentTimeMillis();
 
-        CompletableFuture.supplyAsync(() -> getBridge().onGetPackagesAll())
-                .whenComplete((List<Pkg> packages, Throwable ex) -> {
-                    progressHandle.finish();
-                    SwingUtilities.invokeLater(() -> {
-                        if (ex != null) {
-                            Exceptions.printStackTrace(ex);
-                        }
-                        mAllItems.setAll(packages);
-                        mFilteredItems.setAll(packages);
-                        PkgDictionary.getInstance().debugPrint();
-                        System.out.println("Loaded in " + SystemHelper.age(start));
-                        mLongTaskRunningProperty.set(false);
-                    });
-                });
+        CompletableFuture.supplyAsync(() -> {
+            threadRef.set(Thread.currentThread());
+            return getBridge().onGetPackagesAll(processes);
+        }).whenComplete((List<Pkg> packages, Throwable ex) -> {
+            progressHandle.finish();
+            SwingUtilities.invokeLater(() -> {
+                if (ex != null) {
+                    Exceptions.printStackTrace(ex);
+                    mLongTaskRunningProperty.set(false);
+                    return;
+                }
+                mAllItems.setAll(packages);
+                mFilteredItems.setAll(packages);
+                PkgDictionary.getInstance().debugPrint();
+                System.out.println("Loaded in " + SystemHelper.age(start));
+                mLongTaskRunningProperty.set(false);
+            });
+        });
     }
 
     public ObjectProperty<Pkg> selectedPkgProperty() {
@@ -259,6 +262,23 @@ public class PkgManager {
 
     public void setSelectedPkg(Pkg pkg) {
         mSelectedPkgProperty.set(pkg);
+    }
+
+    private Cancellable createCanceller(Set<Process> processes, AtomicReference<Thread> threadRef) {
+        return () -> {
+            for (var p : processes) {
+                if (p != null && p.isAlive()) {
+                    p.destroyForcibly();
+                }
+            }
+            processes.clear();
+
+            Thread t = threadRef.get();
+            if (t != null) {
+                t.interrupt();
+            }
+            return true;
+        };
     }
 
     private void init() {
