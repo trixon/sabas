@@ -30,9 +30,9 @@ import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import se.trixon.almond.nbp.dialogs.NbMessage;
+import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.api.Bridge;
-import se.trixon.sabas.api.Command;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
 
@@ -64,8 +64,88 @@ public class PkgManager {
         return mBridgeProperty;
     }
 
+    public void cacheClear() {
+        if (isBridgeInvalid()) {
+            return;
+        }
+
+        mLongTaskRunningProperty.set(true);
+
+        Cancellable canceller = () -> {
+            getBridge().abortCurrentOperation();
+            return true;
+        };
+        var progressHandle = ProgressHandle.createHandle("Clearing cache", canceller);
+        progressHandle.start();
+
+        var start = System.currentTimeMillis();
+
+        CompletableFuture.supplyAsync(() -> getBridge().onCacheClear())
+                .whenComplete((String s, Throwable ex) -> {
+                    progressHandle.finish();
+                    SwingUtilities.invokeLater(() -> {
+                        if (ex != null) {
+                            Exceptions.printStackTrace(ex);
+                            mLongTaskRunningProperty.set(false);
+                            return;
+                        }
+                        System.out.println(s);
+                        System.out.println("Cleared in " + SystemHelper.age(start));
+                        mLongTaskRunningProperty.set(false);
+                    });
+                });
+    }
+
+    public void cacheUpdate() {
+        if (isBridgeInvalid()) {
+            return;
+        }
+
+        mLongTaskRunningProperty.set(true);
+
+        Cancellable canceller = () -> {
+            getBridge().abortCurrentOperation();
+            return true;
+        };
+        var progressHandle = ProgressHandle.createHandle("Updating cache", canceller);
+        progressHandle.start();
+
+        var start = System.currentTimeMillis();
+
+        CompletableFuture.supplyAsync(() -> getBridge().onCacheUpdate())
+                .whenComplete((String s, Throwable ex) -> {
+                    progressHandle.finish();
+                    SwingUtilities.invokeLater(() -> {
+                        if (ex != null) {
+                            Exceptions.printStackTrace(ex);
+                            mLongTaskRunningProperty.set(false);
+                            return;
+                        }
+                        System.out.println(s);
+                        System.out.println("Updated in " + SystemHelper.age(start));
+//                        mLongTaskRunningProperty.set(false);
+                    });
+                }).thenRunAsync(() -> populatePackages());
+    }
+
     public ObjectProperty<Pkg> detailedPkgProperty() {
         return mDetailedPkgProperty;
+    }
+
+    public void displayVersion() {
+        if (isBridgeInvalid()) {
+            return;
+        }
+
+        CompletableFuture.supplyAsync(() -> getBridge().onGetVersion())
+                .whenComplete((String version, Throwable ex) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        if (ex != null) {
+                            Exceptions.printStackTrace(ex);
+                        }
+                        NbMessage.information(Dict.VERSION.toString(), version);
+                    });
+                });
     }
 
     public ObservableList<Pkg> getAllItems() {
@@ -113,7 +193,7 @@ public class PkgManager {
         var start = System.currentTimeMillis();
 
         CompletableFuture.supplyAsync(() -> {
-            return getBridge().doGetPackageDetails(pkg);
+            return getBridge().onGetPackageDetails(pkg);
         }).whenComplete((details, exception) -> {
             progressHandle.finish();
 
@@ -134,10 +214,10 @@ public class PkgManager {
     }
 
     public void populatePackages() {
-        if (getBridge() == null) {
-            NbMessage.error("No bride selected", "Select a bridge in order to communicate with the backend.");
+        if (isBridgeInvalid()) {
             return;
         }
+
         mLongTaskRunningProperty.set(true);
         PkgDictionary.getInstance().clear();
 
@@ -150,18 +230,20 @@ public class PkgManager {
 
         var start = System.currentTimeMillis();
 
-        getBridge().executeAsync(Command.GET_PACKAGES_ALL, (List<Pkg> packages) -> {
-            mAllItems.setAll(packages);
-            mFilteredItems.setAll(packages);
-        }).whenComplete((Void result, Throwable exception) -> {
-            progressHandle.finish();
-            PkgDictionary.getInstance().debugPrint();
-            if (exception != null) {
-                Exceptions.printStackTrace(exception);
-            }
-            System.out.println("Loaded in " + SystemHelper.age(start));
-            mLongTaskRunningProperty.set(false);
-        });
+        CompletableFuture.supplyAsync(() -> getBridge().onGetPackagesAll())
+                .whenComplete((List<Pkg> packages, Throwable ex) -> {
+                    progressHandle.finish();
+                    SwingUtilities.invokeLater(() -> {
+                        if (ex != null) {
+                            Exceptions.printStackTrace(ex);
+                        }
+                        mAllItems.setAll(packages);
+                        mFilteredItems.setAll(packages);
+                        PkgDictionary.getInstance().debugPrint();
+                        System.out.println("Loaded in " + SystemHelper.age(start));
+                        mLongTaskRunningProperty.set(false);
+                    });
+                });
     }
 
     public ObjectProperty<Pkg> selectedPkgProperty() {
@@ -187,6 +269,15 @@ public class PkgManager {
                 break;
             }
         }
+    }
+
+    private boolean isBridgeInvalid() {
+        if (getBridge() == null) {
+            NbMessage.error("No bride selected", "Select a bridge in order to communicate with the backend.");
+            return true;
+        }
+
+        return false;
     }
 
     private static class Holder {

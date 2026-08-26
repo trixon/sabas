@@ -15,23 +15,22 @@
  */
 package se.trixon.sabas.api;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import se.trixon.sabas.api.Pkg.Details;
 
 /**
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
-public class Bridge {
+public class Bridge implements BridgeOperations {
 
     protected final Set<Process> mActiveProcesses = ConcurrentHashMap.newKeySet();
     protected final String mFieldSeparator = "\u001F";
@@ -54,30 +53,24 @@ public class Bridge {
         mActiveProcesses.clear();
     }
 
-    public Details doGetPackageDetails(Pkg pkg) {
-        return null;
-    }
+    public String execute(List command) {
+        System.out.println(String.join(" ", command));
+        String output = null;
+        Process process = null;
+        try {
+            process = new ProcessBuilder(command).start();
+            mActiveProcesses.add(process);
+            output = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            //
+        } finally {
+            if (process != null) {
+                mActiveProcesses.remove(process);
+            }
+        }
 
-    public List<Pkg> doGetPackagesAll() {
-        return new ArrayList<>();
-    }
-
-    public String doGetVersion() {
-        return "NO-OP";
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> CompletableFuture<Void> executeAsync(Command command, Consumer<T> action) {
-        return CompletableFuture.supplyAsync(() -> {
-            return (T) switch (command) {
-                case GET_VERSION ->
-                    doGetVersion();
-                case GET_PACKAGES_ALL ->
-                    doGetPackagesAll();
-                default ->
-                    throw new AssertionError("Unknown command: " + command);
-            };
-        }).thenAccept(action);
+        return output;
     }
 
     public String getDescription() {

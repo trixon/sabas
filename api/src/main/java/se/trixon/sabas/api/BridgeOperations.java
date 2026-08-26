@@ -15,11 +15,33 @@
  */
 package se.trixon.sabas.api;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
-public enum Command {
-    GET_VERSION,
-    GET_PACKAGES_ALL;
+public interface BridgeOperations {
+
+    default public String onCacheClear() {
+        return "NO-OP";
+    }
+
+    default public String onCacheUpdate() {
+        return "NO-OP";
+    }
+
+    default public Pkg.Details onGetPackageDetails(Pkg pkg) {
+        return null;
+    }
+
+    default public List<Pkg> onGetPackagesAll() {
+        return new ArrayList<>();
+    }
+
+    default public String onGetVersion() {
+        return "NO-OP";
+    }
+
 }

@@ -20,6 +20,7 @@ import java.awt.Container;
 import java.net.MalformedURLException;
 import java.net.URI;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import org.openide.awt.HtmlBrowser;
 import org.openide.util.Exceptions;
 import org.openide.windows.OnShowing;
@@ -27,6 +28,7 @@ import org.openide.windows.WindowManager;
 import se.trixon.almond.nbp.Almond;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.Sabas;
+import se.trixon.sabas.core.PkgManager;
 import se.trixon.sabas.ui.BrowserPanel;
 
 /**
@@ -35,6 +37,8 @@ import se.trixon.sabas.ui.BrowserPanel;
  */
 @OnShowing
 public class DoOnShowing implements Runnable {
+
+    private final PkgManager mPkgManager = PkgManager.getInstance();
 
     @Override
     public void run() {
@@ -55,6 +59,23 @@ public class DoOnShowing implements Runnable {
 //        Almond.hideTabs("FilterTopComponent");
 //        Almond.hideTabs("ActionsTopComponent");
         Sabas.displaySystemInformation();
+        SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
+    }
+
+    private Component findEditorAreaComponent(Container container) {
+        for (var component : container.getComponents()) {
+            if (component.getClass().getName().endsWith("EditorView$EditorAreaComponent")) {
+                return component;
+            }
+
+            if (component instanceof Container) {
+                var found = findEditorAreaComponent((Container) component);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private void initCustomEditorMode() {
@@ -75,22 +96,6 @@ public class DoOnShowing implements Runnable {
         } catch (Exception e) {
             Exceptions.printStackTrace(e);
         }
-    }
-
-    private Component findEditorAreaComponent(Container container) {
-        for (var component : container.getComponents()) {
-            if (component.getClass().getName().endsWith("EditorView$EditorAreaComponent")) {
-                return component;
-            }
-
-            if (component instanceof Container) {
-                var found = findEditorAreaComponent((Container) component);
-                if (found != null) {
-                    return found;
-                }
-            }
-        }
-        return null;
     }
 
 }

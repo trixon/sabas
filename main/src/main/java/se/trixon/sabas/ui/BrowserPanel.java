@@ -41,18 +41,24 @@ public class BrowserPanel extends javax.swing.JPanel {
     private final PkgListModel mPkgListModel;
     private final DateTimeFormatter mFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             .withZone(ZoneId.systemDefault());
-    private final DelayedResetRunner mDetailsDelayedResetRunner = new DelayedResetRunner(100, () -> mPkgManager.populatePackage(mPkgManager.getSelectedPkg()));
+    private final DelayedResetRunner mDetailsDelayedResetRunner;
+    private final DelayedResetRunner mSelectDelayedResetRunner;
 
     /**
      * Creates new form BrowserPanel
      */
     public BrowserPanel() {
+        mDetailsDelayedResetRunner = new DelayedResetRunner(100, () -> mPkgManager.populatePackage(mPkgManager.getSelectedPkg()));
+        mSelectDelayedResetRunner = new DelayedResetRunner(120, () -> {
+            mPkgManager.setSelectedPkg(packagesList.getSelectedValue());
+            updateFooter();
+        });
         initComponents();
         initListeners();
         mPkgListModel = new PkgListModel(mPkgManager.getFilteredItems());
         packagesList.setModel(mPkgListModel);
         packagesList.setCellRenderer(new PkgRenderer());
-        SwingUtilities.invokeLater(() -> mPkgManager.populatePackages());
+//        SwingUtilities.invokeLater(() -> mPkgManager.populatePackages());
     }
 
     public void postCreate() {
@@ -441,8 +447,7 @@ public class BrowserPanel extends javax.swing.JPanel {
 
     private void packagesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_packagesListValueChanged
         if (!evt.getValueIsAdjusting()) {
-            mPkgManager.setSelectedPkg(packagesList.getSelectedValue());
-            updateFooter();
+            mSelectDelayedResetRunner.reset();
         }
     }//GEN-LAST:event_packagesListValueChanged
 
