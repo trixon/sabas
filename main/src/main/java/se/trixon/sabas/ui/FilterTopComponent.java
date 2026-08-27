@@ -20,7 +20,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javafx.collections.ListChangeListener;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.event.DocumentEvent;
@@ -32,6 +31,7 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
+import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
@@ -162,7 +162,7 @@ public final class FilterTopComponent extends TopComponent {
                     .map(WeightedPkg::pkg);
         }
 
-        mPkgManager.getFilteredItems().setAll(filterStream.toList());
+        mPkgManager.setFilteredItems(filterStream.toList());
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -405,9 +405,9 @@ public final class FilterTopComponent extends TopComponent {
 
         });
 
-        mPkgManager.getAllItems().addListener((ListChangeListener.Change<? extends Pkg> c) -> {
+        Sabas.getGlobalState().addListener(gsce -> {
             populateLists();
-        });
+        }, PkgManager.KEY_ALL_ITEMS);
 
         groupList.addListSelectionListener(event -> {
             listSelection(event, DictionarySection.GROUP, mSelectedGroupIds, groupList);
@@ -429,11 +429,9 @@ public final class FilterTopComponent extends TopComponent {
             listSelection(event, DictionarySection.PACKAGER, mSelectedPackagerIds, packagerList);
         });
 
-        mPkgManager.longTaskRunningProperty().addListener((p, o, n) -> {
-//            makeBusy(n);
-            SwingHelper.enableComponents(this, !n);
-        });
-
+        Sabas.getGlobalState().addListener(gsce -> {
+            SwingHelper.enableComponents(this, !gsce.<Boolean>getValue());
+        }, PkgManager.KEY_TASK_RUNNING);
     }
 
     private record WeightedPkg(Pkg pkg, int relevance) {

@@ -15,17 +15,13 @@
  */
 package se.trixon.sabas.core;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.Strings;
 import org.netbeans.api.progress.ProgressHandle;
@@ -35,6 +31,7 @@ import org.openide.util.Lookup;
 import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
+import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
@@ -45,15 +42,16 @@ import se.trixon.sabas.api.PkgDictionary;
  */
 public class PkgManager {
 
-    private final ObservableList<Pkg> mAllItemsRaw = FXCollections.observableArrayList();
-    private final ObservableList<Pkg> mAllItems = FXCollections.synchronizedObservableList(mAllItemsRaw);
-    private final ObjectProperty<Bridge> mBridgeProperty = new SimpleObjectProperty<>();
-    private final ObjectProperty<Pkg> mDetailedPkgProperty = new SimpleObjectProperty<>();
-    private final ObservableList<Pkg> mFilteredItemsRaw = FXCollections.observableArrayList();
-    private final ObservableList<Pkg> mFilteredItems = FXCollections.synchronizedObservableList(mFilteredItemsRaw);
-    private final BooleanProperty mLongTaskRunningProperty = new SimpleBooleanProperty();
+    public static final String KEY_ALL_ITEMS = "allItems";
+    public static final String KEY_BRIDGE = "bridge";
+    public static final String KEY_FILTERED_ITEMS = "filteredItems";
+    public static final String KEY_SELECTED_PKG = "selectedPkg";
+    public static final String KEY_SELECTED_PKG_DETAILS = "selectedPkgDetails";
+    public static final String KEY_TASK_RUNNING = "longTaskRunning";
+
+    private final List<Pkg> mAllItems = Collections.synchronizedList(new ArrayList<>());
+    private final List<Pkg> mFilteredItems = Collections.synchronizedList(new ArrayList<>());
     private final Options mOptions = Options.getInstance();
-    private final ObjectProperty<Pkg> mSelectedPkgProperty = new SimpleObjectProperty<>();
 
     public static PkgManager getInstance() {
         return Holder.INSTANCE;
@@ -61,10 +59,7 @@ public class PkgManager {
 
     private PkgManager() {
         init();
-    }
-
-    public ObjectProperty<Bridge> bridgeProperty() {
-        return mBridgeProperty;
+        initListeners();
     }
 
     public void cacheClear() {
@@ -72,7 +67,7 @@ public class PkgManager {
             return;
         }
 
-        mLongTaskRunningProperty.set(true);
+        setLongTaskRunning(true);
 
         var threadRef = new AtomicReference<Thread>();
         var processes = ConcurrentHashMap.<Process>newKeySet();
@@ -89,12 +84,12 @@ public class PkgManager {
             SwingUtilities.invokeLater(() -> {
                 if (ex != null) {
                     Exceptions.printStackTrace(ex);
-                    mLongTaskRunningProperty.set(false);
+                    setLongTaskRunning(false);
                     return;
                 }
                 System.out.println(string);
                 System.out.println("Cleared in " + SystemHelper.age(start));
-                mLongTaskRunningProperty.set(false);
+                setLongTaskRunning(false);
             });
         });
     }
@@ -104,7 +99,7 @@ public class PkgManager {
             return;
         }
 
-        mLongTaskRunningProperty.set(true);
+        setLongTaskRunning(true);
         var threadRef = new AtomicReference<Thread>();
         var processes = ConcurrentHashMap.<Process>newKeySet();
         var progressHandle = ProgressHandle.createHandle("Updating cache", createCanceller(processes, threadRef));
@@ -120,17 +115,13 @@ public class PkgManager {
             SwingUtilities.invokeLater(() -> {
                 if (ex != null) {
                     Exceptions.printStackTrace(ex);
-                    mLongTaskRunningProperty.set(false);
+                    setLongTaskRunning(false);
                     return;
                 }
                 System.out.println(string);
                 System.out.println("Updated in " + SystemHelper.age(start));
             });
         }).thenRunAsync(() -> populatePackages());
-    }
-
-    public ObjectProperty<Pkg> detailedPkgProperty() {
-        return mDetailedPkgProperty;
     }
 
     public void displayVersion() {
@@ -151,37 +142,33 @@ public class PkgManager {
                 });
     }
 
-    public ObservableList<Pkg> getAllItems() {
+    public List<Pkg> getAllItems() {
         return mAllItems;
     }
 
     public Bridge getBridge() {
-        return mBridgeProperty.get();
+        return Sabas.getGlobalState().get(KEY_BRIDGE);
     }
 
     public Pkg getDetailedPkg() {
-        return mDetailedPkgProperty.get();
+        return Sabas.getGlobalState().get(KEY_SELECTED_PKG_DETAILS);
     }
 
-    public ObservableList<Pkg> getFilteredItems() {
+    public List<Pkg> getFilteredItems() {
         return mFilteredItems;
     }
 
     public Pkg getSelectedPkg() {
-        return mSelectedPkgProperty.get();
+        return Sabas.getGlobalState().get(KEY_SELECTED_PKG);
     }
 
     public boolean isLongTaskRunning() {
-        return mLongTaskRunningProperty.get();
-    }
-
-    public BooleanProperty longTaskRunningProperty() {
-        return mLongTaskRunningProperty;
+        return Sabas.getGlobalState().get(KEY_TASK_RUNNING);
     }
 
     public void populatePackage(Pkg pkg) {
         if (pkg.getDetails() != null) {
-            mDetailedPkgProperty.set(pkg);
+            setSelectedPkgDetails(pkg);
             return;
         }
 
@@ -208,7 +195,7 @@ public class PkgManager {
             }
 
             SwingUtilities.invokeLater(() -> {
-                mDetailedPkgProperty.set(pkg);
+                setSelectedPkgDetails(pkg);
                 System.out.println("Package details loaded in " + SystemHelper.age(start));
             });
         });
@@ -219,7 +206,7 @@ public class PkgManager {
             return;
         }
 
-        mLongTaskRunningProperty.set(true);
+        setLongTaskRunning(true);
         PkgDictionary.getInstance().clear();
 
         var threadRef = new AtomicReference<Thread>();
@@ -237,31 +224,46 @@ public class PkgManager {
             SwingUtilities.invokeLater(() -> {
                 if (ex != null) {
                     Exceptions.printStackTrace(ex);
-                    mLongTaskRunningProperty.set(false);
+                    setLongTaskRunning(false);
                     return;
                 }
-                mAllItems.setAll(packages);
-                mFilteredItems.setAll(packages);
+                setAllItems(packages);
+                setFilteredItems(packages);
                 PkgDictionary.getInstance().debugPrint();
                 System.out.println("Loaded in " + SystemHelper.age(start));
-                mLongTaskRunningProperty.set(false);
+                setLongTaskRunning(false);
             });
         });
     }
 
-    public ObjectProperty<Pkg> selectedPkgProperty() {
-        return mSelectedPkgProperty;
+    public void setAllItems(List<Pkg> newFilteredList) {
+        mAllItems.clear();
+        mAllItems.addAll(newFilteredList);
+
+        Sabas.getGlobalState().send(KEY_ALL_ITEMS, List.copyOf(mAllItems));
     }
 
     public void setBridge(Bridge bridge) {
         if (bridge != null) {
             mOptions.put(Options.KEY_PM_BRIDGE, bridge.getClass().getSimpleName());
         }
-        mBridgeProperty.set(bridge);
+
+        Sabas.getGlobalState().put(KEY_BRIDGE, bridge);
+    }
+
+    public void setFilteredItems(List<Pkg> newFilteredList) {
+        mFilteredItems.clear();
+        mFilteredItems.addAll(newFilteredList);
+
+        Sabas.getGlobalState().send(KEY_FILTERED_ITEMS, List.copyOf(mFilteredItems));
     }
 
     public void setSelectedPkg(Pkg pkg) {
-        mSelectedPkgProperty.set(pkg);
+        Sabas.getGlobalState().put(KEY_SELECTED_PKG, pkg);
+    }
+
+    public void setSelectedPkgDetails(Pkg pkg) {
+        Sabas.getGlobalState().put(KEY_SELECTED_PKG_DETAILS, pkg);
     }
 
     private Cancellable createCanceller(Set<Process> processes, AtomicReference<Thread> threadRef) {
@@ -291,6 +293,12 @@ public class PkgManager {
         }
     }
 
+    private void initListeners() {
+        Sabas.getGlobalState().addListener(gsce -> {
+            cacheUpdate();
+        }, PkgManager.KEY_BRIDGE);
+    }
+
     private boolean isBridgeInvalid() {
         if (getBridge() == null) {
             NbMessage.error("No bride selected", "Select a bridge in order to communicate with the backend.");
@@ -298,6 +306,11 @@ public class PkgManager {
         }
 
         return false;
+    }
+
+    private void setLongTaskRunning(boolean running) {
+        Sabas.getGlobalState().put(KEY_TASK_RUNNING, running);
+
     }
 
     private static class Holder {

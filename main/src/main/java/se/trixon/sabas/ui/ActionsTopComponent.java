@@ -19,6 +19,7 @@ import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.util.swing.SwingHelper;
+import se.trixon.sabas.Sabas;
 import se.trixon.sabas.core.PkgManager;
 
 /**
@@ -137,10 +138,9 @@ public final class ActionsTopComponent extends TopComponent {
     }// </editor-fold>//GEN-END:initComponents
 
     private void initListeners() {
-        mPkgManager.longTaskRunningProperty().addListener((p, o, n) -> {
-//            makeBusy(n);
-            SwingHelper.enableComponents(this, !n);
-        });
+        Sabas.getGlobalState().addListener(gsce -> {
+            SwingHelper.enableComponents(this, !gsce.<Boolean>getValue());
+        }, PkgManager.KEY_TASK_RUNNING);
     }
 
     private void versionButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_versionButtonActionPerformed

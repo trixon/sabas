@@ -18,13 +18,13 @@ package se.trixon.sabas.ui;
 import java.awt.CardLayout;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import java.util.List;
 import javax.swing.AbstractListModel;
 import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.StringUtils;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
+import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.core.Options;
 import se.trixon.sabas.core.PkgManager;
@@ -58,7 +58,6 @@ public class BrowserPanel extends javax.swing.JPanel {
         mPkgListModel = new PkgListModel(mPkgManager.getFilteredItems());
         packagesList.setModel(mPkgListModel);
         packagesList.setCellRenderer(new PkgRenderer());
-//        SwingUtilities.invokeLater(() -> mPkgManager.populatePackages());
     }
 
     public void postCreate() {
@@ -127,7 +126,7 @@ public class BrowserPanel extends javax.swing.JPanel {
     private void initListeners() {
         Helper.setupDividerMouseListener(splitPane, Options.KEY_UI_SPLIT_POS_CENTER);
 
-        mPkgManager.getFilteredItems().addListener((ListChangeListener.Change<? extends Pkg> c) -> {
+        Sabas.getGlobalState().addListener(gsce -> {
             SwingUtilities.invokeLater(() -> {
                 if (mPkgListModel != null) {
                     packagesList.clearSelection();
@@ -138,22 +137,21 @@ public class BrowserPanel extends javax.swing.JPanel {
                 }
                 updateFooter();
             });
-        });
+        }, PkgManager.KEY_FILTERED_ITEMS);
 
-        mPkgManager.selectedPkgProperty().addListener((p, o, n) -> {
-            displayPackageInfo(n);
-        });
+        Sabas.getGlobalState().addListener(gsce -> {
+            displayPackageInfo(gsce.getValue());
+        }, PkgManager.KEY_SELECTED_PKG);
 
-        mPkgManager.detailedPkgProperty().addListener((p, o, n) -> {
+        Sabas.getGlobalState().addListener(gsce -> {
             if (mPkgManager.getSelectedPkg() == mPkgManager.getDetailedPkg()) {
-                displayPackageInfoDetails(n);
+                displayPackageInfoDetails(gsce.getValue());
             }
+        }, PkgManager.KEY_SELECTED_PKG_DETAILS);
 
-        });
-
-        mPkgManager.longTaskRunningProperty().addListener((p, o, n) -> {
-            SwingHelper.enableComponents(this, !n);
-        });
+        Sabas.getGlobalState().addListener(gsce -> {
+            SwingHelper.enableComponents(this, !gsce.<Boolean>getValue());
+        }, PkgManager.KEY_TASK_RUNNING);
     }
 
     private void updateFooter() {
@@ -511,9 +509,9 @@ public class BrowserPanel extends javax.swing.JPanel {
 
     private static class PkgListModel extends AbstractListModel<Pkg> {
 
-        private final ObservableList<? extends Pkg> sourceList;
+        private final List<? extends Pkg> sourceList;
 
-        public PkgListModel(ObservableList<Pkg> filteredItems) {
+        public PkgListModel(List<Pkg> filteredItems) {
             this.sourceList = filteredItems;
         }
 
