@@ -325,6 +325,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         org.openide.awt.Mnemonics.setLocalizedText(vendorSeparatorLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.vendorSeparatorLabel.text")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(statusLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.statusLabel.text")); // NOI18N
+        statusLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.statusLabel.toolTipText")); // NOI18N
 
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);

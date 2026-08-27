@@ -69,7 +69,7 @@ public class Dnf0Bridge extends Bridge {
                 "provides"
         );
 
-        var command = new ArrayList<>(List.of("dnf", "repoquery", "--cacheonly", "--available", "--installed", pkg.getName(), "--queryformat"));
+        var command = new ArrayList<>(List.of("dnf", "repoquery", "--available", "--installed", pkg.getName(), "--queryformat"));
         command.add(querytags.stream()
                 .map(s -> "%%{%s}".formatted(s))
                 .collect(Collectors.joining(mFieldSeparator)) + mRecordSeparator);
@@ -86,7 +86,7 @@ public class Dnf0Bridge extends Bridge {
 
             try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
                 scanner.useDelimiter(mRecordSeparator);
-                Thread.sleep(25_000);
+//                Thread.sleep(25_000);
                 if (scanner.hasNext()) {
                     var rawRecord = scanner.next();
                     var fields = StringUtils.splitPreserveAllTokens(rawRecord, mFieldSeparator);
@@ -117,13 +117,13 @@ public class Dnf0Bridge extends Bridge {
     @Override
     public List<Pkg> onGetPackagesAll(Set<Process> processes) {
         CompletableFuture<HashMap<String, Pkg>> installedFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--cacheonly", "--installed", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--installed", "--queryformat")), mDnfExecutor);
 
         CompletableFuture<HashMap<String, Pkg>> availableFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--cacheonly", "--available", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--available", "--queryformat")), mDnfExecutor);
 
         CompletableFuture<HashMap<String, Pkg>> upgradableFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--cacheonly", "--upgrades", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--upgrades", "--queryformat")), mDnfExecutor);
 
         try {
             CompletableFuture.allOf(installedFuture, availableFuture, upgradableFuture).join();

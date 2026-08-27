@@ -16,6 +16,7 @@
 package se.trixon.sabas.api;
 
 import java.time.Instant;
+import org.apache.commons.lang3.StringUtils;
 
 public class Pkg {
 
@@ -23,12 +24,14 @@ public class Pkg {
 
     private int mArchId;
     private String mDescription;
+    private String mDescriptionLower;
     private String mEpoch;
     private int mGroupId;
     private String mId;
     private boolean mInstalled;
     private int mLicenseId;
     private String mName;
+    private String mNameLower;
     private boolean mOrphaned;
     private int mPackagerId;
     private String mRelease;
@@ -36,6 +39,7 @@ public class Pkg {
     private long mSizeDownload;
     private long mSizeInstall;
     private String mSummary;
+    private String mSummaryLower;
     private long mTimeBuild;
     private long mTimeInstalled;
     private boolean mUpgradable;
@@ -45,8 +49,20 @@ public class Pkg {
     private String mVersionNew;
     private Details mDetails;
 
+    public String getDescriptionLower() {
+        return mDescriptionLower;
+    }
+
     public Details getDetails() {
         return mDetails;
+    }
+
+    public String getNameLower() {
+        return mNameLower;
+    }
+
+    public String getSummaryLower() {
+        return mSummaryLower;
     }
 
     public void setDetails(Details details) {
@@ -195,6 +211,7 @@ public class Pkg {
 
     public void setDescription(String description) {
         mDescription = description;
+        mDescriptionLower = StringUtils.lowerCase(description);
     }
 
     public void setEpoch(String epoch) {
@@ -219,6 +236,7 @@ public class Pkg {
 
     public void setName(String name) {
         mName = name;
+        mNameLower = StringUtils.lowerCase(name);
     }
 
     public void setOrphaned(boolean orphaned) {
@@ -247,6 +265,7 @@ public class Pkg {
 
     public void setSummary(String summary) {
         mSummary = summary;
+        mSummaryLower = StringUtils.lowerCase(summary);
     }
 
     public void setTimeBuild(long timeBuild) {
