@@ -263,8 +263,11 @@ public class PkgManager {
                     System.out.println("Updated in " + SystemHelper.age(start));
                 });
 
+        var pb = new ProcessBuilder(externalCommand);
+        pb.environment().put("LC_ALL", "C");
+
         var service = ExecutionService.newService(
-                () -> new ProcessBuilder(externalCommand).start(),
+                () -> pb.start(),
                 descriptor,
                 displayName
         );

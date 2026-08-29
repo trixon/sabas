@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import se.trixon.sabas.api.Bridge;
@@ -43,12 +44,98 @@ public class Apt0Bridge extends Bridge {
     }
 
     @Override
+    public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
+        var details = new Pkg.Details();
+        var name = StringUtils.substringBefore(pkg.getName(), ":");
+
+        var dependsCommand = List.of("apt-cache", "depends", name);
+        Process dependsProcess = null;
+        try {
+            dependsProcess = createProcessBuilder(dependsCommand).start();
+            processes.add(dependsProcess);
+
+            var requiresBuilder = new StringBuilder();
+            var providesBuilder = new StringBuilder();
+
+            try (var it = IOUtils.lineIterator(dependsProcess.getInputStream(), StandardCharsets.UTF_8)) {
+                while (it.hasNext()) {
+                    var line = it.next();
+//                    System.out.println("[SABAS DEPENDS RAW]: " + line);
+
+                    if (line.contains("Depends:") || line.contains("Pre-Depends:")) {
+                        int colonIdx = line.indexOf(":");
+                        if (colonIdx != -1) {
+                            String dep = line.substring(colonIdx + 1).trim();
+                            requiresBuilder.append(dep).append("\n");
+                        }
+                    } else if (line.contains("Provides:")) {
+                        int colonIdx = line.indexOf(":");
+                        if (colonIdx != -1) {
+                            String prov = line.substring(colonIdx + 1).trim();
+                            providesBuilder.append(prov).append("\n");
+                        }
+                    }
+                }
+            }
+            dependsProcess.waitFor();
+
+            var reqs = requiresBuilder.toString().trim();
+            var provs = providesBuilder.toString().trim();
+
+            details.setRequires(reqs.isEmpty() ? "Inga explicita beroenden hittades." : reqs);
+            details.setProvides(provs.isEmpty() ? "Tillhandahåller inga virtuella paket." : provs);
+        } catch (Exception e) {
+            details.setRequires("Kunde inte hämta beroenden.");
+            details.setProvides("Kunde inte hämta funktionsutbud.");
+        } finally {
+            if (dependsProcess != null) {
+                processes.remove(dependsProcess);
+            }
+        }
+
+        if (pkg.isInstalled()) {
+            var filesCommand = List.of("dpkg", "-L", name);
+            Process filesProcess = null;
+            try {
+                filesProcess = createProcessBuilder(filesCommand).start();
+                processes.add(filesProcess);
+
+                var filesBuilder = new StringBuilder();
+
+                try (var it = IOUtils.lineIterator(filesProcess.getInputStream(), StandardCharsets.UTF_8)) {
+                    while (it.hasNext()) {
+                        String fileRoute = it.next().trim();
+//                        System.out.println("[SABAS FILES RAW]: " + fileRoute);
+                        if (!fileRoute.isEmpty()) {
+                            filesBuilder.append(fileRoute).append("\n");
+                        }
+                    }
+                }
+                filesProcess.waitFor();
+
+                var filesStr = filesBuilder.toString().trim();
+                details.setFiles(filesStr.isEmpty() ? "Paketet innehåller inga filer." : filesStr);
+            } catch (Exception e) {
+                details.setFiles("Kunde inte hämta filstrukturen.");
+            } finally {
+                if (filesProcess != null) {
+                    processes.remove(filesProcess);
+                }
+            }
+        } else {
+            details.setFiles("Listan över installerade filer är endast tillgänglig för installerade paket");
+        }
+
+        return details;
+    }
+
+    @Override
     public List<Pkg> onGetPackagesAll(Set<Process> processes) {
         var rawBlocksList = new ArrayList<Pkg>();
 
         var installedPackages = new HashSet<String>();
         try {
-            var dpkgProcess = new ProcessBuilder("dpkg-query", "-W", "-f=${Package}\n").start();
+            var dpkgProcess = createProcessBuilder(List.of("dpkg-query", "-W", "-f=${Package}\n")).start();
             try (var it = IOUtils.lineIterator(dpkgProcess.getInputStream(), StandardCharsets.UTF_8)) {
                 while (it.hasNext()) {
                     var line = it.next();
@@ -74,7 +161,7 @@ public class Apt0Bridge extends Bridge {
         boolean parsingDescription = false;
 
         try {
-            process = new ProcessBuilder(command).start();
+            process = createProcessBuilder(command).start();
             processes.add(process);
 
             try (var it = IOUtils.lineIterator(process.getInputStream(), StandardCharsets.UTF_8)) {
@@ -228,5 +315,12 @@ public class Apt0Bridge extends Bridge {
     @Override
     public List<String> onProvideVersionCommand() {
         return List.of("apt", "--version");
+    }
+
+    private ProcessBuilder createProcessBuilder(List<String> command) {
+        var processBuilder = new ProcessBuilder(command);
+        processBuilder.environment().put("LC_ALL", "C");
+
+        return processBuilder;
     }
 }
