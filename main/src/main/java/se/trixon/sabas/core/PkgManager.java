@@ -24,10 +24,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.Strings;
+import org.netbeans.api.extexecution.ExecutionDescriptor;
+import org.netbeans.api.extexecution.ExecutionService;
 import org.netbeans.api.progress.ProgressHandle;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.windows.IOProvider;
+import org.openide.windows.InputOutput;
 import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
@@ -51,6 +55,9 @@ public class PkgManager {
 
     private final List<Pkg> mAllItems = Collections.synchronizedList(new ArrayList<>());
     private final List<Pkg> mFilteredItems = Collections.synchronizedList(new ArrayList<>());
+    private InputOutput mInputOutput;
+    private final Runnable mNoOp = () -> {
+    };
     private final Options mOptions = Options.getInstance();
 
     public static PkgManager getInstance() {
@@ -67,31 +74,7 @@ public class PkgManager {
             return;
         }
 
-        setLongTaskRunning(true);
-
-        var threadRef = new AtomicReference<Thread>();
-        var processes = ConcurrentHashMap.<Process>newKeySet();
-        var progressHandle = ProgressHandle.createHandle("Clearing cache", createCanceller(processes, threadRef));
-        progressHandle.start();
-
-        var start = System.currentTimeMillis();
-
-        CompletableFuture.supplyAsync(() -> {
-            threadRef.set(Thread.currentThread());
-            return getBridge().onCacheClear(processes);
-        }).whenComplete((string, ex) -> {
-            progressHandle.finish();
-            SwingUtilities.invokeLater(() -> {
-                if (ex != null) {
-                    Exceptions.printStackTrace(ex);
-                    setLongTaskRunning(false);
-                    return;
-                }
-                System.out.println(string);
-                System.out.println("Cleared in " + SystemHelper.age(start));
-                setLongTaskRunning(false);
-            });
-        });
+        externalExecutor("Clearing cache...", getBridge().onProvideCacheClearCommand(), mNoOp);
     }
 
     public void cacheUpdate() {
@@ -99,35 +82,15 @@ public class PkgManager {
             return;
         }
 
-        setLongTaskRunning(true);
-        var threadRef = new AtomicReference<Thread>();
-        var processes = ConcurrentHashMap.<Process>newKeySet();
-        var progressHandle = ProgressHandle.createHandle("Updating cache", createCanceller(processes, threadRef));
-        progressHandle.start();
-
-        var start = System.currentTimeMillis();
-
-        CompletableFuture.supplyAsync(() -> {
-            threadRef.set(Thread.currentThread());
-            return getBridge().onCacheUpdate(processes);
-        }).whenComplete((string, ex) -> {
-            progressHandle.finish();
-            SwingUtilities.invokeLater(() -> {
-                if (ex != null) {
-                    Exceptions.printStackTrace(ex);
-                    setLongTaskRunning(false);
-                    return;
-                }
-                System.out.println(string);
-                System.out.println("Updated in " + SystemHelper.age(start));
-            });
-        }).thenRunAsync(() -> populatePackages());
+        externalExecutor("Updating cache...", getBridge().onProvideCacheUpdateCommand(), () -> populatePackages());
     }
 
     public void displayVersion() {
         if (isBridgeInvalid()) {
             return;
         }
+
+        externalExecutor("Getting version...", getBridge().onProvideVersionCommand(), mNoOp);
 
         var processes = ConcurrentHashMap.<Process>newKeySet();
 
@@ -283,6 +246,33 @@ public class PkgManager {
         };
     }
 
+    private void externalExecutor(String displayName, List<String> externalCommand, Runnable postExecution) {
+        if (mInputOutput == null) {
+            mInputOutput = IOProvider.getDefault().getIO("Details", false);
+
+        }
+        var start = System.currentTimeMillis();
+        var descriptor = new ExecutionDescriptor()
+                .frontWindow(true)
+                .inputOutput(mInputOutput)
+                .showProgress(true)
+                .noReset(true)
+                .postExecution(() -> {
+                    postExecution.run();
+                    setLongTaskRunning(false);
+                    System.out.println("Updated in " + SystemHelper.age(start));
+                });
+
+        var service = ExecutionService.newService(
+                () -> new ProcessBuilder(externalCommand).start(),
+                descriptor,
+                displayName
+        );
+        System.out.println(String.join(" ", externalCommand));
+        setLongTaskRunning(true);
+        service.run();
+    }
+
     private void init() {
         var bridgeName = mOptions.get(Options.KEY_PM_BRIDGE, "");
         for (var bridge : Lookup.getDefault().lookupAll(Bridge.class)) {
@@ -295,7 +285,7 @@ public class PkgManager {
 
     private void initListeners() {
         Sabas.getGlobalState().addListener(gsce -> {
-            cacheUpdate();
+//            cacheUpdate();
         }, PkgManager.KEY_BRIDGE);
     }
 

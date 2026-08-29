@@ -25,14 +25,6 @@ import java.util.Set;
  */
 public interface BridgeOperations {
 
-    default public String onCacheClear(Set<Process> processes) {
-        return "NO-OP";
-    }
-
-    default public String onCacheUpdate(Set<Process> processes) {
-        return "NO-OP";
-    }
-
     default public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
         return null;
     }
@@ -43,6 +35,18 @@ public interface BridgeOperations {
 
     default public String onGetVersion(Set<Process> processes) {
         return "NO-OP";
+    }
+
+    default public List<String> onProvideCacheClearCommand() {
+        return List.of();
+    }
+
+    default public List<String> onProvideCacheUpdateCommand() {
+        return List.of();
+    }
+
+    default public List<String> onProvideVersionCommand() {
+        return List.of();
     }
 
 }

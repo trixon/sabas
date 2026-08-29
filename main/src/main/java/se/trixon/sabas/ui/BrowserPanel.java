@@ -87,7 +87,7 @@ public class BrowserPanel extends javax.swing.JPanel {
             sizeInstallLabel.setText(formatSize(pkg.getSizeInstall()));
             vendorLabel.setText(pkg.getVendor());
             urlLabel.setText(pkg.getUrl());
-            urlLabel.setUri(pkg.getUrl());
+            urlLabel.setUri(pkg.getUrl() == null ? "" : pkg.getUrl());
             repositoryLabel.setText(pkg.getRepository());
             packagerLabel.setText(StringUtils.abbreviate(pkg.getPackager(), 50));
             releaseLabel.setText(pkg.getRelease());

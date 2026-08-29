@@ -51,16 +51,6 @@ public class Dnf0Bridge extends Bridge {
     }
 
     @Override
-    public String onCacheClear(Set<Process> processes) {
-        return execute(List.of("dnf", "clean", "expire-cache"), processes);
-    }
-
-    @Override
-    public String onCacheUpdate(Set<Process> processes) {
-        return execute(List.of("dnf", "makecache"), processes);
-    }
-
-    @Override
     public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
 //        System.out.println(pkg.getId());
         final var querytags = List.of(
@@ -175,6 +165,21 @@ public class Dnf0Bridge extends Bridge {
     @Override
     public String onGetVersion(Set<Process> processes) {
         return StringUtils.substringBefore(execute(List.of("dnf", "--version"), processes), "\n\n");
+    }
+
+    @Override
+    public List<String> onProvideCacheClearCommand() {
+        return List.of("dnf", "clean", "expire-cache");
+    }
+
+    @Override
+    public List<String> onProvideCacheUpdateCommand() {
+        return List.of("dnf", "makecache");
+    }
+
+    @Override
+    public List<String> onProvideVersionCommand() {
+        return List.of("dnf", "--version");
     }
 
     private HashMap<String, Pkg> getPackages(Set<Process> processes, List<String> args) {
