@@ -44,6 +44,14 @@ public class Bridge implements BridgeOperations {
         mSupports = supports;
     }
 
+    public ProcessBuilder createProcessBuilder(List<String> command) {
+        var processBuilder = new ProcessBuilder(command);
+        processBuilder.environment().put("LC_ALL", "C");
+        processBuilder.redirectErrorStream(true);
+
+        return processBuilder;
+    }
+
     public String execute(List command, Set<Process> processes) {
         System.out.println(String.join(" ", command));
         String output = null;

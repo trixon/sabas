@@ -79,7 +79,13 @@ public class BrowserPanel extends javax.swing.JPanel {
                 descriptionLogPanel.println("\n FULL LICENSE");
                 descriptionLogPanel.println("\n" + pkg.getLicense());
             }
-            epochLabel.setText(pkg.getEpoch());
+            var epoch = "";
+            try {
+                epoch = String.valueOf(pkg.getEpoch());
+            } catch (NumberFormatException e) {
+                //
+            }
+            epochLabel.setText(epoch);
             descriptionLogPanel.scrollToTop();
             versionLabel.setText(pkg.getVersion());
             licenseLabel.setText(StringUtils.abbreviate(pkg.getLicense(), maxLicenseLength));
@@ -92,7 +98,7 @@ public class BrowserPanel extends javax.swing.JPanel {
             packagerLabel.setText(StringUtils.abbreviate(pkg.getPackager(), 50));
             releaseLabel.setText(pkg.getRelease());
             archLabel.setText(pkg.getArch());
-            buildTimeLabel.setText(mFormatter.format(pkg.getTimeBuildInstant()));
+            updateBuildTime(pkg);
             if (pkg.getTimeInstalled() == 0) {
                 installedTimeLabel.setText("Not installed");
             } else {
@@ -112,14 +118,17 @@ public class BrowserPanel extends javax.swing.JPanel {
     }
 
     private void displayPackageInfoDetails(Pkg pkg) {
+        updateBuildTime(pkg);
         var details = pkg.getDetails();
         if (details != null) {
             filesLogPanel.getTextArea().setText(details.getFiles());
             providesLogPanel.getTextArea().setText(details.getProvides());
             requiresLogPanel.getTextArea().setText(details.getRequires());
+            requiredLogPanel.getTextArea().setText(details.getRequired());
             filesLogPanel.scrollToTop();
             providesLogPanel.scrollToTop();
             requiresLogPanel.scrollToTop();
+            requiredLogPanel.scrollToTop();
         }
     }
 
@@ -152,6 +161,11 @@ public class BrowserPanel extends javax.swing.JPanel {
         Sabas.getGlobalState().addListener(gsce -> {
             SwingHelper.enableComponents(this, !gsce.<Boolean>getValue());
         }, PkgManager.KEY_TASK_RUNNING);
+    }
+
+    private void updateBuildTime(Pkg pkg) {
+        var text = pkg.getTimeBuild() > 0 ? mFormatter.format(pkg.getTimeBuildInstant()) : "-";
+        buildTimeLabel.setText(text);
     }
 
     private void updateFooter() {
@@ -219,6 +233,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         descriptionLogPanel = new se.trixon.almond.util.swing.LogPanel();
         filesLogPanel = new se.trixon.almond.util.swing.LogPanel();
         requiresLogPanel = new se.trixon.almond.util.swing.LogPanel();
+        requiredLogPanel = new se.trixon.almond.util.swing.LogPanel();
         providesLogPanel = new se.trixon.almond.util.swing.LogPanel();
 
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
@@ -433,6 +448,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.descriptionLogPanel.TabConstraints.tabTitle"), descriptionLogPanel); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.filesLogPanel.TabConstraints.tabTitle"), filesLogPanel); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.requiresLogPanel.TabConstraints.tabTitle"), requiresLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.requiredLogPanel.TabConstraints.tabTitle"), requiredLogPanel); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.providesLogPanel.TabConstraints.tabTitle"), providesLogPanel); // NOI18N
 
         infoCardPanel.add(infoTabbedPane, java.awt.BorderLayout.CENTER);
@@ -495,6 +511,7 @@ public class BrowserPanel extends javax.swing.JPanel {
     private javax.swing.JLabel releaseLabel;
     private javax.swing.JLabel releaseSeparatorLabel;
     private javax.swing.JLabel repositoryLabel;
+    private se.trixon.almond.util.swing.LogPanel requiredLogPanel;
     private se.trixon.almond.util.swing.LogPanel requiresLogPanel;
     private javax.swing.JLabel sizeDownloadLabel;
     private javax.swing.JLabel sizeInstallLabel;

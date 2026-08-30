@@ -25,7 +25,8 @@ public class Pkg {
     private int mArchId;
     private String mDescription;
     private String mDescriptionLower;
-    private String mEpoch;
+    private Details mDetails;
+    private int mEpoch;
     private int mGroupId;
     private String mId;
     private boolean mInstalled;
@@ -47,27 +48,6 @@ public class Pkg {
     private int mVendorId;
     private String mVersion;
     private String mVersionNew;
-    private Details mDetails;
-
-    public String getDescriptionLower() {
-        return mDescriptionLower;
-    }
-
-    public Details getDetails() {
-        return mDetails;
-    }
-
-    public String getNameLower() {
-        return mNameLower;
-    }
-
-    public String getSummaryLower() {
-        return mSummaryLower;
-    }
-
-    public void setDetails(Details details) {
-        this.mDetails = details;
-    }
 
     public Pkg() {
     }
@@ -84,7 +64,15 @@ public class Pkg {
         return mDescription;
     }
 
-    public String getEpoch() {
+    public String getDescriptionLower() {
+        return mDescriptionLower;
+    }
+
+    public Details getDetails() {
+        return mDetails;
+    }
+
+    public int getEpoch() {
         return mEpoch;
     }
 
@@ -110,6 +98,10 @@ public class Pkg {
 
     public String getName() {
         return mName;
+    }
+
+    public String getNameLower() {
+        return mNameLower;
     }
 
     public String getPackager() {
@@ -155,6 +147,10 @@ public class Pkg {
 
     public String getSummary() {
         return mSummary;
+    }
+
+    public String getSummaryLower() {
+        return mSummaryLower;
     }
 
     public long getTimeBuild() {
@@ -214,7 +210,11 @@ public class Pkg {
         mDescriptionLower = StringUtils.lowerCase(description);
     }
 
-    public void setEpoch(String epoch) {
+    public void setDetails(Details details) {
+        mDetails = details;
+    }
+
+    public void setEpoch(int epoch) {
         mEpoch = epoch;
     }
 
@@ -301,6 +301,7 @@ public class Pkg {
         private String mFiles;
         private String mProvides;
         private String mRequires;
+        private String mRequired;
 
         public String getFiles() {
             return mFiles;
@@ -308,6 +309,10 @@ public class Pkg {
 
         public String getProvides() {
             return mProvides;
+        }
+
+        public String getRequired() {
+            return mRequired;
         }
 
         public String getRequires() {
@@ -320,6 +325,10 @@ public class Pkg {
 
         public void setProvides(String provides) {
             mProvides = provides;
+        }
+
+        public void setRequired(String required) {
+            mRequired = required;
         }
 
         public void setRequires(String requires) {

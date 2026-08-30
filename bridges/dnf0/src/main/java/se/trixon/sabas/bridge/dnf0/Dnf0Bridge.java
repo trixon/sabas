@@ -44,10 +44,11 @@ import se.trixon.sabas.api.PkgDictionary;
 @ServiceProvider(service = Bridge.class)
 public class Dnf0Bridge extends Bridge {
 
+    public static final String DNF_COMMAND = "dnf5";
     private final ExecutorService mDnfExecutor = Executors.newFixedThreadPool(3);
 
     public Dnf0Bridge() {
-        super("dnf5", "in development", "Fedora 44");
+        super(DNF_COMMAND, "in development", "Fedora 44");
     }
 
     @Override
@@ -59,7 +60,7 @@ public class Dnf0Bridge extends Bridge {
                 "provides"
         );
 
-        var command = new ArrayList<>(List.of("dnf", "repoquery", "--available", "--installed", pkg.getName(), "--queryformat"));
+        var command = new ArrayList<>(List.of(DNF_COMMAND, "repoquery", "--available", "--installed", pkg.getName(), "--queryformat"));
         command.add(querytags.stream()
                 .map(s -> "%%{%s}".formatted(s))
                 .collect(Collectors.joining(mFieldSeparator)) + mRecordSeparator);
@@ -105,15 +106,15 @@ public class Dnf0Bridge extends Bridge {
     }
 
     @Override
-    public List<Pkg> onGetPackagesAll(Set<Process> processes) {
+    public List<Pkg> onGetPackageAll(Set<Process> processes) {
         CompletableFuture<HashMap<String, Pkg>> installedFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--installed", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of(DNF_COMMAND, "repoquery", "--installed", "--queryformat")), mDnfExecutor);
 
         CompletableFuture<HashMap<String, Pkg>> availableFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--available", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of(DNF_COMMAND, "repoquery", "--available", "--queryformat")), mDnfExecutor);
 
         CompletableFuture<HashMap<String, Pkg>> upgradableFuture
-                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of("dnf", "repoquery", "--upgrades", "--queryformat")), mDnfExecutor);
+                = CompletableFuture.supplyAsync(() -> getPackages(processes, List.of(DNF_COMMAND, "repoquery", "--upgrades", "--queryformat")), mDnfExecutor);
 
         try {
             CompletableFuture.allOf(installedFuture, availableFuture, upgradableFuture).join();
@@ -164,22 +165,22 @@ public class Dnf0Bridge extends Bridge {
 
     @Override
     public String onGetVersion(Set<Process> processes) {
-        return StringUtils.substringBefore(execute(List.of("dnf", "--version"), processes), "\n\n");
+        return StringUtils.substringBefore(execute(List.of(DNF_COMMAND, "--version"), processes), "\n\n");
     }
 
     @Override
     public List<String> onProvideCacheClearCommand() {
-        return List.of("dnf", "clean", "expire-cache");
+        return List.of(DNF_COMMAND, "clean", "expire-cache");
     }
 
     @Override
     public List<String> onProvideCacheUpdateCommand() {
-        return List.of("dnf", "makecache");
+        return List.of(DNF_COMMAND, "makecache");
     }
 
     @Override
     public List<String> onProvideVersionCommand() {
-        return List.of("dnf", "--version");
+        return List.of(DNF_COMMAND, "--version");
     }
 
     private HashMap<String, Pkg> getPackages(Set<Process> processes, List<String> args) {
@@ -255,7 +256,13 @@ public class Dnf0Bridge extends Bridge {
                     pkg.setSummary(fields[summaryIndex]);
                     pkg.setDescription(fields[descriptionIndex]);
                     pkg.setLicenseId(dict.getOrCreateId(DictionarySection.LICENSE, fields[licenseIndex]));
-                    pkg.setEpoch(fields[epochIndex]);
+                    var epoch = -1;
+                    try {
+                        epoch = Integer.parseInt(fields[epochIndex]);
+                    } catch (NumberFormatException e) {
+                        //
+                    }
+                    pkg.setEpoch(epoch);
                     pkg.setSizeDownload(Long.parseLong(fields[downloadsizeIndex]));
                     pkg.setSizeInstall(Long.parseLong(fields[installsizeIndex]));
                     pkg.setUrl(fields[urlIndex]);

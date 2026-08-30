@@ -25,12 +25,12 @@ import java.util.Set;
  */
 public interface BridgeOperations {
 
-    default public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
-        return null;
+    default public List<Pkg> onGetPackageAll(Set<Process> processes) {
+        return new ArrayList<>();
     }
 
-    default public List<Pkg> onGetPackagesAll(Set<Process> processes) {
-        return new ArrayList<>();
+    default public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
+        return null;
     }
 
     default public String onGetVersion(Set<Process> processes) {

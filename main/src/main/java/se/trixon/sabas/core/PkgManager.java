@@ -181,7 +181,7 @@ public class PkgManager {
 
         CompletableFuture.supplyAsync(() -> {
             threadRef.set(Thread.currentThread());
-            return getBridge().onGetPackagesAll(processes);
+            return getBridge().onGetPackageAll(processes);
         }).whenComplete((List<Pkg> packages, Throwable ex) -> {
             progressHandle.finish();
             SwingUtilities.invokeLater(() -> {
