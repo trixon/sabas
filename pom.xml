@@ -18,8 +18,8 @@
         <module>application</module>
         <module>api</module>
         <module>main</module>
-        <module>bridges/dnf0</module>
-        <module>bridges/apt0</module>
+        <module>bridges/apt</module>
+        <module>bridges/dnf</module>
     </modules>
     <build>
         <plugins>

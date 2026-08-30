@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.trixon.sabas.bridge.apt0;
+package se.trixon.sabas.bridge.apt;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -40,11 +40,11 @@ import se.trixon.sabas.api.PkgDictionary;
  * @author Patrik Karlström <patrik@trixon.se>
  */
 @ServiceProvider(service = Bridge.class)
-public class Apt0Bridge extends Bridge {
+public class AptBridge extends Bridge {
 
     private final PkgDictionary mDictionary = PkgDictionary.getInstance();
 
-    public Apt0Bridge() {
+    public AptBridge() {
         super("apt", "in development", "Debian 13");
     }
 

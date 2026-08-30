@@ -27,3 +27,5 @@ replay_pid*
 /bridges/apt0/target/
 /labs/target/
 /api/target/
+/bridges/sdkman/target/
+/bridges/apt/target/

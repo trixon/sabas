@@ -7,7 +7,7 @@
         <version>26.07x</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>bridge_apt0</artifactId>
+    <artifactId>bridge_apt</artifactId>
     <packaging>nbm</packaging>
     <build>
         <plugins>
@@ -41,4 +41,5 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
+    <name>bridge_apt</name>
 </project>

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.trixon.sabas.bridge.dnf0;
+package se.trixon.sabas.bridge.dnf;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,12 +42,12 @@ import se.trixon.sabas.api.PkgDictionary;
  * @author Patrik Karlström <patrik@trixon.se>
  */
 @ServiceProvider(service = Bridge.class)
-public class Dnf0Bridge extends Bridge {
+public class DnfBridge extends Bridge {
 
     public static final String DNF_COMMAND = "dnf5";
     private final ExecutorService mDnfExecutor = Executors.newFixedThreadPool(3);
 
-    public Dnf0Bridge() {
+    public DnfBridge() {
         super(DNF_COMMAND, "in development", "Fedora 44");
     }
 

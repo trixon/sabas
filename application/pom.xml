@@ -128,12 +128,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>bridge_dnf0</artifactId>
+            <artifactId>bridge_dnf</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>bridge_apt0</artifactId>
+            <artifactId>bridge_apt</artifactId>
             <version>${project.version}</version>
         </dependency>
 
