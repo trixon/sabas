@@ -9,6 +9,7 @@
     </parent>
     <artifactId>bridge_apt</artifactId>
     <packaging>nbm</packaging>
+    
     <build>
         <plugins>
             <plugin>
@@ -41,5 +42,5 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
-    <name>bridge_apt</name>
+    <name>APT</name>
 </project>

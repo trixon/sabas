@@ -41,5 +41,5 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
-    <name>bridge_dnf</name>
+    <name>DNF</name>
 </project>

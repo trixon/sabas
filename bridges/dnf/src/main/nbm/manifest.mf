@@ -1,3 +1,5 @@
 Manifest-Version: 1.0
-OpenIDE-Module-Localizing-Bundle: se/trixon/sabas/bridge/dnf0/Bundle.properties
-
+OpenIDE-Module-Localizing-Bundle: se/trixon/sabas/bridge/dnf/Bundle.properties
+OpenIDE-Module-Display-Category: Bridge
+OpenIDE-Module-Short-Description: Bridge for DNF based distributions
+OpenIDE-Module-Long-Description: Developed and tested on Fedora 44  with DNF 5.4.3.0.

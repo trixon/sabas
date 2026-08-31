@@ -136,6 +136,11 @@
             <artifactId>bridge_apt</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>bridge_sdkman</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Trixon -->
         <dependency>

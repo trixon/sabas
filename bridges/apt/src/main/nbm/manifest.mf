@@ -1,3 +1,5 @@
 Manifest-Version: 1.0
-OpenIDE-Module-Localizing-Bundle: se/trixon/sabas/dnf/Bundle.properties
-
+OpenIDE-Module-Localizing-Bundle: se/trixon/sabas/bridge/apt/Bundle.properties
+OpenIDE-Module-Display-Category: Bridge
+OpenIDE-Module-Short-Description: Bridge for APT based distributions
+OpenIDE-Module-Long-Description: Developed and tested on Debian 13 with APT 3.0.3.

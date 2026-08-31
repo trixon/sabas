@@ -15,15 +15,19 @@
  */
 package se.trixon.sabas.api;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 
 /**
  *
@@ -53,11 +57,19 @@ public class Bridge implements BridgeOperations {
     }
 
     public String execute(List command, Set<Process> processes) {
+        return execute(command, processes, Map.of());
+    }
+
+    public String execute(List command, Set<Process> processes, Map<String, String> map) {
         System.out.println(String.join(" ", command));
         String output = null;
         Process process = null;
         try {
-            process = new ProcessBuilder(command).start();
+            var processBuilder = new ProcessBuilder(command);
+            processBuilder.environment().putAll(map);
+            processBuilder.redirectErrorStream(true);
+            process = processBuilder.start();
+//            process.
             processes.add(process);
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
@@ -66,6 +78,7 @@ public class Bridge implements BridgeOperations {
             process.waitFor();
         } catch (IOException | InterruptedException e) {
             output = null;
+            System.err.println(e.toString());
         } finally {
             if (process != null) {
                 processes.remove(process);
@@ -86,6 +99,14 @@ public class Bridge implements BridgeOperations {
 
     public String getSupports() {
         return mSupports;
+    }
+
+    public File getUserHome() {
+        return SystemUtils.getUserHome();
+    }
+
+    public Path getUserHomePath() {
+        return SystemUtils.getUserHomePath();
     }
 
     public void setDescription(String description) {
