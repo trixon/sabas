@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Localizing-Bundle: se/trixon/sabas/bridge/sdkman/Bundle.properties
+OpenIDE-Module-Display-Category: Bridge
+OpenIDE-Module-Short-Description: Bridge for SDKMAN!
+OpenIDE-Module-Long-Description: Developed and tested on Linux with SDKMAN 5.23.0.
+
