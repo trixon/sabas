@@ -45,64 +45,11 @@ import se.trixon.sabas.api.PkgDictionary;
 public class DnfBridge extends Bridge {
 
     public static final String DNF_COMMAND = "dnf5";
+    public static final String PKEXEC_COMMAND = "pkexec";
     private final ExecutorService mDnfExecutor = Executors.newFixedThreadPool(3);
 
     public DnfBridge() {
         super(DNF_COMMAND, "in development", "Fedora 44");
-    }
-
-    @Override
-    public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
-//        System.out.println(pkg.getId());
-        final var querytags = List.of(
-                "files",
-                "requires",
-                "provides"
-        );
-
-        var command = new ArrayList<>(List.of(DNF_COMMAND, "repoquery", "--available", "--installed", pkg.getName(), "--queryformat"));
-        command.add(querytags.stream()
-                .map(s -> "%%{%s}".formatted(s))
-                .collect(Collectors.joining(mFieldSeparator)) + mRecordSeparator);
-        System.out.println(String.join(" ", command));
-        System.out.println(System.currentTimeMillis());
-        String files = "";
-        String requires = "";
-        String provides = "";
-
-        Process process = null;
-        try {
-            process = new ProcessBuilder(command).start();
-            processes.add(process);
-
-            try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
-                scanner.useDelimiter(mRecordSeparator);
-//                Thread.sleep(25_000);
-                if (scanner.hasNext()) {
-                    var rawRecord = scanner.next();
-                    var fields = StringUtils.splitPreserveAllTokens(rawRecord, mFieldSeparator);
-                    if (fields.length >= querytags.size()) {
-                        files = fields[0];
-                        requires = fields[1];
-                        provides = fields[2];
-                    }
-                }
-            }
-            process.waitFor();
-        } catch (IOException | InterruptedException e) {
-            //
-        } finally {
-            if (process != null) {
-                processes.remove(process);
-            }
-        }
-
-        var details = new Pkg.Details();
-        details.setFiles(stripDuplicateRowss(files));
-        details.setProvides(stripDuplicateRowss(provides));
-        details.setRequires(stripDuplicateRowss(requires));
-
-        return details;
     }
 
     @Override
@@ -164,6 +111,60 @@ public class DnfBridge extends Bridge {
     }
 
     @Override
+    public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
+//        System.out.println(pkg.getId());
+        final var querytags = List.of(
+                "files",
+                "requires",
+                "provides"
+        );
+
+        var command = new ArrayList<>(List.of(DNF_COMMAND, "repoquery", "--available", "--installed", pkg.getName(), "--queryformat"));
+        command.add(querytags.stream()
+                .map(s -> "%%{%s}".formatted(s))
+                .collect(Collectors.joining(mFieldSeparator)) + mRecordSeparator);
+        System.out.println(String.join(" ", command));
+        System.out.println(System.currentTimeMillis());
+        String files = "";
+        String requires = "";
+        String provides = "";
+
+        Process process = null;
+        try {
+            process = new ProcessBuilder(command).start();
+            processes.add(process);
+
+            try (var scanner = new Scanner(new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8")))) {
+                scanner.useDelimiter(mRecordSeparator);
+//                Thread.sleep(25_000);
+                if (scanner.hasNext()) {
+                    var rawRecord = scanner.next();
+                    var fields = StringUtils.splitPreserveAllTokens(rawRecord, mFieldSeparator);
+                    if (fields.length >= querytags.size()) {
+                        files = fields[0];
+                        requires = fields[1];
+                        provides = fields[2];
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            //
+        } finally {
+            if (process != null) {
+                processes.remove(process);
+            }
+        }
+
+        var details = new Pkg.Details();
+        details.setFiles(stripDuplicateRowss(files));
+        details.setProvides(stripDuplicateRowss(provides));
+        details.setRequires(stripDuplicateRowss(requires));
+
+        return details;
+    }
+
+    @Override
     public String onGetVersion(Set<Process> processes) {
         return StringUtils.substringBefore(execute(List.of(DNF_COMMAND, "--version"), processes), "\n\n");
     }
@@ -176,6 +177,21 @@ public class DnfBridge extends Bridge {
     @Override
     public List<String> onProvideCacheUpdateCommand() {
         return List.of(DNF_COMMAND, "makecache");
+    }
+
+    @Override
+    public List<String> onProvideTransactionInstall() {
+        return List.of(PKEXEC_COMMAND, DNF_COMMAND, "install");
+    }
+
+    @Override
+    public List<String> onProvideTransactionUninstall() {
+        return List.of(PKEXEC_COMMAND, DNF_COMMAND, "remove");
+    }
+
+    @Override
+    public List<String> onProvideTransactionUpgrade() {
+        return List.of(PKEXEC_COMMAND, DNF_COMMAND, "upgrade");
     }
 
     @Override

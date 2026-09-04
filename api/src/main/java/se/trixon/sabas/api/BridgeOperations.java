@@ -45,6 +45,18 @@ public interface BridgeOperations {
         return List.of();
     }
 
+    default public List<String> onProvideTransactionInstall() {
+        return List.of();
+    }
+
+    default public List<String> onProvideTransactionUninstall() {
+        return List.of();
+    }
+
+    default public List<String> onProvideTransactionUpgrade() {
+        return List.of();
+    }
+
     default public List<String> onProvideVersionCommand() {
         return List.of();
     }

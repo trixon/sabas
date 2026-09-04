@@ -98,6 +98,7 @@ public class BrowserPanel extends javax.swing.JPanel {
             packagerLabel.setText(StringUtils.abbreviate(pkg.getPackager(), 50));
             releaseLabel.setText(pkg.getRelease());
             archLabel.setText(pkg.getArch());
+            groupLabel.setText(pkg.getGroup());
             updateBuildTime(pkg);
             if (pkg.getTimeInstalled() == 0) {
                 installedTimeLabel.setText("Not installed");
@@ -229,6 +230,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         buildSeparatorLabel = new javax.swing.JLabel();
         vendorSeparatorLabel = new javax.swing.JLabel();
         statusLabel = new javax.swing.JLabel();
+        groupLabel = new javax.swing.JLabel();
         infoTabbedPane = new javax.swing.JTabbedPane();
         descriptionLogPanel = new se.trixon.almond.util.swing.LogPanel();
         filesLogPanel = new se.trixon.almond.util.swing.LogPanel();
@@ -270,7 +272,7 @@ public class BrowserPanel extends javax.swing.JPanel {
         );
         emptyCardPanelLayout.setVerticalGroup(
             emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 476, Short.MAX_VALUE)
+            .addGap(0, 496, Short.MAX_VALUE)
         );
 
         cardPanel.add(emptyCardPanel, "empty");
@@ -340,6 +342,9 @@ public class BrowserPanel extends javax.swing.JPanel {
         org.openide.awt.Mnemonics.setLocalizedText(statusLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.statusLabel.text")); // NOI18N
         statusLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.statusLabel.toolTipText")); // NOI18N
 
+        org.openide.awt.Mnemonics.setLocalizedText(groupLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.groupLabel.text")); // NOI18N
+        groupLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.groupLabel.toolTipText")); // NOI18N
+
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);
         infoHeaderPanelLayout.setHorizontalGroup(
@@ -357,7 +362,7 @@ public class BrowserPanel extends javax.swing.JPanel {
                         .addComponent(vendorSeparatorLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(packagerLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 335, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(sizeInstallLabel)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -368,10 +373,6 @@ public class BrowserPanel extends javax.swing.JPanel {
                     .addComponent(buildTimeLabel, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(installedTimeLabel, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addContainerGap())
-            .addGroup(infoHeaderPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                 .addGap(6, 6, 6)
                 .addComponent(licenseLabel)
@@ -400,6 +401,12 @@ public class BrowserPanel extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(statusLabel)
                 .addContainerGap())
+            .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(groupLabel)
+                    .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         infoHeaderPanelLayout.setVerticalGroup(
             infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -437,8 +444,10 @@ public class BrowserPanel extends javax.swing.JPanel {
                     .addComponent(idLabel)
                     .addComponent(statusLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(groupLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         infoCardPanel.add(infoHeaderPanel, java.awt.BorderLayout.NORTH);
@@ -495,6 +504,7 @@ public class BrowserPanel extends javax.swing.JPanel {
     private javax.swing.JLabel epochLabel;
     private se.trixon.almond.util.swing.LogPanel filesLogPanel;
     private javax.swing.JLabel footerLabel;
+    private javax.swing.JLabel groupLabel;
     private javax.swing.JLabel idLabel;
     private javax.swing.JPanel infoCardPanel;
     private javax.swing.JPanel infoHeaderPanel;

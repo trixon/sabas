@@ -73,6 +73,9 @@ public final class ActionsTopComponent extends TopComponent {
         versionButton = new javax.swing.JButton();
         clearButton = new javax.swing.JButton();
         updateButton = new javax.swing.JButton();
+        upgradeButton = new javax.swing.JButton();
+        installButton = new javax.swing.JButton();
+        removeButton = new javax.swing.JButton();
 
         org.openide.awt.Mnemonics.setLocalizedText(reloadButton, org.openide.util.NbBundle.getMessage(ActionsTopComponent.class, "ActionsTopComponent.reloadButton.text")); // NOI18N
         reloadButton.addActionListener(new java.awt.event.ActionListener() {
@@ -102,6 +105,27 @@ public final class ActionsTopComponent extends TopComponent {
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(upgradeButton, org.openide.util.NbBundle.getMessage(ActionsTopComponent.class, "ActionsTopComponent.upgradeButton.text")); // NOI18N
+        upgradeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                upgradeButtonActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(installButton, org.openide.util.NbBundle.getMessage(ActionsTopComponent.class, "ActionsTopComponent.installButton.text")); // NOI18N
+        installButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                installButtonActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(removeButton, org.openide.util.NbBundle.getMessage(ActionsTopComponent.class, "ActionsTopComponent.removeButton.text")); // NOI18N
+        removeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -112,13 +136,19 @@ public final class ActionsTopComponent extends TopComponent {
                     .addComponent(bridgeSelectorPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(versionButton)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(reloadButton)
-                                .addGap(18, 18, 18)
-                                .addComponent(clearButton)
-                                .addGap(18, 18, 18)
-                                .addComponent(updateButton)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(updateButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(clearButton))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(versionButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(upgradeButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(installButton))
+                            .addComponent(removeButton))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -129,11 +159,16 @@ public final class ActionsTopComponent extends TopComponent {
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(reloadButton)
-                    .addComponent(clearButton)
-                    .addComponent(updateButton))
+                    .addComponent(updateButton)
+                    .addComponent(clearButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(versionButton)
-                .addContainerGap(230, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(versionButton)
+                    .addComponent(upgradeButton)
+                    .addComponent(installButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(removeButton)
+                .addContainerGap(186, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -159,11 +194,26 @@ public final class ActionsTopComponent extends TopComponent {
         mPkgManager.cacheUpdate();
     }//GEN-LAST:event_updateButtonActionPerformed
 
+    private void upgradeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upgradeButtonActionPerformed
+        mPkgManager.upgrade();
+    }//GEN-LAST:event_upgradeButtonActionPerformed
+
+    private void installButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_installButtonActionPerformed
+        mPkgManager.install();
+    }//GEN-LAST:event_installButtonActionPerformed
+
+    private void removeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeButtonActionPerformed
+        mPkgManager.remove();
+    }//GEN-LAST:event_removeButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private se.trixon.sabas.ui.parts.BridgeSelectorPanel bridgeSelectorPanel1;
     private javax.swing.JButton clearButton;
+    private javax.swing.JButton installButton;
     private javax.swing.JButton reloadButton;
+    private javax.swing.JButton removeButton;
     private javax.swing.JButton updateButton;
+    private javax.swing.JButton upgradeButton;
     private javax.swing.JButton versionButton;
     // End of variables declaration//GEN-END:variables
     @Override

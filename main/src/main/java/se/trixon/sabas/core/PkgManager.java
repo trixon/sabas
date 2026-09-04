@@ -125,6 +125,16 @@ public class PkgManager {
         return Sabas.getGlobalState().get(KEY_SELECTED_PKG);
     }
 
+    public void install() {
+        if (isBridgeInvalid() && getSelectedPkg() != null) {
+            return;
+        }
+        var totalList = new ArrayList<String>();
+        totalList.addAll(getBridge().onProvideTransactionInstall());
+        totalList.add(getSelectedPkg().getName());
+        externalExecutor("Installing...", totalList, () -> populatePackages());
+    }
+
     public boolean isLongTaskRunning() {
         return Sabas.getGlobalState().get(KEY_TASK_RUNNING);
     }
@@ -192,11 +202,21 @@ public class PkgManager {
                 }
                 setAllItems(packages);
                 setFilteredItems(packages);
-                PkgDictionary.getInstance().debugPrint();
+//                PkgDictionary.getInstance().debugPrint();
                 System.out.println("Loaded in " + SystemHelper.age(start));
                 setLongTaskRunning(false);
             });
         });
+    }
+
+    public void remove() {
+        if (isBridgeInvalid() && getSelectedPkg() != null) {
+            return;
+        }
+        var totalList = new ArrayList<String>();
+        totalList.addAll(getBridge().onProvideTransactionUninstall());
+        totalList.add(getSelectedPkg().getName());
+        externalExecutor("Uninstalling...", totalList, () -> populatePackages());
     }
 
     public void setAllItems(List<Pkg> newFilteredList) {
@@ -229,6 +249,14 @@ public class PkgManager {
         Sabas.getGlobalState().put(KEY_SELECTED_PKG_DETAILS, pkg);
     }
 
+    public void upgrade() {
+        if (isBridgeInvalid()) {
+            return;
+        }
+
+        externalExecutor("Upgrading...", getBridge().onProvideTransactionUpgrade(), () -> populatePackages());
+    }
+
     private Cancellable createCanceller(Set<Process> processes, AtomicReference<Thread> threadRef) {
         return () -> {
             for (var p : processes) {
@@ -255,6 +283,7 @@ public class PkgManager {
         var descriptor = new ExecutionDescriptor()
                 .frontWindow(true)
                 .inputOutput(mInputOutput)
+                .inputVisible(true)
                 .showProgress(true)
                 .noReset(true)
                 .postExecution(() -> {
@@ -263,9 +292,12 @@ public class PkgManager {
                     System.out.println("Updated in " + SystemHelper.age(start));
                 });
 
+        if (externalCommand.isEmpty()) {
+            System.out.println("ERRRORRR +" + displayName);
+        }
         var pb = new ProcessBuilder(externalCommand);
         pb.environment().put("LC_ALL", "C");
-
+        pb.redirectErrorStream();
         var service = ExecutionService.newService(
                 () -> pb.start(),
                 descriptor,
@@ -274,6 +306,8 @@ public class PkgManager {
         System.out.println(String.join(" ", externalCommand));
         setLongTaskRunning(true);
         service.run();
+        mInputOutput.select();
+        System.out.println("xxx");
     }
 
     private void init() {

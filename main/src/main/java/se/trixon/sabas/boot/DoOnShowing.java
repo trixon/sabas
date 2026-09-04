@@ -26,6 +26,7 @@ import org.openide.util.Exceptions;
 import org.openide.windows.OnShowing;
 import org.openide.windows.WindowManager;
 import se.trixon.almond.nbp.Almond;
+import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.Sabas;
 import se.trixon.sabas.core.PkgManager;
@@ -59,7 +60,16 @@ public class DoOnShowing implements Runnable {
 //        Almond.hideTabs("FilterTopComponent");
 //        Almond.hideTabs("ActionsTopComponent");
         Sabas.displaySystemInformation();
-        SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
+        if (mPkgManager.getBridge() == null) {
+            var message = """
+                        You need to select a bridge in order to get started.
+                        If no one is available, activate at least one plugin via menu Tools/Plugins.
+                          Make your choise in the 'Installed' tab.""";
+
+            NbMessage.warning("No bridge configured", message);
+        } else {
+            SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
+        }
     }
 
     private Component findEditorAreaComponent(Container container) {
