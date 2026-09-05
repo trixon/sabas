@@ -17,7 +17,6 @@ package se.trixon.sabas.core;
 
 import org.openide.util.NbPreferences;
 import se.trixon.almond.util.OptionsBase;
-import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.Sabas;
 
 /**
@@ -26,13 +25,7 @@ import se.trixon.sabas.Sabas;
  */
 public class Options extends OptionsBase {
 
-    public static final int DEFAULT_UI_SPLIT_POS_LEFT = SwingHelper.getUIScaled(200);
-    public static final int DEFAULT_UI_SPLIT_POS_RIGHT = SwingHelper.getUIScaled(200);
-
     public static final String KEY_PM_BRIDGE = "pm.bridge";
-    public static final String KEY_UI_SPLIT_POS_CENTER = "ui.splitpos.center";
-    public static final String KEY_UI_SPLIT_POS_LEFT = "ui.splitpos.left";
-    public static final String KEY_UI_SPLIT_POS_RIGHT = "ui.splitpos.right";
 
     public static Options getInstance() {
         return Holder.INSTANCE;

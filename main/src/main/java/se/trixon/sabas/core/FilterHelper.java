@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,13 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.trixon.sabas.ui;
+package se.trixon.sabas.core;
 
 /**
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
 public class FilterHelper {
+
+    public static int calculateRelevance(String pkgName, String fullSearchText, String[] searchTokens) {
+        if (fullSearchText.isEmpty()) {
+            return 100;
+        }
+
+        if (pkgName.equals(fullSearchText)) {
+            return 0;
+        }
+
+        if (pkgName.startsWith(fullSearchText)) {
+            return 1;
+        }
+
+        if (pkgName.contains(fullSearchText)) {
+            return 2;
+        }
+
+        if (searchTokens.length > 0 && pkgName.contains(searchTokens[0])) {
+            return 3;
+        }
+
+        return 4;
+    }
 
     public static boolean matchSplitFuzzy(String pkgName, String pkgSummary, String pkgDesc,
             String[] searchTokens, boolean searchSummary, boolean searchDesc) {
@@ -75,30 +99,6 @@ public class FilterHelper {
         }
 
         return tokIdx == tokenLen;
-    }
-
-    static int calculateRelevance(String pkgName, String fullSearchText, String[] searchTokens) {
-        if (fullSearchText.isEmpty()) {
-            return 100;
-        }
-
-        if (pkgName.equals(fullSearchText)) {
-            return 0;
-        }
-
-        if (pkgName.startsWith(fullSearchText)) {
-            return 1;
-        }
-
-        if (pkgName.contains(fullSearchText)) {
-            return 2;
-        }
-
-        if (searchTokens.length > 0 && pkgName.contains(searchTokens[0])) {
-            return 3;
-        }
-
-        return 4;
     }
 
 }

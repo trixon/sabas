@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,9 +18,6 @@ package se.trixon.sabas.ui;
 import java.awt.CardLayout;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import javax.swing.AbstractListModel;
-import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.StringUtils;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
@@ -28,45 +25,31 @@ import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.core.Options;
 import se.trixon.sabas.core.PkgManager;
-import se.trixon.sabas.ui.parts.PkgRenderer;
 
 /**
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
-public class BrowserPanel extends javax.swing.JPanel {
+public class PackagePanel extends javax.swing.JPanel {
 
     private final Options mOptions = Options.getInstance();
     private final PkgManager mPkgManager = PkgManager.getInstance();
-    private final PkgListModel mPkgListModel;
     private final DateTimeFormatter mFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             .withZone(ZoneId.systemDefault());
     private final DelayedResetRunner mDetailsDelayedResetRunner;
-    private final DelayedResetRunner mSelectDelayedResetRunner;
 
     /**
      * Creates new form BrowserPanel
      */
-    public BrowserPanel() {
+    public PackagePanel() {
         mDetailsDelayedResetRunner = new DelayedResetRunner(100, () -> mPkgManager.populatePackage(mPkgManager.getSelectedPkg()));
-        mSelectDelayedResetRunner = new DelayedResetRunner(120, () -> {
-            mPkgManager.setSelectedPkg(packagesList.getSelectedValue());
-            updateFooter();
-        });
         initComponents();
         initListeners();
-        mPkgListModel = new PkgListModel(mPkgManager.getFilteredItems());
-        packagesList.setModel(mPkgListModel);
-        packagesList.setCellRenderer(new PkgRenderer());
-    }
-
-    public void postCreate() {
-        restoreDividerPositions();
     }
 
     private void displayPackageInfo(Pkg pkg) {
-        var cardLayout = (CardLayout) (cardPanel.getLayout());
-        cardLayout.show(cardPanel, pkg == null ? "empty" : "info");
+        var cardLayout = (CardLayout) getLayout();
+        cardLayout.show(this, pkg == null ? "empty" : "info");
 
         if (pkg != null) {
             int maxLicenseLength = 60;
@@ -134,21 +117,6 @@ public class BrowserPanel extends javax.swing.JPanel {
     }
 
     private void initListeners() {
-        Helper.setupDividerMouseListener(splitPane, Options.KEY_UI_SPLIT_POS_CENTER);
-
-        Sabas.getGlobalState().addListener(gsce -> {
-            SwingUtilities.invokeLater(() -> {
-                if (mPkgListModel != null) {
-                    packagesList.clearSelection();
-                    mPkgListModel.updateData();
-                    if (mPkgListModel.getSize() > 0) {
-                        packagesList.setSelectedIndex(0);
-                    }
-                }
-                updateFooter();
-            });
-        }, PkgManager.KEY_FILTERED_ITEMS);
-
         Sabas.getGlobalState().addListener(gsce -> {
             displayPackageInfo(gsce.getValue());
         }, PkgManager.KEY_SELECTED_PKG);
@@ -169,28 +137,6 @@ public class BrowserPanel extends javax.swing.JPanel {
         buildTimeLabel.setText(text);
     }
 
-    private void updateFooter() {
-        var selected = "";
-        var selectedIndex = packagesList.getSelectedIndex();
-        if (selectedIndex != -1) {
-            selected = "@%,d/".formatted(selectedIndex + 1);
-        }
-        footerLabel.setText("%s%,d/%,d".formatted(
-                selected,
-                mPkgManager.getFilteredItems().size(),
-                mPkgManager.getAllItems().size()
-        ));
-    }
-
-    private void restoreDividerPositions() {
-        int mainPos = mOptions.getInt(Options.KEY_UI_SPLIT_POS_CENTER);
-        if (mainPos == 0) {
-            splitPane.setDividerLocation(0.25);
-        } else {
-            splitPane.setDividerLocation(mainPos);
-        }
-    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -200,12 +146,6 @@ public class BrowserPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        splitPane = new javax.swing.JSplitPane();
-        listPanel = new javax.swing.JPanel();
-        packagesScrollPane = new javax.swing.JScrollPane();
-        packagesList = new javax.swing.JList<>();
-        footerLabel = new javax.swing.JLabel();
-        cardPanel = new javax.swing.JPanel();
         emptyCardPanel = new javax.swing.JPanel();
         infoCardPanel = new javax.swing.JPanel();
         infoHeaderPanel = new javax.swing.JPanel();
@@ -238,112 +178,88 @@ public class BrowserPanel extends javax.swing.JPanel {
         requiredLogPanel = new se.trixon.almond.util.swing.LogPanel();
         providesLogPanel = new se.trixon.almond.util.swing.LogPanel();
 
-        setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
-
-        listPanel.setLayout(new java.awt.BorderLayout());
-
-        packagesScrollPane.setMinimumSize(new java.awt.Dimension(250, 23));
-        packagesScrollPane.setPreferredSize(new java.awt.Dimension(300, 260));
-
-        packagesList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        packagesList.setMinimumSize(new java.awt.Dimension(300, 160));
-        packagesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-                packagesListValueChanged(evt);
-            }
-        });
-        packagesScrollPane.setViewportView(packagesList);
-
-        listPanel.add(packagesScrollPane, java.awt.BorderLayout.CENTER);
-
-        footerLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        org.openide.awt.Mnemonics.setLocalizedText(footerLabel, "0/0"); // NOI18N
-        listPanel.add(footerLabel, java.awt.BorderLayout.SOUTH);
-
-        splitPane.setLeftComponent(listPanel);
-
-        cardPanel.setLayout(new java.awt.CardLayout());
+        setLayout(new java.awt.CardLayout());
 
         javax.swing.GroupLayout emptyCardPanelLayout = new javax.swing.GroupLayout(emptyCardPanel);
         emptyCardPanel.setLayout(emptyCardPanelLayout);
         emptyCardPanelLayout.setHorizontalGroup(
             emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 698, Short.MAX_VALUE)
+            .addGap(0, 1006, Short.MAX_VALUE)
         );
         emptyCardPanelLayout.setVerticalGroup(
             emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 496, Short.MAX_VALUE)
         );
 
-        cardPanel.add(emptyCardPanel, "empty");
+        add(emptyCardPanel, "empty");
 
         infoCardPanel.setLayout(new java.awt.BorderLayout());
 
         nameLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "NAME"); // NOI18N
-        nameLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.nameLabel.toolTipText")); // NOI18N
+        nameLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.nameLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(summaryLabel, "SUMMARY"); // NOI18N
-        summaryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.summaryLabel.toolTipText")); // NOI18N
+        summaryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.summaryLabel.toolTipText")); // NOI18N
 
         versionLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
-        org.openide.awt.Mnemonics.setLocalizedText(versionLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.versionLabel.text")); // NOI18N
-        versionLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.versionLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(versionLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.versionLabel.text")); // NOI18N
+        versionLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.versionLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(licenseLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.licenseLabel.text")); // NOI18N
-        licenseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.licenseLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(licenseLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.licenseLabel.text")); // NOI18N
+        licenseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.licenseLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(installSeparatorLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.installSeparatorLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(installSeparatorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.installSeparatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(sizeInstallLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeInstallLabel.text")); // NOI18N
-        sizeInstallLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeInstallLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(sizeInstallLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.sizeInstallLabel.text")); // NOI18N
+        sizeInstallLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.sizeInstallLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(sizeDownloadLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeDownloadLabel.text")); // NOI18N
-        sizeDownloadLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.sizeDownloadLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(sizeDownloadLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.sizeDownloadLabel.text")); // NOI18N
+        sizeDownloadLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.sizeDownloadLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(vendorLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.vendorLabel.text")); // NOI18N
-        vendorLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.vendorLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(vendorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.vendorLabel.text")); // NOI18N
+        vendorLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.vendorLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.urlLabel.text")); // NOI18N
-        urlLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.urlLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.urlLabel.text")); // NOI18N
+        urlLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.urlLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(repositoryLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.repositoryLabel.text")); // NOI18N
-        repositoryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.repositoryLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(repositoryLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.repositoryLabel.text")); // NOI18N
+        repositoryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.repositoryLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(packagerLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.packagerLabel.text")); // NOI18N
-        packagerLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.packagerLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(packagerLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.packagerLabel.text")); // NOI18N
+        packagerLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.packagerLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(releaseLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.releaseLabel.text")); // NOI18N
-        releaseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.releaseLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(releaseLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.releaseLabel.text")); // NOI18N
+        releaseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.releaseLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(archLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.archLabel.text")); // NOI18N
-        archLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.archLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(archLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.archLabel.text")); // NOI18N
+        archLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.archLabel.toolTipText")); // NOI18N
 
         installedTimeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        org.openide.awt.Mnemonics.setLocalizedText(installedTimeLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.installedTimeLabel.text")); // NOI18N
-        installedTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.installedTimeLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(installedTimeLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.installedTimeLabel.text")); // NOI18N
+        installedTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.installedTimeLabel.toolTipText")); // NOI18N
 
         buildTimeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        org.openide.awt.Mnemonics.setLocalizedText(buildTimeLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.buildTimeLabel.text")); // NOI18N
-        buildTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.buildTimeLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(buildTimeLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.buildTimeLabel.text")); // NOI18N
+        buildTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.buildTimeLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(idLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.idLabel.text")); // NOI18N
-        idLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.idLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(idLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.idLabel.text")); // NOI18N
+        idLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.idLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(releaseSeparatorLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.releaseSeparatorLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(releaseSeparatorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.releaseSeparatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(epochLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.epochLabel.text")); // NOI18N
-        epochLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.epochLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(epochLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.epochLabel.text")); // NOI18N
+        epochLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.epochLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(buildSeparatorLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.buildSeparatorLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(buildSeparatorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.buildSeparatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(vendorSeparatorLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.vendorSeparatorLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(vendorSeparatorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.vendorSeparatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(statusLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.statusLabel.text")); // NOI18N
-        statusLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.statusLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(statusLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.statusLabel.text")); // NOI18N
+        statusLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.statusLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(groupLabel, org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.groupLabel.text")); // NOI18N
-        groupLabel.setToolTipText(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.groupLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(groupLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.groupLabel.text")); // NOI18N
+        groupLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.groupLabel.toolTipText")); // NOI18N
 
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);
@@ -454,26 +370,16 @@ public class BrowserPanel extends javax.swing.JPanel {
 
         infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
         infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.descriptionLogPanel.TabConstraints.tabTitle"), descriptionLogPanel); // NOI18N
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.filesLogPanel.TabConstraints.tabTitle"), filesLogPanel); // NOI18N
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.requiresLogPanel.TabConstraints.tabTitle"), requiresLogPanel); // NOI18N
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.requiredLogPanel.TabConstraints.tabTitle"), requiredLogPanel); // NOI18N
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(BrowserPanel.class, "BrowserPanel.providesLogPanel.TabConstraints.tabTitle"), providesLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.descriptionLogPanel.TabConstraints.tabTitle"), descriptionLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.filesLogPanel.TabConstraints.tabTitle"), filesLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.requiresLogPanel.TabConstraints.tabTitle"), requiresLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.requiredLogPanel.TabConstraints.tabTitle"), requiredLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.providesLogPanel.TabConstraints.tabTitle"), providesLogPanel); // NOI18N
 
         infoCardPanel.add(infoTabbedPane, java.awt.BorderLayout.CENTER);
 
-        cardPanel.add(infoCardPanel, "info");
-
-        splitPane.setRightComponent(cardPanel);
-
-        add(splitPane);
+        add(infoCardPanel, "info");
     }// </editor-fold>//GEN-END:initComponents
-
-    private void packagesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_packagesListValueChanged
-        if (!evt.getValueIsAdjusting()) {
-            mSelectDelayedResetRunner.reset();
-        }
-    }//GEN-LAST:event_packagesListValueChanged
 
     private String formatSize(long bytes) {
         if (bytes <= 0) {
@@ -498,12 +404,10 @@ public class BrowserPanel extends javax.swing.JPanel {
     private javax.swing.JLabel archLabel;
     private javax.swing.JLabel buildSeparatorLabel;
     private javax.swing.JLabel buildTimeLabel;
-    private javax.swing.JPanel cardPanel;
     private se.trixon.almond.util.swing.LogPanel descriptionLogPanel;
     private javax.swing.JPanel emptyCardPanel;
     private javax.swing.JLabel epochLabel;
     private se.trixon.almond.util.swing.LogPanel filesLogPanel;
-    private javax.swing.JLabel footerLabel;
     private javax.swing.JLabel groupLabel;
     private javax.swing.JLabel idLabel;
     private javax.swing.JPanel infoCardPanel;
@@ -512,11 +416,8 @@ public class BrowserPanel extends javax.swing.JPanel {
     private javax.swing.JLabel installSeparatorLabel;
     private javax.swing.JLabel installedTimeLabel;
     private javax.swing.JLabel licenseLabel;
-    private javax.swing.JPanel listPanel;
     private javax.swing.JLabel nameLabel;
     private javax.swing.JLabel packagerLabel;
-    private javax.swing.JList<Pkg> packagesList;
-    private javax.swing.JScrollPane packagesScrollPane;
     private se.trixon.almond.util.swing.LogPanel providesLogPanel;
     private javax.swing.JLabel releaseLabel;
     private javax.swing.JLabel releaseSeparatorLabel;
@@ -525,7 +426,6 @@ public class BrowserPanel extends javax.swing.JPanel {
     private se.trixon.almond.util.swing.LogPanel requiresLogPanel;
     private javax.swing.JLabel sizeDownloadLabel;
     private javax.swing.JLabel sizeInstallLabel;
-    private javax.swing.JSplitPane splitPane;
     private javax.swing.JLabel statusLabel;
     private javax.swing.JLabel summaryLabel;
     private se.trixon.almond.util.swing.UriLabel urlLabel;
@@ -534,26 +434,4 @@ public class BrowserPanel extends javax.swing.JPanel {
     private javax.swing.JLabel versionLabel;
     // End of variables declaration//GEN-END:variables
 
-    private static class PkgListModel extends AbstractListModel<Pkg> {
-
-        private final List<? extends Pkg> sourceList;
-
-        public PkgListModel(List<Pkg> filteredItems) {
-            this.sourceList = filteredItems;
-        }
-
-        public void updateData() {
-            fireContentsChanged(this, 0, Math.max(0, getSize() - 1));
-        }
-
-        @Override
-        public int getSize() {
-            return sourceList.size();
-        }
-
-        @Override
-        public Pkg getElementAt(int index) {
-            return sourceList.get(index);
-        }
-    }
 }

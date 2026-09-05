@@ -46,7 +46,6 @@
             <file name="org-netbeans-core-windows-actions-ToolbarsListAction.shadow_hidden"/>
         </folder>
         <!--<file name="Window_hidden"/>-->
-        <file name="Window_hidden"/>
     </folder>
 
     <folder name="OptionsDialog">
@@ -64,6 +63,7 @@
     <folder name="Shortcuts">
         <file name="DS-ENTER.shadow_hidden"/>
         <file name="OS-ENTER.shadow_hidden"/>
+        <file name="O-4.shadow_hidden"/>
         <file name="D-COMMA.shadow">
             <attr name="originalFile" stringvalue="Actions/Window/org-netbeans-modules-options-OptionsWindowAction.instance"/>
         </file>
@@ -77,7 +77,12 @@
     <file name="Toolbars_hidden"/>
     <folder name="Windows2">
         <folder name="Modes">
-            <file name="left.wsmode" url="leftWsmode.xml"/>
+            <file name="left.wsmode" url="left1Wsmode.xml"/>
+            <file name="left2.wsmode" url="left2Wsmode.xml"/>
+            <file name="left3.wsmode" url="left3Wsmode.xml"/>
+            <file name="left4.wsmode" url="left4Wsmode.xml"/>
+            <file name="left5.wsmode" url="left5Wsmode.xml"/>
+            <file name="list.wsmode" url="listWsmode.xml"/>
             <file name="right.wsmode" url="rightWsmode.xml"/>
         </folder>
     </folder>

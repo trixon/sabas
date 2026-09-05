@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,11 +49,11 @@ public final class ActionsTopComponent extends TopComponent {
     public ActionsTopComponent() {
         initComponents();
         setName(Bundle.CTL_ActionsAction());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_SLIDING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
+//        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
+//        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
+//        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
+//        putClientProperty(TopComponent.PROP_SLIDING_DISABLED, Boolean.TRUE);
+//        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
         setHtmlDisplayName("<html><b>%s</b></html>".formatted(getName()));
 

@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.trixon.sabas.api;
+package se.trixon.sabas.ui;
 
-public enum DictionarySection {
-    ARCH,
-    GROUP,
-    LICENSE,
-    PACKAGER,
-    REPOSITORY,
-    STATUS,
-    VENDOR
+import org.openide.windows.TopComponent;
+import se.trixon.sabas.core.PkgManager;
+
+/**
+ *
+ * @author Patrik Karlström <patrik@trixon.se>
+ */
+public abstract class BaseTopComponent extends TopComponent {
+
+    protected final PkgManager mPkgManager = PkgManager.getInstance();
+
 }

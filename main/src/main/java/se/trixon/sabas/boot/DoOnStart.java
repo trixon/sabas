@@ -29,6 +29,7 @@ import se.trixon.almond.nbp.dialogs.NbOptionalDialog;
 public class DoOnStart implements Runnable {
 
     static {
+//        System.setProperty("netbeans.winsys.hideEmptyDocArea", "true");
         System.setProperty("netbeans.winsys.no_help_in_dialogs", "true");
         System.setProperty("netbeans.winsys.no_toolbars", "true");
         UIManager.put("ViewTab.underlineHeight", 0);

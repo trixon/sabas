@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@ import java.awt.Container;
 import java.net.MalformedURLException;
 import java.net.URI;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import org.openide.awt.HtmlBrowser;
 import org.openide.util.Exceptions;
 import org.openide.windows.OnShowing;
@@ -30,7 +29,7 @@ import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.Sabas;
 import se.trixon.sabas.core.PkgManager;
-import se.trixon.sabas.ui.BrowserPanel;
+import se.trixon.sabas.ui.PackagePanel;
 
 /**
  *
@@ -68,7 +67,7 @@ public class DoOnShowing implements Runnable {
 
             NbMessage.warning("No bridge configured", message);
         } else {
-            SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
+//            SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
         }
     }
 
@@ -93,7 +92,7 @@ public class DoOnShowing implements Runnable {
             var editorPanel = (JPanel) findEditorAreaComponent(WindowManager.getDefault().getMainWindow());
 
             if (editorPanel != null) {
-                var customPanel = new BrowserPanel();
+                var customPanel = new PackagePanel();
                 editorPanel.removeAll();
 //                editorPanel.setLayout(new BorderLayout());
 //                editorPanel.add(customPanel, BorderLayout.CENTER);
@@ -101,7 +100,6 @@ public class DoOnShowing implements Runnable {
 
                 editorPanel.validate();
                 editorPanel.repaint();
-                customPanel.postCreate();
             }
         } catch (Exception e) {
             Exceptions.printStackTrace(e);
