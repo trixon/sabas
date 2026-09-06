@@ -17,6 +17,7 @@ package se.trixon.sabas.ui.parts;
 
 import java.awt.Color;
 import java.awt.Component;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import se.trixon.sabas.api.Bridge;
@@ -27,6 +28,8 @@ import se.trixon.sabas.api.Bridge;
  */
 public class BridgeSelectorRenderer extends javax.swing.JPanel implements ListCellRenderer<Bridge> {
 
+    private final DefaultListCellRenderer simple = new DefaultListCellRenderer();
+
     /**
      * Creates new form BridgeListCell
      */
@@ -36,6 +39,11 @@ public class BridgeSelectorRenderer extends javax.swing.JPanel implements ListCe
 
     @Override
     public Component getListCellRendererComponent(JList<? extends Bridge> list, Bridge bridge, int index, boolean isSelected, boolean cellHasFocus) {
+
+        if (index == -1) {
+            var text = (bridge != null) ? bridge.getName() : "";
+            return simple.getListCellRendererComponent(list, text, index, false, false);
+        }
         if (isSelected) {
             setBackground(list.getSelectionBackground());
             nameLabel.setForeground(list.getSelectionForeground());

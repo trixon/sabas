@@ -155,12 +155,27 @@ public class AptBridge extends Bridge {
 
     @Override
     public List<String> onProvideCacheClearCommand() {
-        return List.of("pkexec", "apt-get", "clean");
+        return List.of(PKEXEC, "apt-get", "clean");
     }
 
     @Override
     public List<String> onProvideCacheUpdateCommand() {
-        return List.of("pkexec", "apt-get", "update");
+        return List.of(PKEXEC, "apt-get", "update");
+    }
+
+    @Override
+    public List<String> onProvideTransactionInstall() {
+        return List.of(PKEXEC, "apt-get", "install");
+    }
+
+    @Override
+    public List<String> onProvideTransactionUninstall() {
+        return List.of(PKEXEC, "apt-get", "remove");
+    }
+
+    @Override
+    public List<String> onProvideTransactionUpgrade() {
+        return List.of(PKEXEC, "apt-get", "upgrade");
     }
 
     @Override

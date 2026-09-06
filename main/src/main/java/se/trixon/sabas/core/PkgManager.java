@@ -328,7 +328,7 @@ public class PkgManager {
 
     private boolean isBridgeInvalid() {
         if (getBridge() == null) {
-            NbMessage.error("No bride selected", "Select a bridge in order to communicate with the backend.");
+            NbMessage.error("No bride selected", "Select a bridge in the lower right corner in order to communicate with a backend.");
             return true;
         }
 

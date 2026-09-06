@@ -44,7 +44,7 @@ import se.trixon.sabas.ui.parts.ZebraListCellRenderer;
 @TopComponent.Registration(mode = "left2", openAtStartup = true, position = 1)
 @ActionID(category = "Window", id = "se.trixon.sabas.ui.FilterStatusTopComponent")
 @ActionReferences({
-    @ActionReference(path = "Menu/Window", position = 1),
+    @ActionReference(path = "Menu/Window", position = 10),
     @ActionReference(path = "Shortcuts", name = "D-1")
 })
 @TopComponent.OpenActionRegistration(

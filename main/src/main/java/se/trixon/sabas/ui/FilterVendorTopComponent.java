@@ -39,8 +39,8 @@ import se.trixon.sabas.api.Pkg;
 @TopComponent.Registration(mode = "left5", openAtStartup = true, position = 1)
 @ActionID(category = "Window", id = "se.trixon.sabas.ui.FilterVendorTopComponent")
 @ActionReferences({
-    @ActionReference(path = "Menu/Window", position = 4),
-    @ActionReference(path = "Shortcuts", name = "D-4")
+    @ActionReference(path = "Menu/Window", position = 40),
+    @ActionReference(path = "Shortcuts", name = "D-4", position = 0)
 })
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_FilterVendorAction",

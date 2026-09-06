@@ -15,11 +15,17 @@
  */
 package se.trixon.sabas.ui;
 
+import java.awt.Component;
+import java.awt.Container;
 import java.util.List;
+import javax.swing.JComponent;
+import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.awt.Actions;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.actions.Presenter;
 import org.openide.windows.TopComponent;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
@@ -55,6 +61,32 @@ public final class FilterTextTopComponent extends BaseFilterTopComponent {
         putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
 
         initListeners();
+//        initQuickSearch();
+    }
+
+    private JTextArea findFirstTextArea(Container container) {
+        if (container == null) {
+            return null;
+        }
+
+        // Loopa igenom alla direkta barn till komponenten
+        for (Component child : container.getComponents()) {
+
+            // Om barnet är en JTextArea, har vi hittat rätt!
+            if (child instanceof JTextArea) {
+                return (JTextArea) child;
+            }
+
+            // Om barnet i sin tur är en container (t.ex. en JPanel), sök vidare djupare i trädet
+            if (child instanceof Container) {
+                JTextArea found = findFirstTextArea((Container) child);
+                if (found != null) {
+                    return found; // Returnera direkt om den hittades djupare ner
+                }
+            }
+        }
+
+        return null; // Ingen JTextArea hittades i denna gren
     }
 
     @Override
@@ -114,7 +146,6 @@ public final class FilterTextTopComponent extends BaseFilterTopComponent {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(filterTextField)
                     .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(summaryCheckBox)
                         .addGap(18, 18, 18)
                         .addComponent(descriptionCheckBox)
@@ -135,6 +166,40 @@ public final class FilterTextTopComponent extends BaseFilterTopComponent {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void initQuickSearch() {
+        var quickSearchAction = Actions.forID("Edit", "org.netbeans.modules.quicksearch.QuickSearchAction");
+        if (quickSearchAction instanceof Presenter.Toolbar toolbar) {
+            JComponent component = (JComponent) toolbar.getToolbarPresenter();
+//            panel.add(component, BorderLayout.CENTER);
+            var textArea = findFirstTextArea(component);
+            if (textArea != null) {
+                textArea.getDocument().addDocumentListener(new DocumentListener() {
+                    @Override
+                    public void changedUpdate(DocumentEvent e) {
+                        qqq();
+                    }
+
+                    @Override
+                    public void insertUpdate(DocumentEvent e) {
+                        qqq();
+                    }
+
+                    @Override
+                    public void removeUpdate(DocumentEvent e) {
+                        qqq();
+                    }
+
+                    private void qqq() {
+                        if (textArea.getText().isEmpty()) {
+                            mFilterManager.setText("");
+                            mFilterManager.requestFiltering();
+                        }
+                    }
+                });
+            }
+        }
+    }
 
     private void summaryCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_summaryCheckBoxActionPerformed
         requestFiltering();

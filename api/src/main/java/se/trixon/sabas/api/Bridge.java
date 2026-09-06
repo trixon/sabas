@@ -35,6 +35,7 @@ import org.apache.commons.lang3.SystemUtils;
  */
 public class Bridge implements BridgeOperations {
 
+    public static final String PKEXEC = "pkexec";
     protected final String mFieldSeparator = "\u001F";
     protected final String mRecordSeparator = "\u001E";
 

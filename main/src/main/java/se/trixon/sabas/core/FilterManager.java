@@ -17,6 +17,7 @@ package se.trixon.sabas.core;
 
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import se.trixon.almond.util.swing.DelayedResetRunner;
@@ -69,11 +70,16 @@ public class FilterManager {
         mFilterSummary = filterSummary;
     }
 
+    public List<Pkg> filterNow(String text) {
+        mText = text;
+        return filter();
+    }
+
     public void setText(String text) {
         mText = text;
     }
 
-    private void filter() {
+    private List<Pkg> filter() {
         var filterStream = mPkgManager.getAllItems().stream()
                 .filter(p -> filter(p));
 
@@ -102,8 +108,10 @@ public class FilterManager {
                     )
                     .map(WeightedPkg::pkg);
         }
-        mPkgManager.setFilteredItems(filterStream.toList());
 
+        var result = filterStream.toList();
+        mPkgManager.setFilteredItems(result);
+        return result;
     }
 
     private static class FilterManagerHolder {

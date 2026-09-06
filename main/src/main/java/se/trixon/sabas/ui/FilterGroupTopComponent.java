@@ -39,7 +39,7 @@ import se.trixon.sabas.api.Pkg;
 @TopComponent.Registration(mode = "left2", openAtStartup = true, position = 2)
 @ActionID(category = "Window", id = "se.trixon.sabas.ui.FilterGroupTopComponent")
 @ActionReferences({
-    @ActionReference(path = "Menu/Window", position = 6),
+    @ActionReference(path = "Menu/Window", position = 60, separatorAfter = 61),
     @ActionReference(path = "Shortcuts", name = "D-6")
 })
 @TopComponent.OpenActionRegistration(

@@ -46,6 +46,10 @@
             <file name="org-netbeans-core-windows-actions-ToolbarsListAction.shadow_hidden"/>
         </folder>
         <!--<file name="Window_hidden"/>-->
+        <file name="se-trixon-sabas-ui-parts-QuickSearchAction.shadow">
+            <attr name="originalFile" stringvalue="Actions/Edit/org-netbeans-modules-quicksearch-QuickSearchAction.instance"/>
+            <attr name="position" intvalue="10000"/>
+        </file>
     </folder>
 
     <folder name="OptionsDialog">
@@ -60,10 +64,22 @@
         <file name="Keymaps.instance_hidden"/>
     </folder>
 
+    <folder name="QuickSearch">
+        <folder name="Packages">
+            <attr name="command" stringvalue="p"/>
+            <attr name="position" intvalue="0"/>
+            <file name="se-trixon-sabas-core-PkgTextSearchProvider.instance">
+                <attr name="displayName" bundlevalue="se.trixon.sabas.Bundle#QuickSearchPkgTextSearchProvider"/>
+            </file>
+        </folder>
+    </folder>
     <folder name="Shortcuts">
         <file name="DS-ENTER.shadow_hidden"/>
         <file name="OS-ENTER.shadow_hidden"/>
-        <file name="O-4.shadow_hidden"/>
+        <!--<file name="D-4.shadow_hidden"/>-->
+        <!--        <file name="D-4.shadow">
+            <attr name="originalFile" stringvalue="Actions/Window/se-trixon-sabas-ui-FilterVendorTopComponent.instance"/>
+        </file>-->
         <file name="D-COMMA.shadow">
             <attr name="originalFile" stringvalue="Actions/Window/org-netbeans-modules-options-OptionsWindowAction.instance"/>
         </file>
