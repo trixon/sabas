@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,21 +15,16 @@
  */
 package se.trixon.sabas.boot;
 
-import java.awt.Component;
-import java.awt.Container;
 import java.net.MalformedURLException;
 import java.net.URI;
-import javax.swing.JPanel;
 import org.openide.awt.HtmlBrowser;
 import org.openide.util.Exceptions;
 import org.openide.windows.OnShowing;
-import org.openide.windows.WindowManager;
 import se.trixon.almond.nbp.Almond;
 import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.Sabas;
 import se.trixon.sabas.core.PkgManager;
-import se.trixon.sabas.ui.PackagePanel;
 
 /**
  *
@@ -50,7 +45,6 @@ public class DoOnShowing implements Runnable {
             }
         });
 
-        initCustomEditorMode();
         Almond.openTopComponent("ActionsTopComponent");
         Almond.openAndActivateTopComponent("FilterTopComponent");
 //        var output = WindowManager.getDefault().findTopComponent("output");
@@ -68,41 +62,6 @@ public class DoOnShowing implements Runnable {
             NbMessage.warning("No bridge configured", message);
         } else {
 //            SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
-        }
-    }
-
-    private Component findEditorAreaComponent(Container container) {
-        for (var component : container.getComponents()) {
-            if (component.getClass().getName().endsWith("EditorView$EditorAreaComponent")) {
-                return component;
-            }
-
-            if (component instanceof Container) {
-                var found = findEditorAreaComponent((Container) component);
-                if (found != null) {
-                    return found;
-                }
-            }
-        }
-        return null;
-    }
-
-    private void initCustomEditorMode() {
-        try {
-            var editorPanel = (JPanel) findEditorAreaComponent(WindowManager.getDefault().getMainWindow());
-
-            if (editorPanel != null) {
-                var customPanel = new PackagePanel();
-                editorPanel.removeAll();
-//                editorPanel.setLayout(new BorderLayout());
-//                editorPanel.add(customPanel, BorderLayout.CENTER);
-                editorPanel.add(customPanel);
-
-                editorPanel.validate();
-                editorPanel.repaint();
-            }
-        } catch (Exception e) {
-            Exceptions.printStackTrace(e);
         }
     }
 

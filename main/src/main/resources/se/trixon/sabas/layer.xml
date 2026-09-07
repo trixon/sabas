@@ -93,6 +93,7 @@
     <file name="Toolbars_hidden"/>
     <folder name="Windows2">
         <folder name="Modes">
+            <file name="center.wsmode" url="centerWsmode.xml"/>
             <file name="left.wsmode" url="left1Wsmode.xml"/>
             <file name="left2.wsmode" url="left2Wsmode.xml"/>
             <file name="left3.wsmode" url="left3Wsmode.xml"/>

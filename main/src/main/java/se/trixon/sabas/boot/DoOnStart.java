@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
  */
 package se.trixon.sabas.boot;
 
-import javax.swing.UIManager;
 import org.openide.modules.OnStart;
 import org.openide.util.NbPreferences;
 import se.trixon.almond.nbp.NbHelper;
@@ -29,11 +28,8 @@ import se.trixon.almond.nbp.dialogs.NbOptionalDialog;
 public class DoOnStart implements Runnable {
 
     static {
-//        System.setProperty("netbeans.winsys.hideEmptyDocArea", "true");
+        System.setProperty("netbeans.winsys.hideEmptyDocArea", "true");
         System.setProperty("netbeans.winsys.no_help_in_dialogs", "true");
-//        System.setProperty("netbeans.winsys.no_toolbars", "true");
-        UIManager.put("ViewTab.underlineHeight", 0);
-        UIManager.put("EditorTab.underlineHeight", 0);
 
         NbHelper.setLafDefault("Light");
         NbHelper.setLafAccentColor("#ff0000");

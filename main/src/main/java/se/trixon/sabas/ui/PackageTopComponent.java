@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,11 @@ import java.awt.CardLayout;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import org.apache.commons.lang3.StringUtils;
+import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.util.NbBundle;
+import org.openide.windows.TopComponent;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.Sabas;
@@ -30,7 +35,31 @@ import se.trixon.sabas.core.PkgManager;
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
-public class PackagePanel extends javax.swing.JPanel {
+/**
+ * Top component which displays something.
+ */
+@ConvertAsProperties(
+        dtd = "-//se.trixon.sabas.ui//Package//EN",
+        autostore = false
+)
+@TopComponent.Description(
+        preferredID = "PackageTopComponent",
+        //iconBase="SET/PATH/TO/ICON/HERE",
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+)
+@TopComponent.Registration(mode = "center", openAtStartup = true)
+@ActionID(category = "Window", id = "se.trixon.sabas.ui.PackageTopComponent")
+@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@TopComponent.OpenActionRegistration(
+        displayName = "#CTL_PackageAction",
+        preferredID = "PackageTopComponent"
+)
+@NbBundle.Messages({
+    "CTL_PackageAction=Package",
+    "CTL_PackageTopComponent=Package",
+    "HINT_PackageTopComponent=This is a Package window"
+})
+public class PackageTopComponent extends TopComponent {
 
     private final Options mOptions = Options.getInstance();
     private final PkgManager mPkgManager = PkgManager.getInstance();
@@ -41,10 +70,14 @@ public class PackagePanel extends javax.swing.JPanel {
     /**
      * Creates new form BrowserPanel
      */
-    public PackagePanel() {
+    public PackageTopComponent() {
         mDetailsDelayedResetRunner = new DelayedResetRunner(100, () -> mPkgManager.populatePackage(mPkgManager.getSelectedPkg()));
         initComponents();
         initListeners();
+        setName(Bundle.CTL_PackageTopComponent());
+        setToolTipText(Bundle.HINT_PackageTopComponent());
+        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
+        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
     }
 
     private void displayPackageInfo(Pkg pkg) {
@@ -95,6 +128,7 @@ public class PackagePanel extends javax.swing.JPanel {
                 providesLogPanel.getTextArea().setText("");
                 requiresLogPanel.getTextArea().setText("");
                 mDetailsDelayedResetRunner.reset();
+                makeBusy(true);
             } else {
                 displayPackageInfoDetails(pkg);
             }
@@ -114,6 +148,7 @@ public class PackagePanel extends javax.swing.JPanel {
             requiresLogPanel.scrollToTop();
             requiredLogPanel.scrollToTop();
         }
+        makeBusy(false);
     }
 
     private void initListeners() {
@@ -197,69 +232,69 @@ public class PackagePanel extends javax.swing.JPanel {
 
         nameLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "NAME"); // NOI18N
-        nameLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.nameLabel.toolTipText")); // NOI18N
+        nameLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.nameLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(summaryLabel, "SUMMARY"); // NOI18N
-        summaryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.summaryLabel.toolTipText")); // NOI18N
+        summaryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.summaryLabel.toolTipText")); // NOI18N
 
         versionLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
-        org.openide.awt.Mnemonics.setLocalizedText(versionLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.versionLabel.text")); // NOI18N
-        versionLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.versionLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(versionLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.versionLabel.text")); // NOI18N
+        versionLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.versionLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(licenseLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.licenseLabel.text")); // NOI18N
-        licenseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.licenseLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(licenseLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.licenseLabel.text")); // NOI18N
+        licenseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.licenseLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(installSeparatorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.installSeparatorLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(installSeparatorLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.installSeparatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(sizeInstallLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.sizeInstallLabel.text")); // NOI18N
-        sizeInstallLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.sizeInstallLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(sizeInstallLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.sizeInstallLabel.text")); // NOI18N
+        sizeInstallLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.sizeInstallLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(sizeDownloadLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.sizeDownloadLabel.text")); // NOI18N
-        sizeDownloadLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.sizeDownloadLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(sizeDownloadLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.sizeDownloadLabel.text")); // NOI18N
+        sizeDownloadLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.sizeDownloadLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(vendorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.vendorLabel.text")); // NOI18N
-        vendorLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.vendorLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(vendorLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.vendorLabel.text")); // NOI18N
+        vendorLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.vendorLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.urlLabel.text")); // NOI18N
-        urlLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.urlLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.urlLabel.text")); // NOI18N
+        urlLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.urlLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(repositoryLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.repositoryLabel.text")); // NOI18N
-        repositoryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.repositoryLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(repositoryLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.repositoryLabel.text")); // NOI18N
+        repositoryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.repositoryLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(packagerLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.packagerLabel.text")); // NOI18N
-        packagerLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.packagerLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(packagerLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.packagerLabel.text")); // NOI18N
+        packagerLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.packagerLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(releaseLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.releaseLabel.text")); // NOI18N
-        releaseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.releaseLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(releaseLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.releaseLabel.text")); // NOI18N
+        releaseLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.releaseLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(archLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.archLabel.text")); // NOI18N
-        archLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.archLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(archLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.archLabel.text")); // NOI18N
+        archLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.archLabel.toolTipText")); // NOI18N
 
         installedTimeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        org.openide.awt.Mnemonics.setLocalizedText(installedTimeLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.installedTimeLabel.text")); // NOI18N
-        installedTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.installedTimeLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(installedTimeLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.installedTimeLabel.text")); // NOI18N
+        installedTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.installedTimeLabel.toolTipText")); // NOI18N
 
         buildTimeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        org.openide.awt.Mnemonics.setLocalizedText(buildTimeLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.buildTimeLabel.text")); // NOI18N
-        buildTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.buildTimeLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(buildTimeLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.buildTimeLabel.text")); // NOI18N
+        buildTimeLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.buildTimeLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(idLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.idLabel.text")); // NOI18N
-        idLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.idLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(idLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.idLabel.text")); // NOI18N
+        idLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.idLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(releaseSeparatorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.releaseSeparatorLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(releaseSeparatorLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.releaseSeparatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(epochLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.epochLabel.text")); // NOI18N
-        epochLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.epochLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(epochLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.epochLabel.text")); // NOI18N
+        epochLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.epochLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(buildSeparatorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.buildSeparatorLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(buildSeparatorLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.buildSeparatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(vendorSeparatorLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.vendorSeparatorLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(vendorSeparatorLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.vendorSeparatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(statusLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.statusLabel.text")); // NOI18N
-        statusLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.statusLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(statusLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.statusLabel.text")); // NOI18N
+        statusLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.statusLabel.toolTipText")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(groupLabel, org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.groupLabel.text")); // NOI18N
-        groupLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.groupLabel.toolTipText")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(groupLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.groupLabel.text")); // NOI18N
+        groupLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.groupLabel.toolTipText")); // NOI18N
 
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);
@@ -370,16 +405,27 @@ public class PackagePanel extends javax.swing.JPanel {
 
         infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
         infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.descriptionLogPanel.TabConstraints.tabTitle"), descriptionLogPanel); // NOI18N
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.filesLogPanel.TabConstraints.tabTitle"), filesLogPanel); // NOI18N
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.requiresLogPanel.TabConstraints.tabTitle"), requiresLogPanel); // NOI18N
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.requiredLogPanel.TabConstraints.tabTitle"), requiredLogPanel); // NOI18N
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackagePanel.class, "PackagePanel.providesLogPanel.TabConstraints.tabTitle"), providesLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.descriptionLogPanel.TabConstraints.tabTitle"), descriptionLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.filesLogPanel.TabConstraints.tabTitle"), filesLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.requiresLogPanel.TabConstraints.tabTitle"), requiresLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.requiredLogPanel.TabConstraints.tabTitle"), requiredLogPanel); // NOI18N
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.providesLogPanel.TabConstraints.tabTitle"), providesLogPanel); // NOI18N
 
         infoCardPanel.add(infoTabbedPane, java.awt.BorderLayout.CENTER);
 
         add(infoCardPanel, "info");
     }// </editor-fold>//GEN-END:initComponents
+    void writeProperties(java.util.Properties p) {
+        // better to version settings since initial version as advocated at
+        // http://wiki.apidesign.org/wiki/PropertyFiles
+        p.setProperty("version", "1.0");
+        // TODO store your settings
+    }
+
+    void readProperties(java.util.Properties p) {
+        String version = p.getProperty("version");
+        // TODO read your settings according to their version
+    }
 
     private String formatSize(long bytes) {
         if (bytes <= 0) {
