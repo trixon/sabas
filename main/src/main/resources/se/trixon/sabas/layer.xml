@@ -50,6 +50,20 @@
             <file name="org-netbeans-core-windows-actions-ToolbarsListAction.shadow_hidden"/>
         </folder>
         <!--<file name="Window_hidden"/>-->
+        <folder name="Window">
+            <file name="CloseAllButThisAction.shadow_hidden"/>
+            <file name="CloseAllDocumentsAction.shadow_hidden"/>
+            <file name="CloseWindowAction.shadow_hidden"/>
+            <file name="ConfigureWindow_hidden"/>
+            <file name="DocumentsAction.shadow_hidden"/>
+            <file name="GroupsMenuAction.shadow_hidden"/>
+            <file name="Separator3.instance_hidden"/>
+            <file name="Separator4.instance_hidden"/>
+            <file name="SwitchToRecentDocumentAction.shadow_hidden"/>
+            <file name="Tools_hidden"/>
+            <file name="Web_hidden"/>
+            <file name="org-netbeans-modules-dashboard-ShowDashboardAction.shadow_hidden"/>
+        </folder>
         <file name="se-trixon-sabas-ui-parts-QuickSearchAction.shadow">
             <attr name="originalFile" stringvalue="Actions/Edit/org-netbeans-modules-quicksearch-QuickSearchAction.instance"/>
             <attr name="position" intvalue="10000"/>
