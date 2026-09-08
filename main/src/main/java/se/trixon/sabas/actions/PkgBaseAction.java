@@ -32,9 +32,11 @@ public abstract class PkgBaseAction extends AbstractAction {
         initListeners();
     }
 
-    public PkgBaseAction(String name) {
+    public PkgBaseAction(String name, boolean blockable) {
         super(name);
-        initListeners();
+        if (blockable) {
+            initListeners();
+        }
     }
 
     private void initListeners() {

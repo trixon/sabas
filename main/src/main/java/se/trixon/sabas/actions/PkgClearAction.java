@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,13 +31,13 @@ import org.openide.util.NbBundle.Messages;
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Tools", position = 1000, separatorAfter = 1001)
+    @ActionReference(path = "Menu/Commands", position = 1000, separatorAfter = 1001)
 })
 @Messages("CTL_PkgClearAction=Clear index")
 public final class PkgClearAction extends PkgBaseAction {
 
     public PkgClearAction() {
-        super(Bundle.CTL_PkgClearAction());
+        super(Bundle.CTL_PkgClearAction(), true);
     }
 
     @Override

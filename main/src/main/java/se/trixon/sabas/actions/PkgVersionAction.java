@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,12 +29,12 @@ import org.openide.util.NbBundle.Messages;
         displayName = "#CTL_PkgVersionAction",
         lazy = false
 )
-@ActionReference(path = "Menu/Tools", position = 0)
+@ActionReference(path = "Menu/Commands", position = 1100)
 @Messages("CTL_PkgVersionAction=Version")
 public final class PkgVersionAction extends PkgBaseAction {
 
     public PkgVersionAction() {
-        super(Bundle.CTL_PkgVersionAction());
+        super(Bundle.CTL_PkgVersionAction(), true);
     }
 
     @Override

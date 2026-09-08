@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,14 +31,14 @@ import org.openide.util.NbBundle.Messages;
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Tools", position = 10),
+    @ActionReference(path = "Menu/Commands", position = 10),
     @ActionReference(path = "Shortcuts", name = "D-U")
 })
 @Messages("CTL_PkgUpdateAction=Update index")
 public final class PkgUpdateAction extends PkgBaseAction {
 
     public PkgUpdateAction() {
-        super(Bundle.CTL_PkgUpdateAction());
+        super(Bundle.CTL_PkgUpdateAction(), true);
     }
 
     @Override

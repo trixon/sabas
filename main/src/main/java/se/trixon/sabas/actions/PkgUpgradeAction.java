@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,14 +31,14 @@ import org.openide.util.NbBundle.Messages;
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Tools", position = 20),
+    @ActionReference(path = "Menu/Commands", position = 20),
     @ActionReference(path = "Shortcuts", name = "SD-U")
 })
 @Messages("CTL_PkgUpgradeAction=Upgrade software")
 public final class PkgUpgradeAction extends PkgBaseAction {
 
     public PkgUpgradeAction() {
-        super(Bundle.CTL_PkgUpgradeAction());
+        super(Bundle.CTL_PkgUpgradeAction(), true);
     }
 
     @Override
