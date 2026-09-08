@@ -8,7 +8,7 @@
 
     <constraints>
 
-        <path orientation="horizontal" number="20" weight="0.3"/>
+        <path orientation="horizontal" number="20" weight="0.03"/>
 
         <path orientation="vertical" number="30" weight="0.5"/>
 

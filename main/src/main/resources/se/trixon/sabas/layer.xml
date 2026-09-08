@@ -33,6 +33,10 @@
             <file name="org-netbeans-modules-autoupdate-ui-actions-CheckForUpdatesAction.shadow_hidden"/>
         </folder>
         <folder name="View_hidden"/>
+        <folder name="Commands">
+            <attr name="position" intvalue="450"/>
+            <attr name="displayName" bundlevalue="se.trixon.sabas.Bundle#Commands"/>
+        </folder>
         <folder name="Tools">
             <file name="Separator1.instance_hidden"/>
             <file name="Separator2.instance_hidden"/>
@@ -73,12 +77,21 @@
             </file>
         </folder>
     </folder>
+    <folder name="Keymaps">
+        <folder name="NetBeans">
+            <file name="DOS-P.shadow_hidden"/>
+            <file name="D-4.shadow_hidden"/>
+        </folder>
+    </folder>
     <folder name="Shortcuts">
         <file name="DS-ENTER.shadow_hidden"/>
         <file name="OS-ENTER.shadow_hidden"/>
         <!--<file name="D-4.shadow_hidden"/>-->
         <!--        <file name="D-4.shadow">
             <attr name="originalFile" stringvalue="Actions/Window/se-trixon-sabas-ui-FilterVendorTopComponent.instance"/>
+        </file>-->
+        <!--        <file name="D-F.shadow">
+            <attr name="originalFile" stringvalue="Actions/Edit/org-netbeans-modules-quicksearch-QuickSearchAction.instance"/>
         </file>-->
         <file name="D-COMMA.shadow">
             <attr name="originalFile" stringvalue="Actions/Window/org-netbeans-modules-options-OptionsWindowAction.instance"/>
