@@ -37,28 +37,16 @@ public interface BridgeOperations {
         return "NO-OP";
     }
 
-    default public List<String> onProvideCacheClearCommand() {
-        return List.of();
-    }
+    BridgeOperation onProvideCacheClearCommand();
 
-    default public List<String> onProvideCacheUpdateCommand() {
-        return List.of();
-    }
+    BridgeOperation onProvideCacheUpdateCommand();
 
-    default public List<String> onProvideTransactionInstall() {
-        return List.of();
-    }
+    BridgeOperation onProvideTransactionInstall(String... packages);
 
-    default public List<String> onProvideTransactionUninstall() {
-        return List.of();
-    }
+    BridgeOperation onProvideTransactionRemove(String... packages);
 
-    default public List<String> onProvideTransactionUpgrade() {
-        return List.of();
-    }
+    BridgeOperation onProvideTransactionUpgrade();
 
-    default public List<String> onProvideVersionCommand() {
-        return List.of();
-    }
+    BridgeOperation onProvideVersionCommand();
 
 }

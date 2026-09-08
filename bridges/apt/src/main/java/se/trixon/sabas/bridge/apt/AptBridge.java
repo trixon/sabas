@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.BridgeOperation;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
@@ -42,10 +44,21 @@ import se.trixon.sabas.api.PkgDictionary;
 @ServiceProvider(service = Bridge.class)
 public class AptBridge extends Bridge {
 
+    public static final String APT_GET = "apt-get";
+
+    private final Map<String, String> mDefaultEnvironment = new HashMap<>();
+    private final List<String> mDefaultEnvironmentList;
     private final PkgDictionary mDictionary = PkgDictionary.getInstance();
 
     public AptBridge() {
         super("apt", "in development", "Debian 13");
+        mDefaultEnvironmentList = List.of("env",
+                "DEBIAN_FRONTEND=noninteractive",
+                "DEBCONF_NONINTERACTIVE_SEEN=true",
+                "DEBCONF_NOWARNINGS=yes",
+                "TERM=dumb"
+        );
+        initExecutors();
     }
 
     @Override
@@ -154,33 +167,78 @@ public class AptBridge extends Bridge {
     }
 
     @Override
-    public List<String> onProvideCacheClearCommand() {
-        return List.of(PKEXEC, "apt-get", "clean");
+    public BridgeOperation onProvideCacheClearCommand() {
+        return new BridgeOperation(
+                createBaseCommand(createShellScript("clear", null)),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideCacheUpdateCommand() {
-        return List.of(PKEXEC, "apt-get", "update");
+    public BridgeOperation onProvideCacheUpdateCommand() {
+        return new BridgeOperation(
+                createBaseCommand(createShellScript("update", null)),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideTransactionInstall() {
-        return List.of(PKEXEC, "apt-get", "install");
+    public BridgeOperation onProvideTransactionInstall(String... packages) {
+        return new BridgeOperation(
+                createBaseCommand(createShellScript("install", packages)),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideTransactionUninstall() {
-        return List.of(PKEXEC, "apt-get", "remove");
+    public BridgeOperation onProvideTransactionRemove(String... packages) {
+        return new BridgeOperation(
+                createBaseCommand(createShellScript("remove", packages)),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideTransactionUpgrade() {
-        return List.of(PKEXEC, "apt-get", "upgrade");
+    public BridgeOperation onProvideTransactionUpgrade() {
+        return new BridgeOperation(
+                createBaseCommand(createShellScript("upgrade", null)),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideVersionCommand() {
-        return List.of("apt", "--version");
+    public BridgeOperation onProvideVersionCommand() {
+        return new BridgeOperation(
+                new ArrayList<>(List.of("apt", "--version")),
+                mDefaultEnvironment
+        );
+    }
+
+    private ArrayList<String> createBaseCommand(String shellCommand) {
+        var command = new ArrayList<String>();
+        command.add(PKEXEC);
+        command.addAll(mDefaultEnvironmentList);
+        command.add("sh");
+        command.add("-c");
+        command.add(shellCommand);
+
+        return command;
+    }
+
+    private String createShellScript(String command, String[] packages) {
+        // -q=2
+        if (packages == null) {
+            packages = new String[]{""};
+        }
+
+        return "%s %s %s %s %s && echo 'SABAS SUCCESS' || { echo 'SABAS ERROR'; exit 1; }"
+                .formatted(
+                        APT_GET,
+                        command,
+                        String.join(" ", packages),
+                        "-o Dpkg::Use-Pty=0",
+                        "-o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold"
+                );
     }
 
     private String getPkgDetailsFiles(Set<Process> processes, String name) {
@@ -338,7 +396,7 @@ public class AptBridge extends Bridge {
     private HashSet<String> getPkgOrphaned() {
         var packageNames = new HashSet<String>();
         try {
-            var p = createProcessBuilder(List.of("apt-get", "autoremove", "--simulate")).start();
+            var p = createProcessBuilder(List.of(APT_GET, "autoremove", "--simulate")).start();
             try (var it = IOUtils.lineIterator(p.getInputStream(), StandardCharsets.UTF_8)) {
                 while (it.hasNext()) {
                     var line = it.next();
@@ -567,6 +625,31 @@ public class AptBridge extends Bridge {
         }
 
         return upgradableMap;
+    }
+
+    private void initExecutors() {
+        mDefaultEnvironment.put("DEBIAN_FRONTEND", "noninteractive");
+        mDefaultEnvironment.put("DEBCONF_NONINTERACTIVE_SEEN", "true");
+        mDefaultEnvironment.put("DEBCONF_NOWARNINGS", "yes");
+        mDefaultEnvironment.put("TERM", "dumb");
+
+//        mExecutorCacheClear = new BridgeOperation(
+//                new ArrayList<>(List.of(PKEXEC, APT_GET, "clear")),
+//                mDefaultEnvironment
+//        );
+//
+//        mExecutorCacheUpdate = new BridgeOperation(
+//                new ArrayList<>(List.of(PKEXEC, APT_GET, "update")),
+//                mDefaultEnvironment
+//        );
+//
+//        /*
+//        -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+//         */
+//        mExecutorUpgrade = new BridgeOperation(
+//                new ArrayList<>(List.of(PKEXEC, APT_GET, "upgrade")),
+//                mDefaultEnvironment
+//        );
     }
 
 }

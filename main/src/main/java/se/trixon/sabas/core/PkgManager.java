@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,9 @@
  */
 package se.trixon.sabas.core;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +30,7 @@ import org.apache.commons.lang3.Strings;
 import org.netbeans.api.extexecution.ExecutionDescriptor;
 import org.netbeans.api.extexecution.ExecutionService;
 import org.netbeans.api.progress.ProgressHandle;
+import org.openide.awt.StatusDisplayer;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
@@ -37,6 +41,7 @@ import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.BridgeOperation;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
 
@@ -56,6 +61,7 @@ public class PkgManager {
     private final List<Pkg> mAllItems = Collections.synchronizedList(new ArrayList<>());
     private final List<Pkg> mFilteredItems = Collections.synchronizedList(new ArrayList<>());
     private InputOutput mInputOutput;
+    private final DateTimeFormatter mMediumFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM);
     private final Runnable mNoOp = () -> {
     };
     private final Options mOptions = Options.getInstance();
@@ -129,10 +135,9 @@ public class PkgManager {
         if (isBridgeInvalid() && getSelectedPkg() != null) {
             return;
         }
-        var totalList = new ArrayList<String>();
-        totalList.addAll(getBridge().onProvideTransactionInstall());
-        totalList.add(getSelectedPkg().getName());
-        externalExecutor("Installing...", totalList, () -> populatePackages());
+
+        var bridgeExecutor = getBridge().onProvideTransactionInstall(getSelectedPkg().getName());
+        externalExecutor("Installing...", bridgeExecutor, () -> populatePackages());
     }
 
     public boolean isLongTaskRunning() {
@@ -169,7 +174,6 @@ public class PkgManager {
 
             SwingUtilities.invokeLater(() -> {
                 setSelectedPkgDetails(pkg);
-                System.out.println("Package details loaded in " + SystemHelper.age(start));
             });
         });
     }
@@ -203,7 +207,8 @@ public class PkgManager {
                 setAllItems(packages);
                 setFilteredItems(packages);
 //                PkgDictionary.getInstance().debugPrint();
-                System.out.println("Loaded in " + SystemHelper.age(start));
+                displayStatus("Loading", SystemHelper.age(start));
+
                 setLongTaskRunning(false);
             });
         });
@@ -213,10 +218,9 @@ public class PkgManager {
         if (isBridgeInvalid() && getSelectedPkg() != null) {
             return;
         }
-        var totalList = new ArrayList<String>();
-        totalList.addAll(getBridge().onProvideTransactionUninstall());
-        totalList.add(getSelectedPkg().getName());
-        externalExecutor("Uninstalling...", totalList, () -> populatePackages());
+
+        var bridgeCommand = getBridge().onProvideTransactionRemove(getSelectedPkg().getName());
+        externalExecutor("Removing...", bridgeCommand, () -> populatePackages());
     }
 
     public void setAllItems(List<Pkg> newFilteredList) {
@@ -274,6 +278,57 @@ public class PkgManager {
         };
     }
 
+    private void displayStatus(String title, long elapsed) {
+        var text = "%s %s finnished in %d ms".formatted(
+                LocalTime.now().format(mMediumFormatter),
+                title,
+                elapsed
+        );
+        StatusDisplayer.getDefault().setStatusText(text,
+                StatusDisplayer.IMPORTANCE_ANNOTATION);
+
+    }
+
+    private void externalExecutor(String displayName, BridgeOperation bridgeOperation, Runnable postExecution) {
+        if (mInputOutput == null) {
+            mInputOutput = IOProvider.getDefault().getIO("Details", false);
+        }
+        var command = bridgeOperation.command();
+        var start = System.currentTimeMillis();
+        var descriptor = new ExecutionDescriptor()
+                .frontWindow(true)
+                .inputOutput(mInputOutput)
+                .inputVisible(true)
+                .showProgress(true)
+                .noReset(true)
+                .postExecution(() -> {
+                    postExecution.run();
+                    setLongTaskRunning(false);
+                    displayStatus(displayName, SystemHelper.age(start));
+
+                });
+
+        if (command == null || command.isEmpty()) {
+            System.out.println("Invalid command" + displayName);
+        }
+
+        var pb = new ProcessBuilder(command);
+        pb.environment().put("LC_ALL", "C");
+        pb.environment().putAll(bridgeOperation.env());
+        pb.redirectErrorStream();
+
+        var service = ExecutionService.newService(
+                () -> pb.start(),
+                descriptor,
+                displayName
+        );
+        System.out.println(String.join(" ", command));
+        setLongTaskRunning(true);
+        service.run();
+        mInputOutput.select();
+    }
+
+    @Deprecated
     private void externalExecutor(String displayName, List<String> externalCommand, Runnable postExecution) {
         if (mInputOutput == null) {
             mInputOutput = IOProvider.getDefault().getIO("Details", false);
@@ -289,7 +344,7 @@ public class PkgManager {
                 .postExecution(() -> {
                     postExecution.run();
                     setLongTaskRunning(false);
-                    System.out.println("Updated in " + SystemHelper.age(start));
+                    displayStatus(displayName, SystemHelper.age(start));
                 });
 
         if (externalCommand.isEmpty()) {

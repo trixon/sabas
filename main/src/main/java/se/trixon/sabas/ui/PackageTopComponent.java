@@ -56,8 +56,7 @@ import se.trixon.sabas.core.PkgManager;
 )
 @NbBundle.Messages({
     "CTL_PackageAction=Package",
-    "CTL_PackageTopComponent=Package",
-    "HINT_PackageTopComponent=This is a Package window"
+    "CTL_PackageTopComponent=Package"
 })
 public class PackageTopComponent extends TopComponent {
 
@@ -75,7 +74,6 @@ public class PackageTopComponent extends TopComponent {
         initComponents();
         initListeners();
         setName(Bundle.CTL_PackageTopComponent());
-        setToolTipText(Bundle.HINT_PackageTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
     }

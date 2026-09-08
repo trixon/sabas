@@ -33,12 +33,12 @@ import org.apache.commons.lang3.SystemUtils;
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
-public class Bridge implements BridgeOperations {
+public abstract class Bridge implements BridgeOperations {
 
     public static final String PKEXEC = "pkexec";
+
     protected final String mFieldSeparator = "\u001F";
     protected final String mRecordSeparator = "\u001E";
-
     private String mDescription;
     private String mName;
     private String mSupports;
@@ -70,7 +70,6 @@ public class Bridge implements BridgeOperations {
             processBuilder.environment().putAll(map);
             processBuilder.redirectErrorStream(true);
             process = processBuilder.start();
-//            process.
             processes.add(process);
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();

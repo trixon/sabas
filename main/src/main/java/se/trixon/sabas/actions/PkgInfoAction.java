@@ -22,7 +22,7 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 import se.trixon.almond.nbp.dialogs.NbMessage;
-import se.trixon.sabas.api.BridgeExecutor;
+import se.trixon.sabas.api.BridgeOperation;
 
 @ActionID(
         category = "Pkg",
@@ -59,7 +59,7 @@ public final class PkgInfoAction extends PkgBaseAction {
         return sb.append("<b>").append(text).append("</b><br/>");
     }
 
-    private String convertCommand(BridgeExecutor executor) {
-        return String.join(" ", executor.command()) + "<br/>";
+    private String convertCommand(BridgeOperation operation) {
+        return String.join(" ", operation.command()) + "<br/>";
     }
 }
