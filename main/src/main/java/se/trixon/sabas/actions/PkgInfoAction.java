@@ -46,10 +46,10 @@ public final class PkgInfoAction extends PkgBaseAction {
     public void actionPerformed(ActionEvent e) {
         var bridge = mPkgManager.getBridge();
         var sb = new StringBuilder("<html>");
-        addHeader(sb, "Install").append(convertCommand(bridge.onProvideTransactionInstall("PACKAGES...")));
-        addHeader(sb, "Remove").append(convertCommand(bridge.onProvideTransactionRemove("PACKAGES...")));
-        addHeader(sb, "Upgrade").append(convertCommand(bridge.onProvideTransactionUpgrade()));
-        addHeader(sb, "Update").append(convertCommand(bridge.onProvideCacheUpdateCommand()));
+        addHeader(sb, "Install").append(convertCommand(mPkgManager.getOperationInstall("PACKAGES...")));
+        addHeader(sb, "Remove").append(convertCommand(mPkgManager.getOperationRemove("PACKAGES...")));
+        addHeader(sb, "Upgrade").append(convertCommand(mPkgManager.getOperationUpgrade()));
+        addHeader(sb, "Update").append(convertCommand(mPkgManager.getOperationCacheUpdate()));
         addHeader(sb, "Clear").append(convertCommand(bridge.onProvideCacheClearCommand()));
 
         NbMessage.information("Comands", sb.toString());

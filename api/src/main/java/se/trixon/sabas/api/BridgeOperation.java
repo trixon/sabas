@@ -15,13 +15,13 @@
  */
 package se.trixon.sabas.api;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
-public record BridgeOperation(ArrayList<String> command, Map<String, String> env) {
+public record BridgeOperation(List<String> command, Map<String, String> env) {
 
 }

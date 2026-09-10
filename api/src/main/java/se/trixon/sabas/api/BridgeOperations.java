@@ -16,7 +16,9 @@
 package se.trixon.sabas.api;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,6 +26,9 @@ import java.util.Set;
  * @author Patrik Karlström <patrik@trixon.se>
  */
 public interface BridgeOperations {
+
+    public static final String PKCON = "pkcon";
+    public static final String PKEXEC = "pkexec";
 
     default public List<Pkg> onGetPackageAll(Set<Process> processes) {
         return new ArrayList<>();
@@ -39,13 +44,47 @@ public interface BridgeOperations {
 
     BridgeOperation onProvideCacheClearCommand();
 
-    BridgeOperation onProvideCacheUpdateCommand();
+    default BridgeOperation onProvideCacheUpdateCommand() {
+        return new BridgeOperation(
+                List.of(PKCON, "refresh"),
+                Map.of()
+        );
+    }
 
-    BridgeOperation onProvideTransactionInstall(String... packages);
+    default BridgeOperation onProvideTransactionInstall(String... packages) {
+        var commandList = new ArrayList<>(List.of(PKEXEC, PKCON, "install", "--noninteractive"));
 
-    BridgeOperation onProvideTransactionRemove(String... packages);
+        if (packages != null) {
+            Collections.addAll(commandList, packages);
+        }
 
-    BridgeOperation onProvideTransactionUpgrade();
+        return new BridgeOperation(
+                commandList,
+                Map.of()
+        );
+    }
+
+    default BridgeOperation onProvideTransactionRemove(String... packages) {
+        var commandList = new ArrayList<>(List.of(PKEXEC, PKCON, "remove", "--noninteractive"));
+
+        if (packages != null) {
+            Collections.addAll(commandList, packages);
+        }
+
+        return new BridgeOperation(
+                commandList,
+                Map.of()
+        );
+
+    }
+
+    default BridgeOperation onProvideTransactionUpgrade() {
+        return new BridgeOperation(
+                List.of(PKEXEC, PKCON, "update", "--noninteractive"),
+                Map.of()
+        );
+
+    }
 
     BridgeOperation onProvideVersionCommand();
 

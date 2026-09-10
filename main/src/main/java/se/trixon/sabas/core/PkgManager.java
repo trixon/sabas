@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.Strings;
 import org.netbeans.api.extexecution.ExecutionDescriptor;
@@ -88,7 +89,7 @@ public class PkgManager {
             return;
         }
 
-        externalExecutor("Updating cache...", getBridge().onProvideCacheUpdateCommand(), () -> populatePackages());
+        externalExecutor("Updating cache...", getOperationCacheUpdate(), () -> populatePackages());
     }
 
     public void displayVersion() {
@@ -127,6 +128,22 @@ public class PkgManager {
         return mFilteredItems;
     }
 
+    public BridgeOperation getOperationCacheUpdate() {
+        return getPreferedOperation(() -> getBridge().invokeDefaultCacheUpdate(), () -> getBridge().onProvideCacheUpdateCommand());
+    }
+
+    public BridgeOperation getOperationInstall(String... packages) {
+        return getPreferedOperation(() -> getBridge().invokeDefaultInstall(packages), () -> getBridge().onProvideTransactionInstall(packages));
+    }
+
+    public BridgeOperation getOperationRemove(String... packages) {
+        return getPreferedOperation(() -> getBridge().invokeDefaultRemove(packages), () -> getBridge().onProvideTransactionRemove(packages));
+    }
+
+    public BridgeOperation getOperationUpgrade() {
+        return getPreferedOperation(() -> getBridge().invokeDefaultUpgrade(), () -> getBridge().onProvideTransactionUpgrade());
+    }
+
     public Pkg getSelectedPkg() {
         return Sabas.getGlobalState().get(KEY_SELECTED_PKG);
     }
@@ -136,7 +153,7 @@ public class PkgManager {
             return;
         }
 
-        var bridgeExecutor = getBridge().onProvideTransactionInstall(getSelectedPkg().getName());
+        var bridgeExecutor = getOperationInstall(getSelectedPkg().getName());
         externalExecutor("Installing...", bridgeExecutor, () -> populatePackages());
     }
 
@@ -219,8 +236,8 @@ public class PkgManager {
             return;
         }
 
-        var bridgeCommand = getBridge().onProvideTransactionRemove(getSelectedPkg().getName());
-        externalExecutor("Removing...", bridgeCommand, () -> populatePackages());
+        var bridgeExecutor = getOperationRemove(getSelectedPkg().getName());
+        externalExecutor("Removing...", bridgeExecutor, () -> populatePackages());
     }
 
     public void setAllItems(List<Pkg> newFilteredList) {
@@ -258,7 +275,8 @@ public class PkgManager {
             return;
         }
 
-        externalExecutor("Upgrading...", getBridge().onProvideTransactionUpgrade(), () -> populatePackages());
+        var bridgeExecutor = getOperationUpgrade();
+        externalExecutor("Upgrading...", bridgeExecutor, () -> populatePackages());
     }
 
     private Cancellable createCanceller(Set<Process> processes, AtomicReference<Thread> threadRef) {
@@ -363,6 +381,14 @@ public class PkgManager {
         service.run();
         mInputOutput.select();
         System.out.println("xxx");
+    }
+
+    private BridgeOperation getPreferedOperation(Supplier<BridgeOperation> defaultSupplier, Supplier<BridgeOperation> implSupplier) {
+        if (Options.getInstance().is(Options.KEY_PM_PKCON, true)) {
+            return defaultSupplier.get();
+        } else {
+            return implSupplier.get();
+        }
     }
 
     private void init() {

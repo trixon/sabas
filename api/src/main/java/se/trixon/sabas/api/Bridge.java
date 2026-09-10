@@ -35,8 +35,6 @@ import org.apache.commons.lang3.SystemUtils;
  */
 public abstract class Bridge implements BridgeOperations {
 
-    public static final String PKEXEC = "pkexec";
-
     protected final String mFieldSeparator = "\u001F";
     protected final String mRecordSeparator = "\u001E";
     private String mDescription;
@@ -107,6 +105,22 @@ public abstract class Bridge implements BridgeOperations {
 
     public Path getUserHomePath() {
         return SystemUtils.getUserHomePath();
+    }
+
+    public final BridgeOperation invokeDefaultCacheUpdate() {
+        return BridgeOperations.super.onProvideCacheUpdateCommand();
+    }
+
+    public final BridgeOperation invokeDefaultInstall(String... packages) {
+        return BridgeOperations.super.onProvideTransactionInstall(packages);
+    }
+
+    public final BridgeOperation invokeDefaultRemove(String... packages) {
+        return BridgeOperations.super.onProvideTransactionRemove(packages);
+    }
+
+    public final BridgeOperation invokeDefaultUpgrade() {
+        return BridgeOperations.super.onProvideTransactionUpgrade();
     }
 
     public void setDescription(String description) {

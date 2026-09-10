@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,7 @@ import se.trixon.sabas.Sabas;
 public class Options extends OptionsBase {
 
     public static final String KEY_PM_BRIDGE = "pm.bridge";
+    public static final String KEY_PM_PKCON = "pm.pkcon";
 
     public static Options getInstance() {
         return Holder.INSTANCE;
