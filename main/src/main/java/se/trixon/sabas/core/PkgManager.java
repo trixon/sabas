@@ -403,7 +403,7 @@ public class PkgManager {
 
     private void initListeners() {
         Sabas.getGlobalState().addListener(gsce -> {
-//            cacheUpdate();
+            cacheUpdate();
         }, PkgManager.KEY_BRIDGE);
     }
 

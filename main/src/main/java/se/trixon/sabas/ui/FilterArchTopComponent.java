@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,15 +48,13 @@ import se.trixon.sabas.api.Pkg;
 )
 @Messages({
     "CTL_FilterArchAction=Arch",
-    "CTL_FilterArchTopComponent=Arch",
-    "HINT_FilterArchTopComponent=This is a FilterArch window"
+    "CTL_FilterArchTopComponent=Arch"
 })
 public final class FilterArchTopComponent extends BaseFilterTopComponent {
 
     public FilterArchTopComponent() {
         super(DictionarySection.ARCH, Pkg::getArchId);
         setName(Bundle.CTL_FilterArchTopComponent());
-        setToolTipText(Bundle.HINT_FilterArchTopComponent());
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
 
     }

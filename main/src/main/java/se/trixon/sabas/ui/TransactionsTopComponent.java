@@ -92,7 +92,7 @@ public final class TransactionsTopComponent extends TopComponent {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(TransactionsTopComponent.class, "TransactionsTopComponent.jPanel1.border.title"))); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, "<html>We are aiming for a foolproof queue management in the future but concider Sabas as a package browser for now, <br/>or <b>proceed at your own risk</b>."); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, "<html>The goal in the future is foolproof queue management install &amp; remove but concider Sabas as a package browser for now, <br/>or <b>proceed at your own risk</b>."); // NOI18N
         jLabel1.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         jLabel1.setPreferredSize(new java.awt.Dimension(60, 28));
 
@@ -109,7 +109,7 @@ public final class TransactionsTopComponent extends TopComponent {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
+                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -135,7 +135,7 @@ public final class TransactionsTopComponent extends TopComponent {
                     .addComponent(installButton)
                     .addComponent(removeButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(137, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents

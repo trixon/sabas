@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,11 +39,11 @@ public class BridgeSelectorRenderer extends javax.swing.JPanel implements ListCe
 
     @Override
     public Component getListCellRendererComponent(JList<? extends Bridge> list, Bridge bridge, int index, boolean isSelected, boolean cellHasFocus) {
-
         if (index == -1) {
             var text = (bridge != null) ? bridge.getName() : "";
             return simple.getListCellRendererComponent(list, text, index, false, false);
         }
+
         if (isSelected) {
             setBackground(list.getSelectionBackground());
             nameLabel.setForeground(list.getSelectionForeground());
@@ -68,6 +68,7 @@ public class BridgeSelectorRenderer extends javax.swing.JPanel implements ListCe
 
         setEnabled(list.isEnabled());
         setFont(list.getFont());
+
         return this;
     }
 

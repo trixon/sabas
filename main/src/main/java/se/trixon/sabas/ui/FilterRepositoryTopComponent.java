@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,15 +48,13 @@ import se.trixon.sabas.api.Pkg;
 )
 @Messages({
     "CTL_FilterRepositoryAction=Repository",
-    "CTL_FilterRepositoryTopComponent=Repository",
-    "HINT_FilterRepositoryTopComponent=This is a FilterRepository window"
+    "CTL_FilterRepositoryTopComponent=Repository"
 })
 public final class FilterRepositoryTopComponent extends BaseFilterTopComponent {
 
     public FilterRepositoryTopComponent() {
         super(DictionarySection.REPOSITORY, Pkg::getRepositoryId);
         setName(Bundle.CTL_FilterRepositoryTopComponent());
-        setToolTipText(Bundle.HINT_FilterRepositoryTopComponent());
 
     }
 

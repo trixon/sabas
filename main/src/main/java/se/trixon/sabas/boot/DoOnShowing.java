@@ -17,6 +17,7 @@ package se.trixon.sabas.boot;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import javax.swing.SwingUtilities;
 import org.openide.awt.HtmlBrowser;
 import org.openide.util.Exceptions;
 import org.openide.windows.OnShowing;
@@ -47,11 +48,7 @@ public class DoOnShowing implements Runnable {
 
         Almond.openTopComponent("ActionsTopComponent");
         Almond.openAndActivateTopComponent("FilterTopComponent");
-//        var output = WindowManager.getDefault().findTopComponent("output");
-//        output.setHtmlDisplayName("<html><b>%s</b></html>".formatted(output.getName()));
         Almond.hideTabs("output");
-//        Almond.hideTabs("FilterTopComponent");
-//        Almond.hideTabs("ActionsTopComponent");
         Sabas.displaySystemInformation();
         if (mPkgManager.getBridge() == null) {
             var message = """
@@ -61,7 +58,7 @@ public class DoOnShowing implements Runnable {
 
             NbMessage.warning("No bridge configured", message);
         } else {
-//            SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
+            SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
         }
     }
 

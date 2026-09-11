@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@ package se.trixon.sabas.ui.parts;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.util.Comparator;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.border.EmptyBorder;
@@ -72,7 +73,9 @@ public class BridgeStatusLineElement implements StatusLineElementProvider {
 
     private void updateBridges() {
         SwingHelper.runLater(() -> {
-            var bridges = Lookup.getDefault().lookupAll(Bridge.class).stream().toArray(Bridge[]::new);
+            var bridges = Lookup.getDefault().lookupAll(Bridge.class).stream()
+                    .sorted(Comparator.comparing(Bridge::getName, String.CASE_INSENSITIVE_ORDER))
+                    .toArray(Bridge[]::new);
             var comboBoxCheckModel = new DefaultComboBoxModel<Bridge>(bridges);
             mComboBox.setModel(comboBoxCheckModel);
         });

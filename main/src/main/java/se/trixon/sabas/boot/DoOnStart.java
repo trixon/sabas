@@ -19,6 +19,7 @@ import org.openide.modules.OnStart;
 import org.openide.util.NbPreferences;
 import se.trixon.almond.nbp.NbHelper;
 import se.trixon.almond.nbp.dialogs.NbOptionalDialog;
+import se.trixon.almond.nbp.output.OutputLineMode;
 
 /**
  *
@@ -33,7 +34,7 @@ public class DoOnStart implements Runnable {
 
         NbHelper.setLafDefault("Light");
         NbHelper.setLafAccentColor("#ff0000");
-        NbHelper.initNightModeIfNeeded();
+        OutputLineMode.setNightMode(NbHelper.isNightMode());
 
         NbOptionalDialog.setPreferences(NbPreferences.forModule(NbOptionalDialog.class).node("optionalDialogState"));
     }

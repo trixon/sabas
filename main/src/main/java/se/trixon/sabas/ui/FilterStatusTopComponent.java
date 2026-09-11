@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,8 +53,7 @@ import se.trixon.sabas.ui.parts.ZebraListCellRenderer;
 )
 @Messages({
     "CTL_FilterStatusAction=Status",
-    "CTL_FilterStatusTopComponent=Status",
-    "HINT_FilterStatusTopComponent=This is a FilterStatus window"
+    "CTL_FilterStatusTopComponent=Status"
 })
 public final class FilterStatusTopComponent extends BaseFilterTopComponent {
 
@@ -63,7 +62,6 @@ public final class FilterStatusTopComponent extends BaseFilterTopComponent {
     public FilterStatusTopComponent() {
         super(DictionarySection.STATUS, pkg -> -1);
         setName(Bundle.CTL_FilterStatusTopComponent());
-        setToolTipText(Bundle.HINT_FilterStatusTopComponent());
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         init();
     }

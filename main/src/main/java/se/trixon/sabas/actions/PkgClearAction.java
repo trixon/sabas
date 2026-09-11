@@ -17,8 +17,6 @@ package se.trixon.sabas.actions;
 
 import java.awt.event.ActionEvent;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
@@ -30,9 +28,9 @@ import org.openide.util.NbBundle.Messages;
         displayName = "#CTL_PkgClearAction",
         lazy = false
 )
-@ActionReferences({
-    @ActionReference(path = "Menu/Commands", position = 1000, separatorAfter = 1001)
-})
+//@ActionReferences({
+//    @ActionReference(path = "Menu/Commands", position = 1000, separatorAfter = 1001)
+//})
 @Messages("CTL_PkgClearAction=Clear index")
 public final class PkgClearAction extends PkgBaseAction {
 

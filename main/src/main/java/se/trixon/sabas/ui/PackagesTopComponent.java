@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,8 +49,7 @@ import se.trixon.sabas.ui.parts.PkgRenderer;
 )
 @Messages({
     "CTL_PackagesAction=Packages",
-    "CTL_PackagesTopComponent=Packages",
-    "HINT_PackagesTopComponent=This is a Packages window"
+    "CTL_PackagesTopComponent=Packages"
 })
 public final class PackagesTopComponent extends BaseTopComponent {
 
@@ -60,7 +59,6 @@ public final class PackagesTopComponent extends BaseTopComponent {
     public PackagesTopComponent() {
         initComponents();
         setName(Bundle.CTL_PackagesTopComponent());
-        setToolTipText(Bundle.HINT_PackagesTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_SLIDING_DISABLED, Boolean.TRUE);

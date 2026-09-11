@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,15 +48,13 @@ import se.trixon.sabas.api.Pkg;
 )
 @Messages({
     "CTL_FilterPackagerAction=Packager",
-    "CTL_FilterPackagerTopComponent=Packager",
-    "HINT_FilterPackagerTopComponent=This is a FilterPackager window"
+    "CTL_FilterPackagerTopComponent=Packager"
 })
 public final class FilterPackagerTopComponent extends BaseFilterTopComponent {
 
     public FilterPackagerTopComponent() {
         super(DictionarySection.PACKAGER, Pkg::getPackagerId);
         setName(Bundle.CTL_FilterPackagerTopComponent());
-        setToolTipText(Bundle.HINT_FilterPackagerTopComponent());
     }
 
     void readProperties(java.util.Properties p) {

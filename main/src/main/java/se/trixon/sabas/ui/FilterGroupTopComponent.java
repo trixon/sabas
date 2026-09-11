@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,15 +48,13 @@ import se.trixon.sabas.api.Pkg;
 )
 @Messages({
     "CTL_FilterGroupAction=Group",
-    "CTL_FilterGroupTopComponent=Group",
-    "HINT_FilterGroupTopComponent=This is a Group window"
+    "CTL_FilterGroupTopComponent=Group"
 })
 public final class FilterGroupTopComponent extends BaseFilterTopComponent {
 
     public FilterGroupTopComponent() {
         super(DictionarySection.GROUP, Pkg::getGroupId);
         setName(Bundle.CTL_FilterGroupTopComponent());
-        setToolTipText(Bundle.HINT_FilterGroupTopComponent());
     }
 
     void readProperties(java.util.Properties p) {

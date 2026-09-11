@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -149,7 +149,7 @@ public final class FilterTextTopComponent extends BaseFilterTopComponent {
                         .addComponent(summaryCheckBox)
                         .addGap(18, 18, 18)
                         .addComponent(descriptionCheckBox)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, Short.MAX_VALUE)
                         .addComponent(resetButton)))
                 .addContainerGap())
         );

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,15 +48,13 @@ import se.trixon.sabas.api.Pkg;
 )
 @Messages({
     "CTL_FilterVendorAction=Vendor",
-    "CTL_FilterVendorTopComponent=Vendor",
-    "HINT_FilterVendorTopComponent=This is a FilterVendor window"
+    "CTL_FilterVendorTopComponent=Vendor"
 })
 public final class FilterVendorTopComponent extends BaseFilterTopComponent {
 
     public FilterVendorTopComponent() {
         super(DictionarySection.VENDOR, Pkg::getVendorId);
         setName(Bundle.CTL_FilterVendorTopComponent());
-        setToolTipText(Bundle.HINT_FilterVendorTopComponent());
 
     }
 

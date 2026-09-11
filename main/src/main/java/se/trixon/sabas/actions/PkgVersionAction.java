@@ -29,7 +29,7 @@ import org.openide.util.NbBundle.Messages;
         displayName = "#CTL_PkgVersionAction",
         lazy = false
 )
-@ActionReference(path = "Menu/Commands", position = 1100)
+@ActionReference(path = "Menu/Commands", position = 1100, separatorBefore = 1001)
 @Messages("CTL_PkgVersionAction=Version")
 public final class PkgVersionAction extends PkgBaseAction {
 

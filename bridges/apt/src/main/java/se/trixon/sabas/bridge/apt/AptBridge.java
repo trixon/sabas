@@ -51,7 +51,7 @@ public class AptBridge extends Bridge {
     private final PkgDictionary mDictionary = PkgDictionary.getInstance();
 
     public AptBridge() {
-        super("apt", "in development", "Debian 13");
+        super("APT", "3.0", "Debian 13");
         mDefaultEnvironmentList = List.of("env",
                 "DEBIAN_FRONTEND=noninteractive",
                 "DEBCONF_NONINTERACTIVE_SEEN=true",
