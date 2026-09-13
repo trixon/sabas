@@ -60,3 +60,4 @@ replay_pid*
 !/branding/src/main/nbm-branding/modules/org-netbeans-modules-options-keymap.jar/
 !/branding/src/main/nbm-branding/modules/org-openide-loaders.jar/
 !/branding/src/main/nbm-branding/modules/org-openide-awt.jar/
+/bridges/flatpak/target/
