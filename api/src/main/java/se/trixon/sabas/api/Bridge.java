@@ -123,6 +123,10 @@ public abstract class Bridge implements BridgeOperations {
         return BridgeOperations.super.onProvideTransactionUpgrade();
     }
 
+    public boolean isPkconSupported() {
+        return false;
+    }
+
     public void setDescription(String description) {
         mDescription = description;
     }

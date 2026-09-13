@@ -62,6 +62,11 @@ public class AptBridge extends Bridge {
     }
 
     @Override
+    public boolean isPkconSupported() {
+        return true;
+    }
+
+    @Override
     public List<Pkg> onGetPackageAll(Set<Process> processes) {
         var nameToPackageMap = new HashMap<String, Pkg>();
         var nameToRepoMap = getPkgRepoMap();

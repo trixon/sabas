@@ -52,7 +52,12 @@ public class DnfBridge extends Bridge {
     private final Map<String, String> mDefaultEnvironment = new HashMap<>();
 
     public DnfBridge() {
-        super(DNF_COMMAND, "5.4", "Fedora 44");
+        super("DNF", "5.4", "Fedora 44");
+    }
+
+    @Override
+    public boolean isPkconSupported() {
+        return true;
     }
 
     @Override

@@ -423,7 +423,7 @@ public class PkgManager {
     }
 
     private BridgeOperation getPreferedOperation(Supplier<BridgeOperation> defaultSupplier, Supplier<BridgeOperation> implSupplier) {
-        if (Options.getInstance().is(Options.KEY_PM_PKCON, true)) {
+        if (getBridge().isPkconSupported() && Options.getInstance().is(Options.KEY_PM_PKCON, true)) {
             return defaultSupplier.get();
         } else {
             return implSupplier.get();

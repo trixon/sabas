@@ -25,8 +25,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.apache.commons.io.FileUtils;
@@ -36,6 +38,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.BridgeOperation;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
@@ -48,6 +51,7 @@ import se.trixon.sabas.api.PkgDictionary;
 public class SdkManBridge extends Bridge {
 
     private final String SDK_COMMAND = "source $HOME/.sdkman/bin/sdkman-init.sh && sdk ";
+    private final Map<String, String> mDefaultEnvironment = new HashMap<>();
     private final PkgDictionary mDictionary = PkgDictionary.getInstance();
 
     public SdkManBridge() {
@@ -115,18 +119,43 @@ public class SdkManBridge extends Bridge {
     }
 
     @Override
-    public List<String> onProvideCacheClearCommand() {
-        return List.of("bash", "-c", SDK_COMMAND + "flush");
+    public BridgeOperation onProvideCacheClearCommand() {
+        return new BridgeOperation(
+                List.of("bash", "-c", SDK_COMMAND + "flush"),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideCacheUpdateCommand() {
-        return List.of("bash", "-c", SDK_COMMAND + "update");
+    public BridgeOperation onProvideCacheUpdateCommand() {
+        return new BridgeOperation(
+                List.of("bash", "-c", SDK_COMMAND + "update"),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideVersionCommand() {
-        return List.of("bash", "-c", SDK_COMMAND + "version");
+    public BridgeOperation onProvideTransactionInstall(String... packages) {
+        return new BridgeOperation(
+                List.of(),
+                mDefaultEnvironment
+        );
+    }
+
+    @Override
+    public BridgeOperation onProvideTransactionRemove(String... packages) {
+        return new BridgeOperation(
+                List.of(),
+                mDefaultEnvironment
+        );
+    }
+
+    @Override
+    public BridgeOperation onProvideVersionCommand() {
+        return new BridgeOperation(
+                List.of("bash", "-c", SDK_COMMAND + "version"),
+                mDefaultEnvironment
+        );
     }
 
     private HashSet<String> getPkgInstalledVersions() {
