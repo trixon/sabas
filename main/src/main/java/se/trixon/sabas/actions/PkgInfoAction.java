@@ -35,7 +35,9 @@ import se.trixon.sabas.api.BridgeOperation;
 @ActionReferences({
     @ActionReference(path = "Menu/Commands", position = 2000), //    @ActionReference(path = "Shortcuts", name = "D-I")
 })
-@Messages("CTL_PkgInfoAction=Info")
+@Messages({
+    "CTL_PkgInfoAction=Command summary"
+})
 public final class PkgInfoAction extends PkgBaseAction {
 
     public PkgInfoAction() {
@@ -50,7 +52,7 @@ public final class PkgInfoAction extends PkgBaseAction {
         addHeader(sb, "Upgrade").append(convertCommand(mPkgManager.getOperationUpgrade()));
         addHeader(sb, "Update").append(convertCommand(mPkgManager.getOperationCacheUpdate()));
 
-        NbMessage.information("Comands", sb.toString());
+        NbMessage.information(Bundle.CTL_PkgInfoAction(), sb.toString());
     }
 
     private StringBuilder addHeader(StringBuilder sb, String text) {

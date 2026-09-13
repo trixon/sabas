@@ -93,17 +93,13 @@
     </folder>
     <folder name="Keymaps">
         <folder name="NetBeans">
+            <file name="D-4.shadow_hidden_hidden"/>
             <file name="DOS-P.shadow_hidden"/>
-            <file name="D-4.shadow_hidden"/>
         </folder>
     </folder>
     <folder name="Shortcuts">
         <file name="DS-ENTER.shadow_hidden"/>
         <file name="OS-ENTER.shadow_hidden"/>
-        <!--<file name="D-4.shadow_hidden"/>-->
-        <!--        <file name="D-4.shadow">
-            <attr name="originalFile" stringvalue="Actions/Window/se-trixon-sabas-ui-FilterVendorTopComponent.instance"/>
-        </file>-->
         <!--        <file name="D-F.shadow">
             <attr name="originalFile" stringvalue="Actions/Edit/org-netbeans-modules-quicksearch-QuickSearchAction.instance"/>
         </file>-->

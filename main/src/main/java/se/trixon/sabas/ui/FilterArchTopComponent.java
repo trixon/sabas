@@ -47,8 +47,8 @@ import se.trixon.sabas.api.Pkg;
         preferredID = "FilterArchTopComponent"
 )
 @Messages({
-    "CTL_FilterArchAction=Arch",
-    "CTL_FilterArchTopComponent=Arch"
+    "CTL_FilterArchAction=Architecture",
+    "CTL_FilterArchTopComponent=Architecture"
 })
 public final class FilterArchTopComponent extends BaseFilterTopComponent {
 

@@ -21,7 +21,6 @@ import java.time.format.DateTimeFormatter;
 import org.apache.commons.lang3.StringUtils;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.util.swing.DelayedResetRunner;
@@ -49,7 +48,7 @@ import se.trixon.sabas.core.PkgManager;
 )
 @TopComponent.Registration(mode = "center", openAtStartup = true)
 @ActionID(category = "Window", id = "se.trixon.sabas.ui.PackageTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+//@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_PackageAction",
         preferredID = "PackageTopComponent"

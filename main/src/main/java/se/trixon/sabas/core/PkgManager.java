@@ -26,11 +26,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import javax.swing.JButton;
 import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.Strings;
 import org.netbeans.api.extexecution.ExecutionDescriptor;
 import org.netbeans.api.extexecution.ExecutionService;
 import org.netbeans.api.progress.ProgressHandle;
+import org.openide.DialogDescriptor;
+import org.openide.DialogDisplayer;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
@@ -40,6 +43,7 @@ import org.openide.windows.InputOutput;
 import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
+import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.BridgeOperation;
@@ -245,6 +249,8 @@ public class PkgManager {
         mAllItems.addAll(newFilteredList);
 
         Sabas.getGlobalState().send(KEY_ALL_ITEMS, List.copyOf(mAllItems));
+
+        checkForUpdates();
     }
 
     public void setBridge(Bridge bridge) {
@@ -279,6 +285,39 @@ public class PkgManager {
         externalExecutor("Upgrading...", bridgeExecutor, () -> populatePackages());
     }
 
+    private void checkForUpdates() {
+        Thread.ofVirtual().name("updateChecker").start(() -> {
+            var packages = mAllItems.stream()
+                    .filter(pkg -> pkg.isUpgradable())
+                    .map(pkg -> pkg.getName())
+                    .toList();
+
+            if (!packages.isEmpty()) {
+                var cancelButton = new JButton(Dict.CANCEL.toString());
+                var upgradeButton = new JButton(Dict.UPDATE.toString());
+
+                Object[] buttons = {cancelButton, upgradeButton};
+
+                var message = "Det finns uppdateringar för\n\n • " + String.join("\n • ", packages);
+                DialogDescriptor d = new DialogDescriptor(
+                        message,
+                        "Updates available",
+                        true,
+                        buttons,
+                        upgradeButton,
+                        DialogDescriptor.DEFAULT_ALIGN,
+                        null,
+                        null
+                );
+
+                SwingHelper.runLaterDelayed(10, () -> upgradeButton.requestFocus());
+                if (upgradeButton == DialogDisplayer.getDefault().notify(d)) {
+                    upgrade();
+                }
+            }
+        });
+    }
+
     private Cancellable createCanceller(Set<Process> processes, AtomicReference<Thread> threadRef) {
         return () -> {
             for (var p : processes) {
@@ -309,7 +348,7 @@ public class PkgManager {
 
     private void externalExecutor(String displayName, BridgeOperation bridgeOperation, Runnable postExecution) {
         if (mInputOutput == null) {
-            mInputOutput = IOProvider.getDefault().getIO("Details", false);
+            mInputOutput = IOProvider.getDefault().getIO(Dict.INFORMATION.toString(), false);
         }
         var command = bridgeOperation.command();
         var start = System.currentTimeMillis();
@@ -349,7 +388,7 @@ public class PkgManager {
     @Deprecated
     private void externalExecutor(String displayName, List<String> externalCommand, Runnable postExecution) {
         if (mInputOutput == null) {
-            mInputOutput = IOProvider.getDefault().getIO("Details", false);
+            mInputOutput = IOProvider.getDefault().getIO(Dict.INFORMATION.toString(), false);
 
         }
         var start = System.currentTimeMillis();
