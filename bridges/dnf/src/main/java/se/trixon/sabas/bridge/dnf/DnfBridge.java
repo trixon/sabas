@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -33,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.BridgeOperation;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
@@ -47,9 +49,10 @@ public class DnfBridge extends Bridge {
     public static final String DNF_COMMAND = "dnf5";
     public static final String PKEXEC_COMMAND = "pkexec";
     private final ExecutorService mDnfExecutor = Executors.newFixedThreadPool(3);
+    private final Map<String, String> mDefaultEnvironment = new HashMap<>();
 
     public DnfBridge() {
-        super(DNF_COMMAND, "in development", "Fedora 44");
+        super(DNF_COMMAND, "5.4", "Fedora 44");
     }
 
     @Override
@@ -170,33 +173,51 @@ public class DnfBridge extends Bridge {
     }
 
     @Override
-    public List<String> onProvideCacheClearCommand() {
-        return List.of(DNF_COMMAND, "clean", "expire-cache");
+    public BridgeOperation onProvideCacheClearCommand() {
+        return new BridgeOperation(
+                List.of(DNF_COMMAND, "clean", "expire-cache"),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideCacheUpdateCommand() {
-        return List.of(DNF_COMMAND, "makecache");
+    public BridgeOperation onProvideCacheUpdateCommand() {
+        return new BridgeOperation(
+                List.of(DNF_COMMAND, "makecache"),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideTransactionInstall() {
-        return List.of(PKEXEC_COMMAND, DNF_COMMAND, "install");
+    public BridgeOperation onProvideTransactionInstall(String... packages) {
+        return new BridgeOperation(
+                List.of(PKEXEC_COMMAND, DNF_COMMAND, "install"),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideTransactionUninstall() {
-        return List.of(PKEXEC_COMMAND, DNF_COMMAND, "remove");
+    public BridgeOperation onProvideTransactionRemove(String... packages) {
+        return new BridgeOperation(
+                List.of(PKEXEC_COMMAND, DNF_COMMAND, "remove"),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideTransactionUpgrade() {
-        return List.of(PKEXEC_COMMAND, DNF_COMMAND, "upgrade");
+    public BridgeOperation onProvideTransactionUpgrade() {
+        return new BridgeOperation(
+                List.of(PKEXEC_COMMAND, DNF_COMMAND, "upgrade"),
+                mDefaultEnvironment
+        );
     }
 
     @Override
-    public List<String> onProvideVersionCommand() {
-        return List.of(DNF_COMMAND, "--version");
+    public BridgeOperation onProvideVersionCommand() {
+        return new BridgeOperation(
+                List.of(DNF_COMMAND, "--version"),
+                mDefaultEnvironment
+        );
     }
 
     private HashMap<String, Pkg> getPackages(Set<Process> processes, List<String> args) {
