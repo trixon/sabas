@@ -55,11 +55,11 @@ public abstract class Bridge implements BridgeOperations {
         return processBuilder;
     }
 
-    public String execute(List command, Set<Process> processes) {
+    public String execute(List<String> command, Set<Process> processes) {
         return execute(command, processes, Map.of());
     }
 
-    public String execute(List command, Set<Process> processes, Map<String, String> map) {
+    public String execute(List<String> command, Set<Process> processes, Map<String, String> map) {
         System.out.println(String.join(" ", command));
         String output = null;
         Process process = null;

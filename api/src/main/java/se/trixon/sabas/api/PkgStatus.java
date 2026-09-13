@@ -15,25 +15,29 @@
  */
 package se.trixon.sabas.api;
 
+import java.util.Locale;
+import java.util.ResourceBundle;
+
 /**
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
 public enum PkgStatus {
-    ALL("*"),
-    AVAILABLE("Available"),
-    INSTALLED("Installed"),
-    UPGRADABLE("Upgradable"),
-    ORPHANED("Orphaned");
-    private final String mTitle;
+    ALL("status_all"),
+    AVAILABLE("status_available"),
+    INSTALLED("status_installed"),
+    UPGRADABLE("status_upgradable"),
+    ORPHANED("status_orphaned");
+    private final String mKey;
+    private final ResourceBundle mResourceBundle = ResourceBundle.getBundle(PkgStatus.class.getPackageName() + ".Bundle", Locale.getDefault());
 
-    private PkgStatus(String title) {
-        mTitle = title;
+    private PkgStatus(String key) {
+        mKey = key;
     }
 
     @Override
     public String toString() {
-        return mTitle;
+        return mResourceBundle.getString(mKey);
     }
 
 }
