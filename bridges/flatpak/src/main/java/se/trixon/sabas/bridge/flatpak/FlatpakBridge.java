@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.openide.util.lookup.ServiceProvider;
 import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.BridgeOperation;
@@ -66,12 +67,20 @@ public class FlatpakBridge extends Bridge {
         );
 
         var rawPackagesList = new ArrayList<Pkg>();
-        var installedApps = getLocalInstalledFlatpaks(processes);
-        var command = List.of(FLATPAK, "remote-ls", "--app", "--columns=all");
+        var installedApps = getInstalled(processes);
+        var command = List.of(
+                FLATPAK,
+                "remote-ls",
+                "--app",
+                //                "--arch=*",
+                "--columns=all"
+        );
 
         Process process = null;
         try {
-            process = createProcessBuilder(command).start();
+            var pb = createProcessBuilder(command);
+            pb.environment().put("LANGUAGE", "en_US");
+            process = pb.start();
             processes.add(process);
             final int nameIndex = querytags.indexOf("name");
             final int descriptionIndex = querytags.indexOf("description");
@@ -86,13 +95,12 @@ public class FlatpakBridge extends Bridge {
             final int iSizeIndex = querytags.indexOf("isize");
             final int dSizeIndex = querytags.indexOf("dsize");
 
-            var groupId = mDictionary.getOrCreateId(DictionarySection.GROUP, "Flatpak Applications");
             var licenseId = mDictionary.getOrCreateId(DictionarySection.LICENSE, "Open Source / Mixed");
 
             try (var it = IOUtils.lineIterator(process.getInputStream(), StandardCharsets.UTF_8)) {
                 while (it.hasNext()) {
                     var line = it.next().trim();
-                    if (line.isEmpty()) {
+                    if (line.isEmpty() || Strings.CI.containsAny(line, ".BaseApp", ".BaseExtension")) {
                         continue;
                     }
 
@@ -109,6 +117,7 @@ public class FlatpakBridge extends Bridge {
                     var pkg = new Pkg();
                     pkg.setId(fields[refIndex]);
                     pkg.setName(fields[nameIndex]);
+                    pkg.setNameTransaction(fields[idIndex]);
                     pkg.setSummary(fields[descriptionIndex]);
 //                    pkg.setDescription("");
                     pkg.setVersion(fields[versionIndex]);
@@ -120,7 +129,7 @@ public class FlatpakBridge extends Bridge {
                     pkg.setSizeDownload(getSize(fields[dSizeIndex]));
                     pkg.setSizeInstall(getSize(fields[iSizeIndex]));
 
-                    if (installedApps.contains(pkg.getId())) {
+                    if (installedApps.contains(fields[idIndex])) {
                         pkg.setInstalled(true);
                     }
 
@@ -159,7 +168,11 @@ public class FlatpakBridge extends Bridge {
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
         return new BridgeOperation(
-                List.of("true"),
+                List.of(
+                        "flatpak",
+                        "update",
+                        "--appstream"
+                ),
                 mDefaultEnvironment
         );
     }
@@ -167,7 +180,12 @@ public class FlatpakBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
         return new BridgeOperation(
-                List.of(FLATPAK, "install"),
+                List.of(
+                        FLATPAK,
+                        "install",
+                        "--noninteractive",
+                        String.join(" ", packages)
+                ),
                 mDefaultEnvironment
         );
     }
@@ -175,7 +193,12 @@ public class FlatpakBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
         return new BridgeOperation(
-                List.of(FLATPAK, "uninstall"),
+                List.of(
+                        FLATPAK,
+                        "uninstall",
+                        "--noninteractive",
+                        String.join(" ", packages)
+                ),
                 mDefaultEnvironment
         );
     }
@@ -183,7 +206,11 @@ public class FlatpakBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionUpgrade() {
         return new BridgeOperation(
-                List.of(FLATPAK, "update"),
+                List.of(
+                        FLATPAK,
+                        "update",
+                        "--noninteractive"
+                ),
                 mDefaultEnvironment
         );
     }
@@ -196,7 +223,7 @@ public class FlatpakBridge extends Bridge {
         );
     }
 
-    private HashSet<String> getLocalInstalledFlatpaks(Set<Process> processes) {
+    private Set<String> getInstalled(Set<Process> processes) {
         var installedSet = new HashSet<String>();
         var command = List.of(FLATPAK, "list", "--all", "--columns=application");
         Process p = null;
@@ -248,7 +275,6 @@ public class FlatpakBridge extends Bridge {
             return (long) (sizeDouble * factor);
 
         } catch (NumberFormatException e) {
-            System.err.println("[SABAS] Kunde inte parsa storleks-siffra: " + item[0]);
             return 0;
         }
     }

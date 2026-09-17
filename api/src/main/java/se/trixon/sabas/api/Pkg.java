@@ -16,6 +16,7 @@
 package se.trixon.sabas.api;
 
 import java.time.Instant;
+import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 
 public class Pkg {
@@ -33,6 +34,7 @@ public class Pkg {
     private int mLicenseId;
     private String mName;
     private String mNameLower;
+    private String mNameTransaction;
     private boolean mOrphaned;
     private int mPackagerId;
     private String mRelease;
@@ -102,6 +104,10 @@ public class Pkg {
 
     public String getNameLower() {
         return mNameLower;
+    }
+
+    public String getNameTransaction() {
+        return Objects.toString(mNameTransaction, getName());
     }
 
     public String getPackager() {
@@ -237,6 +243,10 @@ public class Pkg {
     public void setName(String name) {
         mName = name;
         mNameLower = StringUtils.lowerCase(name);
+    }
+
+    public void setNameTransaction(String nameTransaction) {
+        mNameTransaction = nameTransaction;
     }
 
     public void setOrphaned(boolean orphaned) {

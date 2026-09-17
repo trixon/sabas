@@ -575,7 +575,7 @@ public class AptBridge extends Bridge {
                         if (filename.endsWith("_Packages")) {
                             var repoName = "Online Components";
                             if (filename.contains("_dists_")) {
-                                var distPart = org.apache.commons.lang3.StringUtils.substringAfter(filename, "_dists_");
+                                var distPart = StringUtils.substringAfter(filename, "_dists_");
                                 repoName = distPart.replace("_binary-amd64_Packages", "")
                                         .replace("_binary-all_Packages", "")
                                         .replace("_main", "/main")

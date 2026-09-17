@@ -157,7 +157,7 @@ public class PkgManager {
             return;
         }
 
-        var bridgeExecutor = getOperationInstall(getSelectedPkg().getName());
+        var bridgeExecutor = getOperationInstall(getSelectedPkg().getNameTransaction());
         externalExecutor("Installing...", bridgeExecutor, () -> populatePackages());
     }
 
@@ -240,7 +240,7 @@ public class PkgManager {
             return;
         }
 
-        var bridgeExecutor = getOperationRemove(getSelectedPkg().getName());
+        var bridgeExecutor = getOperationRemove(getSelectedPkg().getNameTransaction());
         externalExecutor("Removing...", bridgeExecutor, () -> populatePackages());
     }
 
