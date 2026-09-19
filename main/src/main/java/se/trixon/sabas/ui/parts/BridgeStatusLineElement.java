@@ -74,6 +74,7 @@ public class BridgeStatusLineElement implements StatusLineElementProvider {
     private void updateBridges() {
         SwingHelper.runLater(() -> {
             var bridges = Lookup.getDefault().lookupAll(Bridge.class).stream()
+                    .filter(bridge -> bridge.isCommandAvailable())
                     .sorted(Comparator.comparing(Bridge::getName, String.CASE_INSENSITIVE_ORDER))
                     .toArray(Bridge[]::new);
             var comboBoxCheckModel = new DefaultComboBoxModel<Bridge>(bridges);

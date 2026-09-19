@@ -50,6 +50,11 @@ public class FlatpakBridge extends Bridge {
     }
 
     @Override
+    public String getCommand() {
+        return FLATPAK;
+    }
+
+    @Override
     public List<Pkg> onGetPackageAll(Set<Process> processes) {
         final var querytags = List.of(
                 "name",

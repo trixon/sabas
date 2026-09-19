@@ -42,6 +42,8 @@ public interface BridgeOperations {
         return "NO-OP";
     }
 
+    String getCommand();
+
     @Deprecated(forRemoval = true)
     BridgeOperation onProvideCacheClearCommand();
 

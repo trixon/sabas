@@ -48,11 +48,16 @@ public class DnfBridge extends Bridge {
 
     public static final String DNF_COMMAND = "dnf5";
     public static final String PKEXEC_COMMAND = "pkexec";
-    private final ExecutorService mDnfExecutor = Executors.newFixedThreadPool(3);
     private final Map<String, String> mDefaultEnvironment = new HashMap<>();
+    private final ExecutorService mDnfExecutor = Executors.newFixedThreadPool(3);
 
     public DnfBridge() {
         super("DNF", "5.4", "Fedora 44");
+    }
+
+    @Override
+    public String getCommand() {
+        return DNF_COMMAND;
     }
 
     @Override
@@ -196,7 +201,12 @@ public class DnfBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
         return new BridgeOperation(
-                List.of(PKEXEC_COMMAND, DNF_COMMAND, "install"),
+                List.of(
+                        PKEXEC_COMMAND,
+                        DNF_COMMAND,
+                        "install",
+                        String.join(" ", packages)
+                ),
                 mDefaultEnvironment
         );
     }
@@ -204,7 +214,12 @@ public class DnfBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
         return new BridgeOperation(
-                List.of(PKEXEC_COMMAND, DNF_COMMAND, "remove"),
+                List.of(
+                        PKEXEC_COMMAND,
+                        DNF_COMMAND,
+                        "remove",
+                        String.join(" ", packages)
+                ),
                 mDefaultEnvironment
         );
     }

@@ -59,6 +59,11 @@ public class SdkManBridge extends Bridge {
     }
 
     @Override
+    public String getCommand() {
+        return "%s/%s".formatted(FileUtils.getUserDirectoryPath(), ".sdkman/bin/sdkman-init.sh");
+    }
+
+    @Override
     public List<Pkg> onGetPackageAll(Set<Process> processes) {
         var rawPackagesList = new ArrayList<Pkg>();
         var client = HttpClient.newHttpClient();

@@ -18,6 +18,7 @@ package se.trixon.sabas.api;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -27,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.SystemUtils;
 
 /**
@@ -123,6 +125,37 @@ public abstract class Bridge implements BridgeOperations {
         return BridgeOperations.super.onProvideTransactionUpgrade();
     }
 
+    public boolean isCommandAvailable() {
+        var command = getCommand();
+        if (StringUtils.isBlank(command)) {
+            return false;
+        }
+
+        if (Strings.CI.contains(command, File.separator)) {
+            var commandPath = Path.of(command);
+            return Files.isRegularFile(commandPath);
+        }
+
+        var pathEnv = System.getenv("PATH");
+        if (pathEnv == null) {
+            return false;
+        }
+
+        var pathSeparator = File.pathSeparator;
+        var directories = StringUtils.split(pathEnv, pathSeparator);
+
+        if (directories != null) {
+            for (var dir : directories) {
+                var commandPath = Path.of(dir, command);
+                if (Files.isRegularFile(commandPath) && Files.isExecutable(commandPath)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public boolean isPkconSupported() {
         return false;
     }
@@ -146,4 +179,5 @@ public abstract class Bridge implements BridgeOperations {
                 .stream()
                 .collect(Collectors.joining("\n"));
     }
+
 }

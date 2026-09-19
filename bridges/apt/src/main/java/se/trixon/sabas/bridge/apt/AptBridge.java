@@ -62,6 +62,11 @@ public class AptBridge extends Bridge {
     }
 
     @Override
+    public String getCommand() {
+        return APT_GET;
+    }
+
+    @Override
     public boolean isPkconSupported() {
         return true;
     }
