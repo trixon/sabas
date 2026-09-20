@@ -48,7 +48,7 @@ public interface BridgeOperations {
     BridgeOperation onProvideCacheClearCommand();
 
     default BridgeOperation onProvideCacheUpdateCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(PKCON, "refresh"),
                 Map.of()
         );
@@ -61,7 +61,7 @@ public interface BridgeOperations {
             Collections.addAll(commandList, packages);
         }
 
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 commandList,
                 Map.of()
         );
@@ -74,7 +74,7 @@ public interface BridgeOperations {
             Collections.addAll(commandList, packages);
         }
 
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 commandList,
                 Map.of()
         );
@@ -82,7 +82,7 @@ public interface BridgeOperations {
     }
 
     default BridgeOperation onProvideTransactionUpgrade() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(PKEXEC, PKCON, "update", "--noninteractive"),
                 Map.of()
         );

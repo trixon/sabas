@@ -76,7 +76,7 @@ public class AptBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheClearCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 createBaseCommand(createShellScript("clear", null)),
                 mDefaultEnvironment
         );
@@ -84,7 +84,7 @@ public class AptBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 createBaseCommand(createShellScript("update", null)),
                 mDefaultEnvironment
         );
@@ -92,7 +92,7 @@ public class AptBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 createBaseCommand(createShellScript("install", packages)),
                 mDefaultEnvironment
         );
@@ -100,7 +100,7 @@ public class AptBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 createBaseCommand(createShellScript("remove", packages)),
                 mDefaultEnvironment
         );
@@ -108,7 +108,7 @@ public class AptBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionUpgrade() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 createBaseCommand(createShellScript("upgrade", null)),
                 mDefaultEnvironment
         );
@@ -116,7 +116,7 @@ public class AptBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideVersionCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 new ArrayList<>(List.of("apt", "--version")),
                 mDefaultEnvironment
         );

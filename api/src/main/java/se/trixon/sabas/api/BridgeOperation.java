@@ -22,6 +22,21 @@ import java.util.Map;
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
-public record BridgeOperation(List<String> command, Map<String, String> env) {
+public record BridgeOperation(List<String> command, Map<String, String> env, Runnable runnable) {
 
+    public static BridgeOperation ofProcess(List<String> command, Map<String, String> env) {
+        return new BridgeOperation(command, env, null);
+    }
+
+    public static BridgeOperation ofRunnable(Runnable runnable) {
+        return new BridgeOperation(null, null, runnable);
+    }
+
+    public boolean isProcess() {
+        return command != null && !command.isEmpty();
+    }
+
+    public boolean isRunnable() {
+        return runnable != null;
+    }
 }

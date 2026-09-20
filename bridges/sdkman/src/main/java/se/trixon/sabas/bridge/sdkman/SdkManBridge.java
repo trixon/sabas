@@ -125,7 +125,7 @@ public class SdkManBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheClearCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of("bash", "-c", SDK_COMMAND + "flush"),
                 mDefaultEnvironment
         );
@@ -133,7 +133,7 @@ public class SdkManBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of("bash", "-c", SDK_COMMAND + "update"),
                 mDefaultEnvironment
         );
@@ -141,7 +141,7 @@ public class SdkManBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(),
                 mDefaultEnvironment
         );
@@ -149,7 +149,7 @@ public class SdkManBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(),
                 mDefaultEnvironment
         );
@@ -157,7 +157,7 @@ public class SdkManBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideVersionCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of("bash", "-c", SDK_COMMAND + "version"),
                 mDefaultEnvironment
         );

@@ -38,6 +38,7 @@ import org.openide.awt.StatusDisplayer;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.RequestProcessor;
 import org.openide.windows.IOProvider;
 import org.openide.windows.InputOutput;
 import se.trixon.almond.nbp.dialogs.NbMessage;
@@ -347,11 +348,42 @@ public class PkgManager {
     }
 
     private void externalExecutor(String displayName, BridgeOperation bridgeOperation, Runnable postExecution) {
+        if (bridgeOperation == null) {
+            return;
+        }
+
         if (mInputOutput == null) {
             mInputOutput = IOProvider.getDefault().getIO(Dict.INFORMATION.toString(), false);
         }
-        var command = bridgeOperation.command();
+
         var start = System.currentTimeMillis();
+        if (bridgeOperation.isRunnable()) {
+            System.out.println("Executing Java internal operation: " + displayName);
+            setLongTaskRunning(true);
+            mInputOutput.select();
+
+            RequestProcessor.getDefault().post(() -> {
+                try {
+                    bridgeOperation.runnable().run();
+                } catch (Exception e) {
+                    System.err.println("[SABAS] Fel under Java-operation: " + e.getMessage());
+                    if (mInputOutput != null) {
+                        mInputOutput.getErr().println("Error: " + e.getMessage());
+                    }
+                } finally {
+                    SwingUtilities.invokeLater(() -> {
+                        postExecution.run();
+                        setLongTaskRunning(false);
+                        displayStatus(displayName, SystemHelper.age(start));
+                    });
+                }
+            });
+
+            return;
+        }
+
+        var externalCommand = bridgeOperation.command();
+
         var descriptor = new ExecutionDescriptor()
                 .frontWindow(true)
                 .inputOutput(mInputOutput)
@@ -362,14 +394,14 @@ public class PkgManager {
                     postExecution.run();
                     setLongTaskRunning(false);
                     displayStatus(displayName, SystemHelper.age(start));
-
                 });
 
-        if (command == null || command.isEmpty()) {
-            System.out.println("Invalid command" + displayName);
+        if (externalCommand == null || externalCommand.isEmpty()) {
+            System.out.println("Invalid command " + displayName);
+            return;
         }
 
-        var pb = new ProcessBuilder(command);
+        var pb = new ProcessBuilder(externalCommand);
         pb.environment().put("LC_ALL", "C");
         pb.environment().putAll(bridgeOperation.env());
         pb.redirectErrorStream();
@@ -379,47 +411,10 @@ public class PkgManager {
                 descriptor,
                 displayName
         );
-        System.out.println(String.join(" ", command));
-        setLongTaskRunning(true);
-        service.run();
-        mInputOutput.select();
-    }
-
-    @Deprecated
-    private void externalExecutor(String displayName, List<String> externalCommand, Runnable postExecution) {
-        if (mInputOutput == null) {
-            mInputOutput = IOProvider.getDefault().getIO(Dict.INFORMATION.toString(), false);
-
-        }
-        var start = System.currentTimeMillis();
-        var descriptor = new ExecutionDescriptor()
-                .frontWindow(true)
-                .inputOutput(mInputOutput)
-                .inputVisible(true)
-                .showProgress(true)
-                .noReset(true)
-                .postExecution(() -> {
-                    postExecution.run();
-                    setLongTaskRunning(false);
-                    displayStatus(displayName, SystemHelper.age(start));
-                });
-
-        if (externalCommand.isEmpty()) {
-            System.out.println("ERRRORRR +" + displayName);
-        }
-        var pb = new ProcessBuilder(externalCommand);
-        pb.environment().put("LC_ALL", "C");
-        pb.redirectErrorStream();
-        var service = ExecutionService.newService(
-                () -> pb.start(),
-                descriptor,
-                displayName
-        );
         System.out.println(String.join(" ", externalCommand));
         setLongTaskRunning(true);
         service.run();
         mInputOutput.select();
-        System.out.println("xxx");
     }
 
     private BridgeOperation getPreferedOperation(Supplier<BridgeOperation> defaultSupplier, Supplier<BridgeOperation> implSupplier) {

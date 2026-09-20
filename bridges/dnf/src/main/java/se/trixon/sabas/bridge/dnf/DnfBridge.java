@@ -67,7 +67,7 @@ public class DnfBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheClearCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(DNF_COMMAND, "clean", "expire-cache"),
                 mDefaultEnvironment
         );
@@ -75,7 +75,7 @@ public class DnfBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(DNF_COMMAND, "makecache"),
                 mDefaultEnvironment
         );
@@ -83,7 +83,7 @@ public class DnfBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(
                         PKEXEC_COMMAND,
                         DNF_COMMAND,
@@ -96,7 +96,7 @@ public class DnfBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(
                         PKEXEC_COMMAND,
                         DNF_COMMAND,
@@ -109,7 +109,7 @@ public class DnfBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionUpgrade() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(PKEXEC_COMMAND, DNF_COMMAND, "upgrade"),
                 mDefaultEnvironment
         );
@@ -117,7 +117,7 @@ public class DnfBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideVersionCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(DNF_COMMAND, "--version"),
                 mDefaultEnvironment
         );

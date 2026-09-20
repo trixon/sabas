@@ -62,7 +62,7 @@ public class FlatpakBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheClearCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of("true"),
                 mDefaultEnvironment
         );
@@ -70,7 +70,7 @@ public class FlatpakBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(
                         FLATPAK,
                         "update",
@@ -82,7 +82,7 @@ public class FlatpakBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(
                         FLATPAK,
                         "install",
@@ -95,7 +95,7 @@ public class FlatpakBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(
                         FLATPAK,
                         "uninstall",
@@ -108,7 +108,7 @@ public class FlatpakBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionUpgrade() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(
                         FLATPAK,
                         "update",
@@ -120,7 +120,7 @@ public class FlatpakBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideVersionCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(FLATPAK, "--version"),
                 mDefaultEnvironment
         );
