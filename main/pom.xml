@@ -117,6 +117,11 @@
             <artifactId>org-netbeans-spi-quicksearch</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-core-io-ui</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
 
         <!-- Trixon -->
         <dependency>

@@ -141,6 +141,11 @@
             <artifactId>bridge_sdkman</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>bridge_flatpak</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Trixon -->
         <dependency>
@@ -163,7 +168,7 @@
                     <etcConfFile>src/main/resources/sabas.conf</etcConfFile>
                     <verifyRuntime>true</verifyRuntime>
                     <!--<additionalArguments>&#045;&#045;fontsize 16</additionalArguments>-->
-                    <additionalArguments>&#045;&#045;locale en</additionalArguments>
+                    <!--<additionalArguments>&#045;&#045;locale en</additionalArguments>-->
                 </configuration>
             </plugin>
         </plugins>

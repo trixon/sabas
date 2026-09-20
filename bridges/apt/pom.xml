@@ -9,7 +9,7 @@
     </parent>
     <artifactId>bridge_apt</artifactId>
     <packaging>nbm</packaging>
-    
+
     <build>
         <plugins>
             <plugin>

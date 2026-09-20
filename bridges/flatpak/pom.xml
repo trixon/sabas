@@ -42,7 +42,4 @@
         </dependency>
     </dependencies>
     <name>FLATPAK</name>
-    <properties>
-        <netbeans.hint.jdkPlatform>@@DEFAULT@@</netbeans.hint.jdkPlatform>
-    </properties>
 </project>

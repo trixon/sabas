@@ -19,6 +19,7 @@
         <module>main</module>
         <module>bridges/apt</module>
         <module>bridges/dnf</module>
+        <module>bridges/flatpak</module>
         <module>bridges/sdkman</module>
     </modules>
     <build>
@@ -40,6 +41,5 @@
     </build>
     <properties>
         <brandingToken>sabas</brandingToken>
-        <netbeans.hint.jdkPlatform>@@DEFAULT@@</netbeans.hint.jdkPlatform>
     </properties>
 </project>
