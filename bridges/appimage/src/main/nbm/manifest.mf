@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Localizing-Bundle: se/trixon/sabas/bridge/appimage/Bundle.properties
+OpenIDE-Module-Display-Category: Bridge
+OpenIDE-Module-Short-Description: Bridge for AppImage
+OpenIDE-Module-Long-Description: Developed and tested on Linux.

@@ -33,7 +33,6 @@ import se.trixon.sabas.api.Pkg;
 public class DnfBridge extends Bridge {
 
     public static final String DNF_COMMAND = "dnf5";
-    public static final String PKEXEC_COMMAND = "pkexec";
     private final Map<String, String> mDefaultEnvironment = new HashMap<>();
     private final DnfPopulator mPopulator = new DnfPopulator();
 

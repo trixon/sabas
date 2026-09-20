@@ -21,6 +21,7 @@
         <module>bridges/dnf</module>
         <module>bridges/flatpak</module>
         <module>bridges/sdkman</module>
+        <module>bridges/appimage</module>
     </modules>
     <build>
         <plugins>

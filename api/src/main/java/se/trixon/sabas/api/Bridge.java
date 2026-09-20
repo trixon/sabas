@@ -34,6 +34,8 @@ import org.apache.commons.lang3.SystemUtils;
  */
 public abstract class Bridge implements BridgeOperations {
 
+    public static final String PKEXEC_COMMAND = "pkexec";
+
     private String mDescription;
     private String mName;
     private String mSupports;
@@ -122,7 +124,9 @@ public abstract class Bridge implements BridgeOperations {
 
     public boolean isCommandAvailable() {
         var command = getCommand();
-        if (StringUtils.isBlank(command)) {
+        if (command == null) {
+            return true;
+        } else if (StringUtils.isBlank(command)) {
             return false;
         }
 

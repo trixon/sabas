@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.trixon.sabas.bridge.apt;
+package se.trixon.sabas.bridge.appimage;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,33 +29,19 @@ import se.trixon.sabas.api.Pkg;
  * @author Patrik Karlström <patrik@trixon.se>
  */
 @ServiceProvider(service = Bridge.class)
-public class AptBridge extends Bridge {
+public class AppImageBridge extends Bridge {
 
-    public static final String APT_GET = "apt-get";
-
+    public static final String COMMAND = "true";
     private final Map<String, String> mDefaultEnvironment = new HashMap<>();
-    private final List<String> mDefaultEnvironmentList;
-    private final AptPopulator mPopulator = new AptPopulator();
+    private final AppImagePopulator mPopulator = new AppImagePopulator();
 
-    public AptBridge() {
-        super("APT", "3.0", "Debian 13");
-        mDefaultEnvironmentList = List.of("env",
-                "DEBIAN_FRONTEND=noninteractive",
-                "DEBCONF_NONINTERACTIVE_SEEN=true",
-                "DEBCONF_NOWARNINGS=yes",
-                "TERM=dumb"
-        );
-        initExecutors();
+    public AppImageBridge() {
+        super("AppImage", "1.0", "Linux");
     }
 
     @Override
     public String getCommand() {
-        return APT_GET;
-    }
-
-    @Override
-    public boolean isPkconSupported() {
-        return true;
+        return null;
     }
 
     @Override
@@ -71,13 +56,13 @@ public class AptBridge extends Bridge {
 
     @Override
     public String onGetVersion(Set<Process> processes) {
-        return execute(List.of("apt", "--version"), processes);
+        return "Not supported";
     }
 
     @Override
     public BridgeOperation onProvideCacheClearCommand() {
         return new BridgeOperation(
-                createBaseCommand(createShellScript("clear", null)),
+                List.of(COMMAND),
                 mDefaultEnvironment
         );
     }
@@ -85,7 +70,7 @@ public class AptBridge extends Bridge {
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
         return new BridgeOperation(
-                createBaseCommand(createShellScript("update", null)),
+                List.of(COMMAND),
                 mDefaultEnvironment
         );
     }
@@ -93,7 +78,9 @@ public class AptBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
         return new BridgeOperation(
-                createBaseCommand(createShellScript("install", packages)),
+                List.of(
+                        COMMAND
+                ),
                 mDefaultEnvironment
         );
     }
@@ -101,7 +88,9 @@ public class AptBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
         return new BridgeOperation(
-                createBaseCommand(createShellScript("remove", packages)),
+                List.of(
+                        COMMAND
+                ),
                 mDefaultEnvironment
         );
     }
@@ -109,7 +98,7 @@ public class AptBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionUpgrade() {
         return new BridgeOperation(
-                createBaseCommand(createShellScript("upgrade", null)),
+                List.of(COMMAND),
                 mDefaultEnvironment
         );
     }
@@ -117,43 +106,9 @@ public class AptBridge extends Bridge {
     @Override
     public BridgeOperation onProvideVersionCommand() {
         return new BridgeOperation(
-                new ArrayList<>(List.of("apt", "--version")),
+                List.of("true"),
                 mDefaultEnvironment
         );
-    }
-
-    private ArrayList<String> createBaseCommand(String shellCommand) {
-        var command = new ArrayList<String>();
-        command.add(PKEXEC);
-        command.addAll(mDefaultEnvironmentList);
-        command.add("sh");
-        command.add("-c");
-        command.add(shellCommand);
-
-        return command;
-    }
-
-    private String createShellScript(String command, String[] packages) {
-        // -q=2
-        if (packages == null) {
-            packages = new String[]{""};
-        }
-
-        return "%s %s %s %s %s && echo 'SABAS SUCCESS' || { echo 'SABAS ERROR'; exit 1; }"
-                .formatted(
-                        APT_GET,
-                        command,
-                        String.join(" ", packages),
-                        "-o Dpkg::Use-Pty=0",
-                        "-o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold"
-                );
-    }
-
-    private void initExecutors() {
-        mDefaultEnvironment.put("DEBIAN_FRONTEND", "noninteractive");
-        mDefaultEnvironment.put("DEBCONF_NONINTERACTIVE_SEEN", "true");
-        mDefaultEnvironment.put("DEBCONF_NOWARNINGS", "yes");
-        mDefaultEnvironment.put("TERM", "dumb");
     }
 
 }
