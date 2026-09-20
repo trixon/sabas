@@ -33,7 +33,7 @@ public class FlatpakBridge extends Bridge {
 
     public static final String FLATPAK = "flatpak";
     private final Map<String, String> mDefaultEnvironment = new HashMap<>();
-    private final Populator mPopulator = new Populator();
+    private final FlatpakPopulator mPopulator = new FlatpakPopulator();
 
     public FlatpakBridge() {
         super("FLATPAK", "1.16", "Linux");
@@ -46,24 +46,13 @@ public class FlatpakBridge extends Bridge {
 
     @Override
     public List<Pkg> onGetPackageAll(Set<Process> processes) {
-        var command = List.of(
-                FLATPAK,
-                "remote-ls",
-                "--app",
-                //                "--arch=*",
-                "--columns=all"
-        );
 
-        return mPopulator.populate(command, processes);
+        return mPopulator.populate(processes);
     }
 
     @Override
     public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
-        var details = new Pkg.Details();
-        details.setRequires(pkg.getGroup());
-        pkg.setDetails(details);
-
-        return details;
+        return mPopulator.populateDetails(processes, pkg);
     }
 
     @Override
@@ -136,5 +125,4 @@ public class FlatpakBridge extends Bridge {
                 mDefaultEnvironment
         );
     }
-
 }

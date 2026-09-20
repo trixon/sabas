@@ -20,12 +20,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -37,8 +34,6 @@ import org.apache.commons.lang3.SystemUtils;
  */
 public abstract class Bridge implements BridgeOperations {
 
-    protected final String mFieldSeparator = "\u001F";
-    protected final String mRecordSeparator = "\u001E";
     private String mDescription;
     private String mName;
     private String mSupports;
@@ -170,14 +165,6 @@ public abstract class Bridge implements BridgeOperations {
 
     public void setSupports(String supports) {
         mSupports = supports;
-    }
-
-    protected String stripDuplicateRowss(String s) {
-        return Arrays.stream(StringUtils.split(s, "\n"))
-                .map(String::trim)
-                .collect(Collectors.toCollection(LinkedHashSet::new))
-                .stream()
-                .collect(Collectors.joining("\n"));
     }
 
 }

@@ -39,27 +39,33 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.openide.util.Exceptions;
 import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.BridgePopulator;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
-import se.trixon.sabas.api.PkgDictionary;
 
 /**
  *
  * @author Patrik Karlström <patrik@trixon.se>
  */
-public class Populator {
+public class FlatpakPopulator extends BridgePopulator {
 
-    private final PkgDictionary mDictionary = PkgDictionary.getInstance();
-
-    public Populator() {
+    public FlatpakPopulator() {
     }
 
-    List<Pkg> populate(List<String> command, Set<Process> processes) {
+    @Override
+    public List<Pkg> populate(Set<Process> processes) {
         var rawPackagesList = new ArrayList<Pkg>();
         var idToPkgMap = new HashMap<String, Pkg>();
         var idToInstallTimeMap = new HashMap< String, Long>();
         var installedApps = getInstalled(idToInstallTimeMap);
         var upgradableApps = getUpgradable(processes);
+        var command = List.of(
+                FlatpakBridge.FLATPAK,
+                "remote-ls",
+                "--app",
+                //                "--arch=*",
+                "--columns=all"
+        );
 
         var querytags = List.of(
                 "name",
@@ -150,6 +156,15 @@ public class Populator {
         return rawPackagesList.stream()
                 .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
+    }
+
+    @Override
+    public Pkg.Details populateDetails(Set<Process> processes, Pkg pkg) {
+        var details = new Pkg.Details();
+        details.setRequires(pkg.getGroup());
+        pkg.setDetails(details);
+
+        return details;
     }
 
     private Set<String> getInstalled(HashMap<String, Long> idToInstallTimeMap) {
