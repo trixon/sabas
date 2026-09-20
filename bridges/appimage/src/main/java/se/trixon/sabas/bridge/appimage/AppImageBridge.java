@@ -15,10 +15,16 @@
  */
 package se.trixon.sabas.bridge.appimage;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.io.IOUtils;
+import org.openide.modules.Places;
+import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.BridgeOperation;
@@ -32,11 +38,13 @@ import se.trixon.sabas.api.Pkg;
 public class AppImageBridge extends Bridge {
 
     public static final String COMMAND = "true";
+    public static final File FEED_JSON = new File(Places.getCacheSubdirectory("bridge/appimage"), "feed.json");
     private final Map<String, String> mDefaultEnvironment = new HashMap<>();
     private final AppImagePopulator mPopulator = new AppImagePopulator();
 
     public AppImageBridge() {
         super("AppImage", "1.0", "Linux");
+
     }
 
     @Override
@@ -61,7 +69,7 @@ public class AppImageBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheClearCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(COMMAND),
                 mDefaultEnvironment
         );
@@ -69,15 +77,18 @@ public class AppImageBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
-        return new BridgeOperation(
-                List.of(COMMAND),
-                mDefaultEnvironment
-        );
+        return BridgeOperation.ofRunnable(() -> {
+            try {
+                IOUtils.copy(URI.create("https://appimage.github.io/feed.json").toURL(), FEED_JSON);
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        });
     }
 
     @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(
                         COMMAND
                 ),
@@ -87,7 +98,7 @@ public class AppImageBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(
                         COMMAND
                 ),
@@ -97,7 +108,7 @@ public class AppImageBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionUpgrade() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of(COMMAND),
                 mDefaultEnvironment
         );
@@ -105,7 +116,7 @@ public class AppImageBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideVersionCommand() {
-        return new BridgeOperation(
+        return BridgeOperation.ofProcess(
                 List.of("true"),
                 mDefaultEnvironment
         );

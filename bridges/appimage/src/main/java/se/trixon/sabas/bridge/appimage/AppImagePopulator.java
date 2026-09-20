@@ -15,10 +15,18 @@
  */
 package se.trixon.sabas.bridge.appimage;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
+import org.openide.util.Exceptions;
 import se.trixon.sabas.api.BridgePopulator;
+import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
+import se.trixon.sabas.bridge.appimage.data.AppImageFeed;
 
 /**
  *
@@ -28,7 +36,73 @@ public class AppImagePopulator extends BridgePopulator {
 
     @Override
     public List<Pkg> populate(Set<Process> processes) {
-        return List.of();
+        if (!AppImageBridge.FEED_JSON.isFile()) {
+            return List.of();
+        }
+
+        var rawPackagesList = new ArrayList<Pkg>();
+        try {
+            var mapper = new ObjectMapper();
+            var feed = mapper.readValue(AppImageBridge.FEED_JSON, AppImageFeed.class);
+
+            if (feed == null || feed.getItems() == null) {
+                return List.of();
+            }
+
+            var groupId = mDictionary.getOrCreateId(DictionarySection.GROUP, "AppImage Applications");
+            for (var item : feed.getItems()) {
+                if (StringUtils.isBlank(item.getName())) {
+                    continue;
+                }
+
+                var pkg = new Pkg();
+                pkg.setName(item.getName().trim());
+                pkg.setVersion("GitHub Release");
+                pkg.setRelease("continuous");
+                pkg.setGroupId(groupId);
+
+                var licenseText = item.getLicense() != null ? item.getLicense() : "Unknown / Open Source";
+                pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, licenseText));
+                pkg.setRepositoryId(mDictionary.getOrCreateId(DictionarySection.REPOSITORY, "AppImage Hub"));
+                var rawDesc = item.getDescription();
+                if (StringUtils.isNotBlank(rawDesc)) {
+                    if (rawDesc.contains("<p>") || rawDesc.contains("<ul>")) {
+                        pkg.setDescription("<html>" + rawDesc.trim() + "</html>");
+                    } else {
+                        pkg.setDescription("<html><p>" + rawDesc.trim() + "</p></html>");
+                    }
+                } else {
+                    pkg.setDescription("<html><p>No description available.</p></html>");
+                }
+
+                if (item.getLinks() != null) {
+                    for (var link : item.getLinks()) {
+                        if ("Download".equalsIgnoreCase(link.getType()) || "GitHub".equalsIgnoreCase(link.getType())) {
+                            pkg.setUrl(link.getUrl());
+                            break;
+                        }
+                    }
+                }
+
+                String vendorName = "Unknown";
+
+                if (item.getAuthors() != null && !item.getAuthors().isEmpty()) {
+                    var primaryAuthor = item.getAuthors().get(0);
+                    if (StringUtils.isNotBlank(primaryAuthor.getName())) {
+                        vendorName = primaryAuthor.getName().trim();
+                    }
+                }
+                pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, vendorName));
+
+                rawPackagesList.add(pkg);
+            }
+        } catch (IOException e) {
+            Exceptions.printStackTrace(e);
+        }
+
+        return rawPackagesList.stream()
+                .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 
     @Override
