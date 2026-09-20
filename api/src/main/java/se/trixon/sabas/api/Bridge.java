@@ -49,7 +49,7 @@ public abstract class Bridge implements BridgeOperations {
         mSupports = supports;
     }
 
-    public ProcessBuilder createProcessBuilder(List<String> command) {
+    public static ProcessBuilder createProcessBuilder(List<String> command) {
         var processBuilder = new ProcessBuilder(command);
         processBuilder.environment().put("LC_ALL", "C");
         processBuilder.redirectErrorStream(true);
