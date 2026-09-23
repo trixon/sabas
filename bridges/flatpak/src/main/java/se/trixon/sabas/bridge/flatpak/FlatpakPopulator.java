@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -244,7 +245,7 @@ public class FlatpakPopulator extends BridgePopulator {
                 }
             }
             process.waitFor();
-        } catch (Exception e) {
+        } catch (IOException | InterruptedException e) {
             Exceptions.printStackTrace(e);
         } finally {
             if (process != null) {
@@ -253,6 +254,182 @@ public class FlatpakPopulator extends BridgePopulator {
         }
 
         return upgradeableSet;
+    }
+
+    private void parseSingleAppStreamFile(FileInputStream fileStream, Map<String, Pkg> packageMap) throws Exception {
+        var systemLang = Locale.getDefault().getLanguage().toLowerCase();
+        var factory = XMLInputFactory.newInstance();
+        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        var reader = factory.createXMLStreamReader(fileStream, "UTF-8");
+
+        String currentAppId = null;
+        String currentLicense = null;
+        String currentDeveloper = null;
+        String currentUrl = null;
+        String currentBuildTime = null;
+        String currentPackager = null;
+        String bestName = null;
+        String bestSummary = null;
+        String bestHtmlDescription = null;
+        int namePriority = -1;
+        int summaryPriority = -1;
+        int currentLangPriority = -1;
+        boolean insideDescription = false;
+        var htmlBuilder = new StringBuilder();
+
+        while (reader.hasNext()) {
+            int event = reader.next();
+
+            if (event == XMLStreamConstants.START_ELEMENT) {
+                var tagName = reader.getLocalName();
+
+                if ("component".equals(tagName)) {
+                    currentAppId = null;
+                    currentLicense = null;
+                    currentUrl = null;
+                    currentBuildTime = null;
+                    currentDeveloper = null;
+                    currentPackager = "* Community Packager *";
+                    bestName = null;
+                    namePriority = -1;
+                    bestSummary = null;
+                    summaryPriority = -1;
+                    bestHtmlDescription = null;
+                    currentLangPriority = -1;
+                    htmlBuilder.setLength(0);
+                    insideDescription = false;
+                } else if ("id".equals(tagName) && currentAppId == null) {
+                    currentAppId = reader.getElementText().trim();
+                } else if ("name".equals(tagName)) {
+                    String lang = reader.getAttributeValue("http://w3.org", "lang");
+                    if (lang == null) {
+                        lang = reader.getAttributeValue(null, "lang");
+                    }
+                    String text = reader.getElementText().trim();
+                    if (lang == null || "en".equalsIgnoreCase(lang)) {
+                        if (namePriority < 0) {
+                            bestName = text;
+                            namePriority = 0;
+                        }
+                    } else if (systemLang.equalsIgnoreCase(lang)) {
+                        bestName = text;
+                        namePriority = 1;
+                    }
+                } else if ("summary".equals(tagName)) {
+                    String lang = reader.getAttributeValue("http://w3.org", "lang");
+                    if (lang == null) {
+                        lang = reader.getAttributeValue(null, "lang");
+                    }
+                    String text = reader.getElementText().trim();
+                    if (lang == null || "en".equalsIgnoreCase(lang)) {
+                        if (summaryPriority < 0) {
+                            bestSummary = text;
+                            summaryPriority = 0;
+                        }
+                    } else if (systemLang.equalsIgnoreCase(lang)) {
+                        bestSummary = text;
+                        summaryPriority = 1;
+                    }
+
+                } else if ("project_license".equals(tagName)) {
+                    currentLicense = reader.getElementText().trim();
+                } else if ("developer_name".equals(tagName)) {
+                    currentDeveloper = reader.getElementText().trim();
+                } else if ("url".equals(tagName)) {
+                    String urlType = reader.getAttributeValue(null, "type");
+                    if ("homepage".equalsIgnoreCase(urlType)) {
+                        currentUrl = reader.getElementText().trim();
+                    }
+                } else if ("release".equals(tagName)) {
+                    String releaseTimestamp = reader.getAttributeValue(null, "timestamp");
+                    if (releaseTimestamp != null && currentBuildTime == null) {
+                        currentBuildTime = releaseTimestamp;
+                    }
+                } else if ("value".equals(tagName)) {
+                    String key = reader.getAttributeValue(null, "key");
+                    String valueText = reader.getElementText().trim();
+                    if ("flathub::verification::website".equals(key)) {
+                        currentPackager = valueText;
+                    }
+                } else if ("description".equals(tagName)) {
+                    String lang = reader.getAttributeValue("http://w3.org", "lang");
+                    if (lang == null) {
+                        lang = reader.getAttributeValue(null, "lang");
+                    }
+                    if (lang == null || "en".equalsIgnoreCase(lang)) {
+                        if (currentLangPriority < 0) {
+                            insideDescription = true;
+                            currentLangPriority = 0;
+                            htmlBuilder.setLength(0);
+                        }
+                    } else if (systemLang.equalsIgnoreCase(lang)) {
+                        insideDescription = true;
+                        currentLangPriority = 1;
+                        htmlBuilder.setLength(0);
+                    } else {
+                        insideDescription = false;
+                    }
+
+                } else if (insideDescription) {
+                    htmlBuilder.append("<").append(tagName);
+                    int attributeCount = reader.getAttributeCount();
+                    for (int i = 0; i < attributeCount; i++) {
+                        htmlBuilder.append(" ").append(reader.getAttributeLocalName(i)).append("=\"").append(reader.getAttributeValue(i)).append("\"");
+                    }
+                    htmlBuilder.append(">");
+                }
+            }
+
+            if (event == XMLStreamConstants.CHARACTERS && insideDescription) {
+                String text = reader.getText();
+                if (text != null) {
+                    htmlBuilder.append(text);
+                }
+            }
+
+            if (event == XMLStreamConstants.END_ELEMENT) {
+                String tagName = reader.getLocalName();
+
+                if ("description".equals(tagName)) {
+                    if (insideDescription) {
+                        bestHtmlDescription = htmlBuilder.toString().trim();
+                    }
+                    insideDescription = false;
+                } else if (insideDescription) {
+                    htmlBuilder.append("</").append(tagName).append(">");
+                } else if ("component".equals(tagName)) {
+                    if (currentAppId != null && packageMap.containsKey(currentAppId)) {
+                        var pkg = packageMap.get(currentAppId);
+                        if (bestName != null) {
+                            pkg.setName(bestName);
+                        }
+                        if (bestSummary != null) {
+                            pkg.setSummary(bestSummary);
+                        }
+                        if (currentLicense != null) {
+                            pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, currentLicense));
+                        }
+                        if (currentUrl != null) {
+                            pkg.setUrl(currentUrl);
+                        }
+                        if (currentDeveloper != null) {
+                            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, currentDeveloper));
+                        }
+                        if (currentPackager != null) {
+                            pkg.setPackagerId(mDictionary.getOrCreateId(DictionarySection.PACKAGER, currentPackager));
+                        }
+                        if (bestHtmlDescription != null && !bestHtmlDescription.isEmpty()) {
+                            pkg.setDescription("<html>" + bestHtmlDescription + "</html>");
+                        }
+                        if (currentBuildTime != null) {
+                            long timestamp = Long.parseLong(currentBuildTime);
+                            long localMidnightSeconds = Instant.ofEpochSecond(timestamp).atZone(ZoneId.systemDefault()).toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000;
+                            pkg.setTimeBuild(localMidnightSeconds);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void populateAppStream(Map<String, Pkg> packageMap) {
@@ -269,129 +446,7 @@ public class FlatpakPopulator extends BridgePopulator {
                     }
 
                     try (var fileStream = new FileInputStream(appstreamFile)) {
-                        var factory = XMLInputFactory.newInstance();
-
-                        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-                        var reader = factory.createXMLStreamReader(fileStream, "UTF-8");
-
-                        String currentAppId = null;
-                        String currentLicense = null;
-                        String currentDeveloper = null;
-                        String currentUrl = null;
-                        String currentBuildTime = null;
-                        String currentPackager = "* Community Packager *";
-                        boolean isVerified = false;
-
-                        var htmlBuilder = new StringBuilder();
-                        boolean insideDescription = false;
-
-                        while (reader.hasNext()) {
-                            int event = reader.next();
-
-                            if (event == XMLStreamConstants.START_ELEMENT) {
-                                var tagName = reader.getLocalName();
-
-                                if ("component".equals(tagName)) {
-                                    currentAppId = null;
-                                    currentLicense = null;
-                                    currentUrl = null;
-                                    currentBuildTime = null;
-                                    currentDeveloper = null;
-                                    currentPackager = null;
-                                    htmlBuilder.setLength(0);
-                                    insideDescription = false;
-                                    isVerified = false;
-                                } else if ("id".equals(tagName) && currentAppId == null) {
-                                    currentAppId = reader.getElementText().trim();
-                                } else if ("project_license".equals(tagName)) {
-                                    currentLicense = reader.getElementText().trim();
-                                } else if ("developer_name".equals(tagName)) {
-                                    currentDeveloper = reader.getElementText().trim();
-                                } else if ("url".equals(tagName)) {
-                                    String urlType = reader.getAttributeValue(null, "type");
-                                    if ("homepage".equalsIgnoreCase(urlType)) {
-                                        currentUrl = reader.getElementText().trim();
-                                    }
-                                } else if ("release".equals(tagName)) {
-                                    String releaseTimestamp = reader.getAttributeValue(null, "timestamp");
-                                    if (releaseTimestamp != null && currentBuildTime == null) {
-                                        currentBuildTime = releaseTimestamp;
-                                    }
-                                } else if ("value".equals(tagName)) {
-                                    String key = reader.getAttributeValue(null, "key");
-                                    if ("flathub::verification::verified".equals(key)) {
-                                        String val = reader.getElementText().trim();
-                                        if ("true".equalsIgnoreCase(val)) {
-                                            isVerified = true;
-                                        }
-                                    } else if ("flathub::verification::website".equals(key)) {
-                                        currentPackager = reader.getElementText().trim();
-                                    }
-                                } else if ("description".equals(tagName)) {
-                                    insideDescription = true;
-                                } else if (insideDescription) {
-                                    htmlBuilder.append("<").append(tagName);
-                                    int attributeCount = reader.getAttributeCount();
-                                    for (int i = 0; i < attributeCount; i++) {
-                                        htmlBuilder.append(" ")
-                                                .append(reader.getAttributeLocalName(i))
-                                                .append("=\"")
-                                                .append(reader.getAttributeValue(i))
-                                                .append("\"");
-                                    }
-                                    htmlBuilder.append(">");
-                                }
-                            }
-
-                            if (event == XMLStreamConstants.CHARACTERS && insideDescription) {
-                                String text = reader.getText();
-                                if (text != null) {
-                                    htmlBuilder.append(text);
-                                }
-                            }
-
-                            if (event == XMLStreamConstants.END_ELEMENT) {
-                                String tagName = reader.getLocalName();
-
-                                if ("description".equals(tagName)) {
-                                    insideDescription = false;
-                                } else if (insideDescription) {
-                                    htmlBuilder.append("</").append(tagName).append(">");
-                                } else if ("component".equals(tagName)) {
-                                    if (currentAppId != null && packageMap.containsKey(currentAppId)) {
-                                        var pkg = packageMap.get(currentAppId);
-
-                                        if (currentLicense != null) {
-                                            pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, currentLicense));
-                                        }
-                                        if (currentUrl != null) {
-                                            pkg.setUrl(currentUrl);
-                                        }
-                                        if (currentDeveloper != null) {
-                                            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, currentDeveloper));
-                                        }
-                                        if (currentPackager != null) {
-                                            pkg.setPackagerId(mDictionary.getOrCreateId(DictionarySection.PACKAGER, currentPackager));
-                                        }
-                                        if (currentBuildTime != null) {
-                                            long timestamp = Long.parseLong(currentBuildTime);
-                                            long localMidnightSeconds = Instant.ofEpochSecond(timestamp)
-                                                    .atZone(ZoneId.systemDefault())
-                                                    .toLocalDate()
-                                                    .atStartOfDay(ZoneId.systemDefault())
-                                                    .toInstant()
-                                                    .toEpochMilli() / 1000;
-                                            pkg.setTimeBuild(localMidnightSeconds);
-                                        }
-
-                                        String htmlDescription = htmlBuilder.toString().trim();
-                                        if (!htmlDescription.isEmpty()) {
-                                            pkg.setDescription("<html>" + htmlDescription + "</html>");
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        parseSingleAppStreamFile(fileStream, packageMap);
                     } catch (Exception e) {
                         Exceptions.printStackTrace(e);
                     }
