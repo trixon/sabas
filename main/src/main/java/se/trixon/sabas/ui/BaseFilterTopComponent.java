@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ public abstract class BaseFilterTopComponent extends BaseTopComponent implements
     protected final Set<Integer> mSelectedIds = new HashSet<>();
     private final DictionarySection mDictionarySection;
     protected final FilterManager mFilterManager = FilterManager.getInstance();
-    private Function<Pkg, Integer> mFilterFunction;
+    private final Function<Pkg, Integer> mFilterFunction;
 
     public BaseFilterTopComponent(DictionarySection dictionarySection, Function<Pkg, Integer> filterFunction) {
         mDictionarySection = dictionarySection;
@@ -89,7 +89,6 @@ public abstract class BaseFilterTopComponent extends BaseTopComponent implements
         Sabas.getGlobalState().addListener(gsce -> {
             var enabled = !gsce.<Boolean>getValue();
             SwingHelper.enableComponents(this, enabled);
-            //makeBusy(!enabled);
         }, PkgManager.KEY_TASK_RUNNING);
 
         list.addListSelectionListener(event -> {

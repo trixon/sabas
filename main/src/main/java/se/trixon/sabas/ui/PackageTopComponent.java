@@ -19,6 +19,7 @@ import java.awt.CardLayout;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.util.NbBundle;
@@ -86,12 +87,13 @@ public class PackageTopComponent extends TopComponent {
             idLabel.setText(pkg.getId());
             nameLabel.setText(pkg.getName());
             summaryLabel.setText(pkg.getSummary());
-            descriptionLogPanel.clear();
-            descriptionLogPanel.println(pkg.getDescription());
-            if (pkg.getLicense().length() > maxLicenseLength) {
-                descriptionLogPanel.println("\n FULL LICENSE");
-                descriptionLogPanel.println("\n" + pkg.getLicense());
-            }
+            descriptionTextPane.setText(pkg.getDescription());
+            descriptionTextPane.setContentType(Strings.CI.startsWith(pkg.getDescription(), "<html>") ? "text/html" : "text/plain");
+            descriptionTextPane.setCaretPosition(0);
+//            if (pkg.getLicense().length() > maxLicenseLength) {
+//                descriptionLogPanel.println("\n FULL LICENSE");
+//                descriptionLogPanel.println("\n" + pkg.getLicense());
+//            }
             var epoch = "";
             try {
                 epoch = String.valueOf(pkg.getEpoch());
@@ -99,7 +101,6 @@ public class PackageTopComponent extends TopComponent {
                 //
             }
             epochLabel.setText(epoch);
-            descriptionLogPanel.scrollToTop();
             versionLabel.setText(pkg.getVersion());
             licenseLabel.setText(StringUtils.abbreviate(pkg.getLicense(), maxLicenseLength));
             sizeDownloadLabel.setText(formatSize(pkg.getSizeDownload()));
@@ -125,7 +126,6 @@ public class PackageTopComponent extends TopComponent {
                 providesLogPanel.getTextArea().setText("");
                 requiresLogPanel.getTextArea().setText("");
                 mDetailsDelayedResetRunner.reset();
-                makeBusy(true);
             } else {
                 displayPackageInfoDetails(pkg);
             }
@@ -145,7 +145,6 @@ public class PackageTopComponent extends TopComponent {
             requiresLogPanel.scrollToTop();
             requiredLogPanel.scrollToTop();
         }
-        makeBusy(false);
     }
 
     private void initListeners() {
@@ -204,7 +203,8 @@ public class PackageTopComponent extends TopComponent {
         statusLabel = new javax.swing.JLabel();
         groupLabel = new javax.swing.JLabel();
         infoTabbedPane = new javax.swing.JTabbedPane();
-        descriptionLogPanel = new se.trixon.almond.util.swing.LogPanel();
+        descriptionScrollPane = new javax.swing.JScrollPane();
+        descriptionTextPane = new javax.swing.JTextPane();
         filesLogPanel = new se.trixon.almond.util.swing.LogPanel();
         requiresLogPanel = new se.trixon.almond.util.swing.LogPanel();
         requiredLogPanel = new se.trixon.almond.util.swing.LogPanel();
@@ -402,7 +402,12 @@ public class PackageTopComponent extends TopComponent {
 
         infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
         infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.descriptionLogPanel.TabConstraints.tabTitle"), descriptionLogPanel); // NOI18N
+
+        descriptionTextPane.setEditable(false);
+        descriptionTextPane.setContentType("text/html"); // NOI18N
+        descriptionScrollPane.setViewportView(descriptionTextPane);
+
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.descriptionScrollPane.TabConstraints.tabTitle"), descriptionScrollPane); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.filesLogPanel.TabConstraints.tabTitle"), filesLogPanel); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.requiresLogPanel.TabConstraints.tabTitle"), requiresLogPanel); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.requiredLogPanel.TabConstraints.tabTitle"), requiredLogPanel); // NOI18N
@@ -447,7 +452,8 @@ public class PackageTopComponent extends TopComponent {
     private javax.swing.JLabel archLabel;
     private javax.swing.JLabel buildSeparatorLabel;
     private javax.swing.JLabel buildTimeLabel;
-    private se.trixon.almond.util.swing.LogPanel descriptionLogPanel;
+    private javax.swing.JScrollPane descriptionScrollPane;
+    private javax.swing.JTextPane descriptionTextPane;
     private javax.swing.JPanel emptyCardPanel;
     private javax.swing.JLabel epochLabel;
     private se.trixon.almond.util.swing.LogPanel filesLogPanel;

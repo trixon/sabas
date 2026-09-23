@@ -255,6 +255,8 @@ public class PkgManager {
     }
 
     public void setBridge(Bridge bridge) {
+        PkgDictionary.getInstance().clear();
+        setAllItems(List.of());
         if (bridge != null) {
             mOptions.put(Options.KEY_PM_BRIDGE, bridge.getClass().getSimpleName());
         }

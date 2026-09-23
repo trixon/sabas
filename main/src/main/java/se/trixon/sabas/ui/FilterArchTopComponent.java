@@ -56,7 +56,6 @@ public final class FilterArchTopComponent extends BaseFilterTopComponent {
         super(DictionarySection.ARCH, Pkg::getArchId);
         setName(Bundle.CTL_FilterArchTopComponent());
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
-
     }
 
     void readProperties(java.util.Properties p) {
