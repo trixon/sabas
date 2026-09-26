@@ -22,6 +22,7 @@
         <module>bridges/flatpak</module>
         <module>bridges/sdkman</module>
         <module>bridges/appimage</module>
+        <module>bridges/pkgman</module>
     </modules>
     <build>
         <plugins>

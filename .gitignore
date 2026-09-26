@@ -62,3 +62,5 @@ replay_pid*
 !/branding/src/main/nbm-branding/modules/org-openide-awt.jar/
 /bridges/flatpak/target/
 /bridges/appimage/target/
+/bridges/dnf kopia/target/
+/bridges/pkgman/target/
