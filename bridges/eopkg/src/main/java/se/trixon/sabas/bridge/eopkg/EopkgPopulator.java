@@ -23,9 +23,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +44,7 @@ import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.BridgePopulator;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
+import static se.trixon.sabas.bridge.eopkg.EopkgBridge.EOPKG;
 
 /**
  *
@@ -47,11 +52,12 @@ import se.trixon.sabas.api.Pkg;
  */
 public class EopkgPopulator extends BridgePopulator {
 
+    private final DateTimeFormatter mFormatter = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm", Locale.ENGLISH);
+
     @Override
     public List<Pkg> populate(Set<Process> processes) {
         var nameToPackageMap = new ConcurrentHashMap<String, Pkg>();
-        var installedPackages = getInstalledPackages();
-        var command = List.of(EopkgBridge.EOPKG, "list-available", "--long", "--no-color");
+        var command = List.of(EOPKG, "list-available", "--long", "--no-color");
 //        var command = List.of("cat", "/home/pata/eopkg.txt");
 
         Process process = null;
@@ -95,10 +101,6 @@ public class EopkgPopulator extends BridgePopulator {
                             pkg.setArchId(mDictionary.getOrCreateId(DictionarySection.ARCH, currentArch));
                             if (currentLicense != null) {
                                 pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, currentLicense));
-                            }
-
-                            if (installedPackages.contains(currentName)) {
-                                pkg.setInstalled(true);
                             }
 
                             var details = new Pkg.Details();
@@ -156,7 +158,6 @@ public class EopkgPopulator extends BridgePopulator {
                 }
             }
             process.waitFor();
-
         } catch (IOException | InterruptedException e) {
             System.err.println("[SABAS EOPKG ERROR] " + e.getMessage());
             nameToPackageMap.clear();
@@ -168,30 +169,152 @@ public class EopkgPopulator extends BridgePopulator {
 
         var packageDir = Path.of("/var/lib/eopkg/index");
         if (Files.isDirectory(packageDir)) {
-            try {
-                Files.list(packageDir)
-                        .map(p -> new File(p.toFile(), "eopkg-index.xml"))
-                        .filter(f -> f.isFile())
-                        .forEach(f -> {
-                            try (var fileStream = new FileInputStream(f)) {
-                                parseIndexFile(fileStream, nameToPackageMap);
-                            } catch (FileNotFoundException ex) {
-                                Exceptions.printStackTrace(ex);
-                            } catch (IOException | XMLStreamException ex) {
-                                Exceptions.printStackTrace(ex);
-                            }
-                        });
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+            getActiveRepositories(processes).stream()
+                    .map(repository -> new File(packageDir.toFile(), repository + "/eopkg-index.xml"))
+                    .filter(f -> f.isFile())
+                    .forEach(f -> {
+                        try (var fileStream = new FileInputStream(f)) {
+                            applyXml(fileStream, nameToPackageMap);
+                        } catch (FileNotFoundException ex) {
+                            Exceptions.printStackTrace(ex);
+                        } catch (IOException | XMLStreamException ex) {
+                            Exceptions.printStackTrace(ex);
+                        }
+                    });
         }
+
+        applyInstalled(processes, nameToPackageMap);
+        applyOrphaned(processes, nameToPackageMap);
+        applyUpgradable(processes, nameToPackageMap);
 
         return nameToPackageMap.values().stream()
                 .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
     }
 
-    private void parseIndexFile(FileInputStream fileStream, Map<String, Pkg> packageMap) throws XMLStreamException, IOException {
+    @Override
+    public Pkg.Details populateDetails(Set<Process> processes, Pkg pkg) {
+        var details = new Pkg.Details();
+//        details.setFiles(stripDuplicateRowss(files));
+//        details.setProvides(stripDuplicateRowss(provides));
+//        details.setRequires(stripDuplicateRowss(requires));
+
+        return details;
+    }
+
+    private void applyInstalled(Set<Process> processes, Map<String, Pkg> packageMap) {
+        var command = List.of(
+                EOPKG,
+                "--no-color",
+                "list-installed",
+                "--install-info"
+        );
+
+        Process process = null;
+        try {
+            var pb = Bridge.createProcessBuilder(command);
+
+            process = pb.start();
+            processes.add(process);
+            try (var it = IOUtils.lineIterator(process.getInputStream(), StandardCharsets.UTF_8)) {
+                while (it.hasNext()) {
+                    var line = it.next().trim();
+                    if (!Strings.CI.contains(line, ":")) {
+                        continue;
+                    }
+                    var items = StringUtils.split(line, '|');
+                    var pkg = packageMap.get(items[0].trim());
+                    if (pkg != null) {
+                        pkg.setInstalled(true);
+                        pkg.setTimeInstalled(LocalDateTime.parse(items[5], mFormatter).atZone(ZoneId.systemDefault()).toEpochSecond());
+                        pkg.setVersionNew(pkg.getVersion());
+                        pkg.setVersion(StringUtils.trim(items[2]));
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+
+        } finally {
+            if (process != null) {
+                processes.remove(process);
+            }
+        }
+    }
+
+    private void applyOrphaned(Set<Process> processes, Map<String, Pkg> packageMap) {
+        var command = List.of(
+                EOPKG,
+                "--no-color",
+                "list-installed",
+                "--automatic"
+        );
+
+        Process process = null;
+        try {
+            var pb = Bridge.createProcessBuilder(command);
+
+            process = pb.start();
+            processes.add(process);
+            try (var it = IOUtils.lineIterator(process.getInputStream(), StandardCharsets.UTF_8)) {
+                while (it.hasNext()) {
+                    var line = it.next().trim();
+                    if (Strings.CI.endsWith(line, "Orphaned package")) {
+                        var pkg = packageMap.get(StringUtils.substringBefore(line, " "));
+                        if (pkg != null) {
+                            pkg.setOrphaned(true);
+                        }
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+
+        } finally {
+            if (process != null) {
+                processes.remove(process);
+            }
+        }
+    }
+
+    private void applyUpgradable(Set<Process> processes, Map<String, Pkg> packageMap) {
+        var command = List.of(
+                EOPKG,
+                "--no-color",
+                "list-upgrades",
+                "--install-info"
+        );
+
+        Process process = null;
+        try {
+            var pb = Bridge.createProcessBuilder(command);
+
+            process = pb.start();
+            processes.add(process);
+            try (var it = IOUtils.lineIterator(process.getInputStream(), StandardCharsets.UTF_8)) {
+                while (it.hasNext()) {
+                    var line = it.next().trim();
+                    if (!Strings.CI.contains(line, ":")) {
+                        continue;
+                    }
+                    var items = StringUtils.split(line, '|');
+                    var pkg = packageMap.get(items[0].trim());
+                    if (pkg != null) {
+                        pkg.setUpgradable(true);
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+
+        } finally {
+            if (process != null) {
+                processes.remove(process);
+            }
+        }
+    }
+
+    private void applyXml(FileInputStream fileStream, Map<String, Pkg> packageMap) throws XMLStreamException, IOException {
         var factory = XMLInputFactory.newInstance();
         factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
         var reader = factory.createXMLStreamReader(fileStream, "UTF-8");
@@ -228,20 +351,31 @@ public class EopkgPopulator extends BridgePopulator {
         }
     }
 
-    @Override
-    public Pkg.Details populateDetails(Set<Process> processes, Pkg pkg) {
-        var details = new Pkg.Details();
-//        details.setFiles(stripDuplicateRowss(files));
-//        details.setProvides(stripDuplicateRowss(provides));
-//        details.setRequires(stripDuplicateRowss(requires));
+    private List<String> getActiveRepositories(Set<Process> processes) {
+        var activeRepositories = new ArrayList<String>();
+        var command = List.of(EOPKG, "list-repo", "--no-color");
 
-        return details;
-    }
+        Process process = null;
+        try {
+            var pb = Bridge.createProcessBuilder(command);
 
-    private Set<String> getInstalledPackages() {
-        var installedSet = new HashSet<String>();
+            process = pb.start();
+            processes.add(process);
+            try (var it = IOUtils.lineIterator(process.getInputStream(), StandardCharsets.UTF_8)) {
+                var active = " [active]";
+                while (it.hasNext()) {
+                    var line = it.next().trim();
+                    if (Strings.CI.endsWith(line, active)) {
+                        activeRepositories.add(StringUtils.substringBefore(line, active));
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
 
-        return installedSet;
+        }
+
+        return activeRepositories;
     }
 
 }
