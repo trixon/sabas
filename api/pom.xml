@@ -19,6 +19,8 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>se.trixon.sabas.api</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.*</publicPackage>
+                        <publicPackage>org.apache.commons.*</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>
@@ -38,6 +40,21 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
             <version>2.22</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.22.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.22.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>2.22.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

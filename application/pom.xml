@@ -156,6 +156,11 @@
             <artifactId>bridge_pkgman</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>bridge_eopkg</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Trixon -->
         <dependency>
