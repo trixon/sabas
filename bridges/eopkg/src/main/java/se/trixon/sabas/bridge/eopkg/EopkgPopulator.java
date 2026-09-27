@@ -226,7 +226,8 @@ public class EopkgPopulator extends BridgePopulator {
                     var pkg = packageMap.get(items[0].trim());
                     if (pkg != null) {
                         pkg.setInstalled(true);
-                        pkg.setTimeInstalled(LocalDateTime.parse(items[5], mFormatter).atZone(ZoneId.systemDefault()).toEpochSecond());
+                        var dateStr = items[5].trim();
+                        pkg.setTimeInstalled(LocalDateTime.parse(dateStr, mFormatter).atZone(ZoneId.systemDefault()).toEpochSecond());
                         pkg.setVersionNew(pkg.getVersion());
                         pkg.setVersion(StringUtils.trim(items[2]));
                     }
@@ -234,7 +235,7 @@ public class EopkgPopulator extends BridgePopulator {
             }
             process.waitFor();
         } catch (IOException | InterruptedException e) {
-
+            Exceptions.printStackTrace(e);
         } finally {
             if (process != null) {
                 processes.remove(process);
@@ -260,16 +261,19 @@ public class EopkgPopulator extends BridgePopulator {
                 while (it.hasNext()) {
                     var line = it.next().trim();
                     if (Strings.CI.endsWith(line, "Orphaned package")) {
-                        var pkg = packageMap.get(StringUtils.substringBefore(line, " "));
-                        if (pkg != null) {
-                            pkg.setOrphaned(true);
+                        var tokens = StringUtils.split(line);
+                        if (tokens != null && tokens.length > 0) {
+                            var pkg = packageMap.get(tokens[0]);
+                            if (pkg != null) {
+                                pkg.setOrphaned(true);
+                            }
                         }
                     }
                 }
             }
             process.waitFor();
         } catch (IOException | InterruptedException e) {
-
+            Exceptions.printStackTrace(e);
         } finally {
             if (process != null) {
                 processes.remove(process);
@@ -306,7 +310,7 @@ public class EopkgPopulator extends BridgePopulator {
             }
             process.waitFor();
         } catch (IOException | InterruptedException e) {
-
+            Exceptions.printStackTrace(e);
         } finally {
             if (process != null) {
                 processes.remove(process);
@@ -345,6 +349,21 @@ public class EopkgPopulator extends BridgePopulator {
                                 pkg.setPackagerId(mDictionary.getOrCreateId(DictionarySection.PACKAGER, packagerName));
                             }
                         }
+
+                        if (xmlPackage.getHistory() != null && xmlPackage.getHistory().getUpdates() != null && !xmlPackage.getHistory().getUpdates().isEmpty()) {
+                            var latestUpdate = xmlPackage.getHistory().getUpdates().getFirst();
+                            var dateStr = latestUpdate.getDate();
+
+                            if (StringUtils.isNotBlank(dateStr)) {
+                                try {
+                                    var localDate = java.time.LocalDate.parse(dateStr.trim());
+                                    long epochSeconds = localDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
+                                    pkg.setTimeBuild(epochSeconds);
+                                } catch (Exception e) {
+                                    //
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -372,7 +391,11 @@ public class EopkgPopulator extends BridgePopulator {
             }
             process.waitFor();
         } catch (IOException | InterruptedException e) {
-
+            Exceptions.printStackTrace(e);
+        } finally {
+            if (process != null) {
+                processes.remove(process);
+            }
         }
 
         return activeRepositories;

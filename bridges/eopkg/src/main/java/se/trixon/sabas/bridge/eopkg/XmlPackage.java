@@ -20,11 +20,16 @@ package se.trixon.sabas.bridge.eopkg;
  * @author Patrik Karlström <patrik@trixon.se>
  */
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class XmlPackage {
 
+    @JacksonXmlProperty(localName = "History")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    private HistoryNode history;
     @JacksonXmlProperty(localName = "InstalledSize")
     private Long installedSize;
     @JacksonXmlProperty(localName = "Name")
@@ -35,6 +40,10 @@ public class XmlPackage {
     private String packageUri;
     @JacksonXmlProperty(localName = "Source")
     private SourceNode source;
+
+    public HistoryNode getHistory() {
+        return history;
+    }
 
     public Long getInstalledSize() {
         return installedSize;
@@ -54,6 +63,18 @@ public class XmlPackage {
 
     public SourceNode getSource() {
         return source;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class HistoryNode {
+
+        @JacksonXmlProperty(localName = "Update")
+        @JacksonXmlElementWrapper(useWrapping = false)
+        private List<UpdateNode> updates;
+
+        public List<UpdateNode> getUpdates() {
+            return updates;
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -82,6 +103,17 @@ public class XmlPackage {
 
         public PackagerNode getPackager() {
             return packager;
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class UpdateNode {
+
+        @JacksonXmlProperty(localName = "Date")
+        private String date;
+
+        public String getDate() {
+            return date;
         }
     }
 }
