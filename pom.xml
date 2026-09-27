@@ -23,6 +23,7 @@
         <module>bridges/sdkman</module>
         <module>bridges/appimage</module>
         <module>bridges/pkgman</module>
+        <module>bridges/eopkg</module>
     </modules>
     <build>
         <plugins>

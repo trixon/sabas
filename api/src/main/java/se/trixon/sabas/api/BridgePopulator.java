@@ -41,6 +41,35 @@ public abstract class BridgePopulator {
         return null;
     }
 
+    protected long getSize(String sizeString) {
+        if (sizeString == null || sizeString.trim().isEmpty() || "Available".equalsIgnoreCase(sizeString)) {
+            return 0;
+        }
+        String[] item = sizeString.trim().split("[^0-9.A-Za-z]+");
+        if (item.length < 2) {
+            return 0;
+        }
+
+        long factor = switch (item[1].trim()) {
+            case "kB", "KB" ->
+                1024L;
+            case "MB" ->
+                1024L * 1024L;
+            case "GB" ->
+                1024L * 1024L * 1024L;
+            default ->
+                1L;
+        };
+
+        try {
+            double sizeDouble = Double.parseDouble(item[0].trim());
+            return (long) (sizeDouble * factor);
+
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
     protected String stripDuplicateRowss(String s) {
         return Arrays.stream(StringUtils.split(s, "\n"))
                 .map(String::trim)

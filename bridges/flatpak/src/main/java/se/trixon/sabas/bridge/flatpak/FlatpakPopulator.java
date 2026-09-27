@@ -198,35 +198,6 @@ public class FlatpakPopulator extends BridgePopulator {
         return installedSet;
     }
 
-    private long getSize(String sizeString) {
-        if (sizeString == null || sizeString.trim().isEmpty() || "Available".equalsIgnoreCase(sizeString)) {
-            return 0;
-        }
-        String[] item = sizeString.trim().split("[^0-9.A-Za-z]+");
-        if (item.length < 2) {
-            return 0;
-        }
-
-        long factor = switch (item[1].trim()) {
-            case "kB", "KB" ->
-                1024L;
-            case "MB" ->
-                1024L * 1024L;
-            case "GB" ->
-                1024L * 1024L * 1024L;
-            default ->
-                1L;
-        };
-
-        try {
-            double sizeDouble = Double.parseDouble(item[0].trim());
-            return (long) (sizeDouble * factor);
-
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
     private Set<String> getUpgradable(Set<Process> processes) {
         var upgradeableSet = new HashSet<String>();
         var command = List.of(FlatpakBridge.FLATPAK, "remote-ls", "--app", "--updates", "--columns=application");

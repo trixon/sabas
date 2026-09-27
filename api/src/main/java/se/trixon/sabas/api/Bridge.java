@@ -48,7 +48,7 @@ public abstract class Bridge implements BridgeOperations {
 
     public static ProcessBuilder createProcessBuilder(List<String> command) {
         var processBuilder = new ProcessBuilder(command);
-        processBuilder.environment().put("LC_ALL", "C");
+        processBuilder.environment().put("LC_ALL", "C.UTF-8");
         processBuilder.redirectErrorStream(true);
 
         return processBuilder;

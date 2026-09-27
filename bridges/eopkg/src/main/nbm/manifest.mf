@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Localizing-Bundle: se/trixon/sabas/bridge/pkgman/Bundle.properties
+OpenIDE-Module-Display-Category: Bridge
+OpenIDE-Module-Short-Description: Bridge for Haiku
+OpenIDE-Module-Long-Description: Developed and tested on Haiku R1-beta6  with PKGMAN.

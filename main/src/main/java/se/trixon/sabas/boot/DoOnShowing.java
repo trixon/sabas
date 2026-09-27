@@ -58,7 +58,14 @@ public class DoOnShowing implements Runnable {
 
             NbMessage.warning("No bridge configured", message);
         } else {
-            SwingUtilities.invokeLater(() -> mPkgManager.cacheUpdate());
+            SwingUtilities.invokeLater(() -> {
+                var makeFullInit = false;
+                if (makeFullInit) {
+                    mPkgManager.cacheUpdate();
+                } else {
+                    mPkgManager.populatePackages();
+                }
+            });
         }
     }
 
