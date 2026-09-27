@@ -62,7 +62,7 @@ public class EopkgBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheClearCommand() {
-        return BridgeOperation.ofProcess(List.of(EOPKG, "clean", "expire-cache"),
+        return BridgeOperation.ofProcess(List.of(),
                 mDefaultEnvironment
         );
     }
@@ -88,6 +88,7 @@ public class EopkgBridge extends Bridge {
     public BridgeOperation onProvideTransactionRemove(String... packages) {
         return BridgeOperation.ofProcess(List.of(EOPKG,
                 "remove",
+                "--yes-all",
                 String.join(" ", packages)
         ),
                 mDefaultEnvironment
