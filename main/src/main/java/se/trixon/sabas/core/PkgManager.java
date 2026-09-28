@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.SwingUtilities;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.netbeans.api.extexecution.ExecutionDescriptor;
 import org.netbeans.api.extexecution.ExecutionService;
@@ -38,12 +39,14 @@ import org.openide.awt.StatusDisplayer;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.NbBundle;
 import org.openide.util.RequestProcessor;
 import org.openide.windows.IOProvider;
 import org.openide.windows.InputOutput;
 import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
+import se.trixon.almond.util.swing.LogPanel;
 import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.Bridge;
@@ -292,19 +295,24 @@ public class PkgManager {
         Thread.ofVirtual().name("updateChecker").start(() -> {
             var packages = mAllItems.stream()
                     .filter(pkg -> pkg.isUpgradable())
-                    .map(pkg -> pkg.getName())
                     .toList();
 
             if (!packages.isEmpty()) {
+                var maxLength = packages.stream().mapToInt(p -> p.getName().length()).max().orElse(0);
+                var lines = packages.stream()
+                        .map(p -> StringUtils.rightPad(p.getName(), maxLength + 2) + p.getVersionNew())
+                        .toList();
                 var cancelButton = new JButton(Dict.CANCEL.toString());
                 var upgradeButton = new JButton(Dict.UPDATE.toString());
-
+                var logPanel = new LogPanel();
+                var bullet = " • ";
+                logPanel.println(bullet + String.join("\n" + bullet, lines));
+                logPanel.scrollToTop();
+                logPanel.setPreferredSize(SwingHelper.getUIScaledDim(550, 600));
                 Object[] buttons = {cancelButton, upgradeButton};
-
-                var message = "Det finns uppdateringar för\n\n • " + String.join("\n • ", packages);
-                DialogDescriptor d = new DialogDescriptor(
-                        message,
-                        "Updates available",
+                var d = new DialogDescriptor(
+                        logPanel,
+                        NbBundle.getMessage(PkgManager.class, "title_updates_available"),
                         true,
                         buttons,
                         upgradeButton,
