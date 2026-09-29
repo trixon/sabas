@@ -15,25 +15,17 @@
  */
 package se.trixon.sabas.bridge.flatpak;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
+import java.util.function.BiConsumer;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -43,6 +35,7 @@ import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.BridgePopulator;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
+import static se.trixon.sabas.bridge.flatpak.FlatpakBridge.FLATPAK;
 
 /**
  *
@@ -50,7 +43,10 @@ import se.trixon.sabas.api.Pkg;
  */
 public class FlatpakPopulator extends BridgePopulator {
 
+    private final AppStreamPopulator mAppStreamPopulator = new AppStreamPopulator();
+
     public FlatpakPopulator() {
+        initEnricher();
     }
 
     @Override
@@ -61,7 +57,7 @@ public class FlatpakPopulator extends BridgePopulator {
         var installedApps = getInstalled(idToInstallTimeMap);
         var upgradableApps = getUpgradable(processes);
         var command = List.of(
-                FlatpakBridge.FLATPAK,
+                FLATPAK,
                 "remote-ls",
                 "--app",
                 //                "--arch=*",
@@ -143,7 +139,7 @@ public class FlatpakPopulator extends BridgePopulator {
                     idToPkgMap.put(id, pkg);
                 }
             }
-            populateAppStream(idToPkgMap);
+            mAppStreamPopulator.populateAppStream(idToPkgMap);
             process.waitFor();
         } catch (IOException | InterruptedException e) {
             Exceptions.printStackTrace(e);
@@ -200,7 +196,7 @@ public class FlatpakPopulator extends BridgePopulator {
 
     private Set<String> getUpgradable(Set<Process> processes) {
         var upgradeableSet = new HashSet<String>();
-        var command = List.of(FlatpakBridge.FLATPAK, "remote-ls", "--app", "--updates", "--columns=application");
+        var command = List.of(FLATPAK, "remote-ls", "--app", "--updates", "--columns=application");
 
         Process process = null;
         try {
@@ -227,15 +223,10 @@ public class FlatpakPopulator extends BridgePopulator {
         return upgradeableSet;
     }
 
-    private void parseSingleAppStreamFile(FileInputStream fileStream, Map<String, Pkg> packageMap) throws Exception {
-        var systemLang = Locale.getDefault().getLanguage().toLowerCase();
-        var factory = XMLInputFactory.newInstance();
-        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-        var reader = factory.createXMLStreamReader(fileStream, "UTF-8");
+    /*
 
+    private void parseSingleAppStreamFileOLD(FileInputStream fileStream, Map<String, Pkg> packageMap) throws Exception {
         String currentAppId = null;
-        String currentLicense = null;
-        String currentDeveloper = null;
         String currentUrl = null;
         String currentBuildTime = null;
         String currentPackager = null;
@@ -256,10 +247,6 @@ public class FlatpakPopulator extends BridgePopulator {
 
                 if ("component".equals(tagName)) {
                     currentAppId = null;
-                    currentLicense = null;
-                    currentUrl = null;
-                    currentBuildTime = null;
-                    currentDeveloper = null;
                     currentPackager = "* Community Packager *";
                     bestName = null;
                     namePriority = -1;
@@ -302,15 +289,6 @@ public class FlatpakPopulator extends BridgePopulator {
                         summaryPriority = 1;
                     }
 
-                } else if ("project_license".equals(tagName)) {
-                    currentLicense = reader.getElementText().trim();
-                } else if ("developer_name".equals(tagName)) {
-                    currentDeveloper = reader.getElementText().trim();
-                } else if ("url".equals(tagName)) {
-                    String urlType = reader.getAttributeValue(null, "type");
-                    if ("homepage".equalsIgnoreCase(urlType)) {
-                        currentUrl = reader.getElementText().trim();
-                    }
                 } else if ("release".equals(tagName)) {
                     String releaseTimestamp = reader.getAttributeValue(null, "timestamp");
                     if (releaseTimestamp != null && currentBuildTime == null) {
@@ -374,18 +352,6 @@ public class FlatpakPopulator extends BridgePopulator {
                         if (bestName != null) {
                             pkg.setName(bestName);
                         }
-                        if (bestSummary != null) {
-                            pkg.setSummary(bestSummary);
-                        }
-                        if (currentLicense != null) {
-                            pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, currentLicense));
-                        }
-                        if (currentUrl != null) {
-                            pkg.setUrl(currentUrl);
-                        }
-                        if (currentDeveloper != null) {
-                            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, currentDeveloper));
-                        }
                         if (currentPackager != null) {
                             pkg.setPackagerId(mDictionary.getOrCreateId(DictionarySection.PACKAGER, currentPackager));
                         }
@@ -402,27 +368,27 @@ public class FlatpakPopulator extends BridgePopulator {
             }
         }
     }
-
-    private void populateAppStream(Map<String, Pkg> packageMap) {
-        var basePaths = List.of("/var/lib", FileUtils.getUserDirectoryPath() + "/.local/share");
-        var repositories = packageMap.values().stream().map(pkg -> pkg.getRepository()).collect(Collectors.toSet());
-        var architectures = packageMap.values().stream().map(pkg -> pkg.getArch()).collect(Collectors.toSet());
-
-        for (var basePath : basePaths) {
-            for (var repository : repositories) {
-                for (var architecture : architectures) {
-                    var appstreamFile = new File("%s/flatpak/appstream/%s/%s/active/appstream.xml".formatted(basePath, repository, architecture));
-                    if (!appstreamFile.isFile()) {
-                        continue;
-                    }
-
-                    try (var fileStream = new FileInputStream(appstreamFile)) {
-                        parseSingleAppStreamFile(fileStream, packageMap);
-                    } catch (Exception e) {
-                        Exceptions.printStackTrace(e);
-                    }
-                }
+     */
+    private void initEnricher() {
+        BiConsumer<AppStreamPackage, Pkg> biConsumer = (asp, pkg) -> {
+            pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, asp.getLicense()));
+            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, asp.getDeveloperName()));
+            pkg.setUrl(asp.getUrl("homepage"));
+            var summary = asp.getSummary();
+            if (StringUtils.isNotBlank(summary)) {
+                pkg.setSummary(summary);
             }
-        }
+            var name = asp.getName();
+            if (StringUtils.isNotBlank(name)) {
+                pkg.setName(name);
+            }
+            var description = asp.getDescription();
+            if (StringUtils.isNotBlank(description)) {
+                pkg.setDescription(description);
+            }
+        };
+
+        mAppStreamPopulator.setEnricher(biConsumer);
     }
+
 }
