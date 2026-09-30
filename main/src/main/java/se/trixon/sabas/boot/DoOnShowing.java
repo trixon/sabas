@@ -61,7 +61,7 @@ public class DoOnShowing implements Runnable {
             SwingUtilities.invokeLater(() -> {
                 var makeFullInit = false;
                 if (makeFullInit) {
-                    mPkgManager.cacheUpdate();
+                    mPkgManager.cacheUpdate(null);
                 } else {
                     mPkgManager.populatePackages();
                 }

@@ -24,25 +24,25 @@ import org.openide.util.NbBundle.Messages;
 
 @ActionID(
         category = "Pkg",
-        id = "se.trixon.sabas.actions.PkgUpdateAction"
+        id = "se.trixon.sabas.actions.PkgCheckUpdatesAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_PkgUpdateAction",
+        displayName = "#CTL_PkgCheckUpdatesAction",
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Commands", position = 10),
-    @ActionReference(path = "Shortcuts", name = "D-U")
+    @ActionReference(path = "Menu/Commands", position = 9),
+    @ActionReference(path = "Shortcuts", name = "D-K")
 })
-@Messages("CTL_PkgUpdateAction=Update index")
-public final class PkgUpdateAction extends PkgBaseAction {
+@Messages("CTL_PkgCheckUpdatesAction=Check updates")
+public final class PkgCheckUpdatesAction extends PkgBaseAction {
 
-    public PkgUpdateAction() {
-        super(Bundle.CTL_PkgUpdateAction(), true);
+    public PkgCheckUpdatesAction() {
+        super(Bundle.CTL_PkgCheckUpdatesAction(), true);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        mPkgManager.cacheUpdate(null);
+        mPkgManager.cacheUpdate(() -> mPkgManager.checkForUpdates(true));
     }
 }
