@@ -23,22 +23,22 @@ public class Pkg {
 
     private static final PkgDictionary DICTIONARY = PkgDictionary.getInstance();
 
-    private int mArchId;
+    private int mArchId = -1;
     private String mDescription;
     private String mDescriptionLower;
     private Details mDetails;
     private int mEpoch;
-    private int mGroupId;
+    private int mGroupId = -1;
     private String mId;
     private boolean mInstalled;
-    private int mLicenseId;
+    private int mLicenseId = -1;
     private String mName;
     private String mNameLower;
     private String mNameTransaction;
     private boolean mOrphaned;
-    private int mPackagerId;
+    private int mPackagerId = -1;
     private String mRelease;
-    private int mRepositoryId;
+    private int mRepositoryId = -1;
     private long mSizeDownload;
     private long mSizeInstall;
     private String mSummary;
@@ -47,7 +47,7 @@ public class Pkg {
     private long mTimeInstalled;
     private boolean mUpgradable;
     private String mUrl;
-    private int mVendorId;
+    private int mVendorId = -1;
     private String mVersion;
     private String mVersionNew;
 
