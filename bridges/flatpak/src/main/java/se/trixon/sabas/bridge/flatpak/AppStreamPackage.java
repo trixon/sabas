@@ -15,47 +15,52 @@
  */
 package se.trixon.sabas.bridge.flatpak;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAnyElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.Strings;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.apache.commons.lang3.StringUtils;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "component")
 public class AppStreamPackage {
 
-    private final Map<String, String> mDescriptionMap = new HashMap<>();
-    @JacksonXmlProperty(localName = "developer_name")
+    private Map<String, String> mDescriptionMap;
+    @XmlElement(name = "description")
+    private List<DescriptionNode> mDescriptions;
+    @XmlElement(name = "developer_name")
     private String mDeveloperName;
-    @JacksonXmlProperty(localName = "id")
+    @XmlElement(name = "id")
     private String mId;
-    @JacksonXmlProperty(localName = "project_license")
+    @XmlElement(name = "project_license")
     private String mLicense;
-    @JacksonXmlProperty(localName = "metadata")
+    @XmlElement(name = "metadata")
     private MetadataNode mMetadata;
     private Map<String, String> mNameMap;
-    @JacksonXmlProperty(localName = "name")
-    @JacksonXmlElementWrapper(useWrapping = false)
-    private List<LangNode> mNames;
-    @JacksonXmlProperty(localName = "release")
-    @JacksonXmlElementWrapper(useWrapping = false)
-    private List<ReleaseNode> mReleases = new ArrayList<>();
-    @JacksonXmlProperty(localName = "summary")
-    @JacksonXmlElementWrapper(useWrapping = false)
-    private List<LangNode> mSummaries;
+    @XmlElement(name = "name")
+    private List<LangTextNode> mNames;
+    @XmlElement(name = "release")
+    private List<ReleaseNode> mReleases;
+    @XmlElement(name = "summary")
+    private List<LangTextNode> mSummaries;
     private Map<String, String> mSummaryMap;
-    @JacksonXmlProperty(localName = "url")
-    @JacksonXmlElementWrapper(useWrapping = false)
+    @XmlElement(name = "url")
     private List<UrlNode> mUrls;
 
     public AppStreamPackage() {
@@ -69,32 +74,34 @@ public class AppStreamPackage {
         return mDeveloperName;
     }
 
+    public String getFlathubVerificationWebsite() {
+        if (mMetadata == null || mMetadata.getValues() == null) {
+            return null;
+        }
+        return mMetadata.getValues().stream()
+                .filter(v -> "flathub::verification::website".equals(v.getKey()))
+                .map(ValueNode::getValue)
+                .findFirst()
+                .orElse(null);
+    }
+
     public String getId() {
-        return mId;
+        return mId != null ? mId.trim() : null;
+    }
+
+    public String getLatestReleaseTimestamp() {
+        if (mReleases == null || mReleases.isEmpty()) {
+            return null;
+        }
+        return mReleases.get(0).getTimestamp();
     }
 
     public String getLicense() {
         return mLicense;
     }
 
-    public MetadataNode getMetadata() {
-        return mMetadata;
-    }
-
     public String getName(String... langArgs) {
         return getLocalizedValue(mNameMap, langArgs);
-    }
-
-    public List<LangNode> getNames() {
-        return mNames;
-    }
-
-    public List<ReleaseNode> getReleases() {
-        return mReleases;
-    }
-
-    public List<LangNode> getSummaries() {
-        return mSummaries;
     }
 
     public String getSummary(String... langArgs) {
@@ -102,126 +109,50 @@ public class AppStreamPackage {
     }
 
     public String getUrl(String type) {
-        return Optional.ofNullable(mUrls).orElse(List.of()).stream()
-                .filter(u -> Strings.CI.equals(u.type, type))
-                .map(u -> u.value)
+        if (mUrls == null) {
+            return null;
+        }
+        return mUrls.stream()
+                .filter(u -> StringUtils.equalsIgnoreCase(u.getType(), type))
+                .map(UrlNode::getValue)
                 .findFirst()
                 .orElse(null);
     }
 
-    public List<UrlNode> getUrls() {
-        return mUrls;
-    }
+    /*
+    This one is a keeper...
+     */
+    private void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
+        mNameMap = createLangNodeMap(mNames);
+        mSummaryMap = createLangNodeMap(mSummaries);
 
-    @JsonSetter("description")
-    public void setDescriptionNode(JsonNode node) {
-        if (node == null) {
-            return;
-        }
-
-        var htmlBuilder = new java.lang.StringBuilder("<html>");
-
-        if (node.has("p")) {
-            var pNode = node.get("p");
-            if (pNode.isArray()) {
-                for (var textNode : pNode) {
-                    var text = textNode.asText().trim();
-                    if (!text.isEmpty()) {
-                        htmlBuilder.append("<p>").append(text).append("</p>\n");
-                    }
-                }
-            } else {
-                var text = pNode.asText().trim();
-                if (!text.isEmpty()) {
-                    htmlBuilder.append("<p>").append(text).append("</p>\n");
-                }
+        mDescriptionMap = new HashMap<>();
+        if (mDescriptions != null) {
+            for (var desc : mDescriptions) {
+                var langKey = desc.getLang() != null ? desc.getLang().toLowerCase(Locale.ROOT) : "";
+                mDescriptionMap.put(langKey, desc.getHtmlContent());
             }
-        }
-
-        if (node.has("heading")) {
-            var hNode = node.get("heading");
-            if (hNode.isArray()) {
-                for (var textNode : hNode) {
-                    htmlBuilder.append("<h3>").append(textNode.asText().trim()).append("</h3>\n");
-                }
-            } else {
-                htmlBuilder.append("<h3>").append(hNode.asText().trim()).append("</h3>\n");
-            }
-        }
-
-        if (node.has("ul") && node.get("ul").has("li")) {
-            var liNode = node.get("ul").get("li");
-            htmlBuilder.append("<ul>\n");
-            if (liNode.isArray()) {
-                for (var itemNode : liNode) {
-                    htmlBuilder.append("  <li>").append(itemNode.asText().trim()).append("</li>\n");
-                }
-            } else {
-                htmlBuilder.append("  <li>").append(liNode.asText().trim()).append("</li>\n");
-            }
-            htmlBuilder.append("</ul>\n");
-        }
-
-        if (node.has("ol") && node.get("ol").has("li")) {
-            var liNode = node.get("ol").get("li");
-            htmlBuilder.append("<ol>\n");
-            if (liNode.isArray()) {
-                for (var itemNode : liNode) {
-                    htmlBuilder.append("  <li>").append(itemNode.asText().trim()).append("</li>\n");
-                }
-            } else {
-                htmlBuilder.append("  <li>").append(liNode.asText().trim()).append("</li>\n");
-            }
-            htmlBuilder.append("</ol>\n");
-        }
-        htmlBuilder.append("</html>");
-
-        var finalHtml = htmlBuilder.toString().trim();
-        if (!finalHtml.isEmpty()) {
-//            var lang = node.has("@lang") ? node.get("@lang").asText() : "";
-            String lang = "";
-            var fields = node.fieldNames();
-            while (fields.hasNext()) {
-                String fieldName = fields.next();
-                if (fieldName.startsWith("@") && Strings.CI.endsWith(fieldName, "lang")) {
-                    lang = node.get(fieldName).asText();
-                    break;
-                }
-            }
-
-            mDescriptionMap.put(lang.toLowerCase(), finalHtml);
         }
     }
 
-    @JsonSetter("name")
-    public void setNames(List<LangNode> names) {
-        mNames = names;
-        mNameMap = createLangTextMap(names);
-    }
-
-    @JsonSetter("summary")
-    public void setSummaries(List<LangNode> summaries) {
-        mSummaries = summaries;
-        mSummaryMap = createLangTextMap(summaries);
-    }
-
-    private Map<String, String> createLangTextMap(List<? extends LangText> langNodes) {
-        return langNodes.stream()
-                .collect(Collectors.toMap(
-                        p -> Objects.toString(p.getLang(), "").toLowerCase(),
-                        p -> Objects.toString(p.getText(), ""),
-                        (existingValue, newValue) -> newValue
-                ));
+    private Map<String, String> createLangNodeMap(List<LangTextNode> langNodes) {
+        if (langNodes == null) {
+            return new HashMap<>();
+        }
+        return langNodes.stream().collect(Collectors.toMap(
+                p -> Objects.toString(p.getLang(), "").toLowerCase(Locale.ROOT),
+                p -> Objects.toString(p.getText(), ""),
+                (existingValue, newValue) -> newValue
+        ));
     }
 
     private String getLocalizedValue(Map<String, String> map, String... langArgs) {
         if (map == null || map.isEmpty()) {
             return null;
         }
-
-        var lang = langArgs != null && langArgs.length > 0
+        var lang = (langArgs != null && langArgs.length > 0)
                 ? langArgs[0].toLowerCase()
-                : Locale.getDefault().getLanguage().toLowerCase();
+                : Locale.getDefault().getLanguage().toLowerCase(Locale.ROOT);
 
         var text = map.get(lang);
         if (text != null) {
@@ -241,37 +172,85 @@ public class AppStreamPackage {
         return map.values().stream().findFirst().orElse(null);
     }
 
-    public static interface LangText {
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class DescriptionNode {
 
-        String getLang();
-
-        String getText();
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class LangNode implements LangText {
-
-        @JacksonXmlProperty(isAttribute = true, localName = "lang")
+        @XmlAttribute(name = "lang", namespace = "http://www.w3.org/XML/1998/namespace")
         private String lang;
-        @JacksonXmlText
-        private String text;
+        @XmlAnyElement
+        private List<Object> descriptionElements = new ArrayList<>();
 
-        @Override
         public String getLang() {
             return lang;
         }
 
-        @Override
+        public String getHtmlContent() {
+            if (descriptionElements == null || descriptionElements.isEmpty()) {
+                return "";
+            }
+
+            var htmlBuilder = new java.lang.StringBuilder();
+
+            try {
+                var tf = TransformerFactory.newInstance();
+                var transformer = tf.newTransformer();
+                transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+                transformer.setOutputProperty(OutputKeys.METHOD, "html");
+
+                for (var obj : descriptionElements) {
+                    if (obj instanceof org.w3c.dom.Element element) {
+                        var writer = new java.io.StringWriter();
+                        transformer.transform(new DOMSource(element), new StreamResult(writer));
+                        var rawXml = writer.toString().trim();
+                        if (!rawXml.isEmpty()) {
+                            htmlBuilder.append(rawXml).append("\n");
+                        }
+                    } else if (obj != null) {
+                        var text = obj.toString().trim();
+                        if (!text.isEmpty()) {
+                            if (!text.startsWith("<")) {
+                                htmlBuilder.append("<p>").append(text).append("</p>\n");
+                            } else {
+                                htmlBuilder.append(text).append("\n");
+                            }
+                        }
+                    }
+                }
+
+                return htmlBuilder.toString().trim();
+            } catch (IllegalArgumentException | TransformerException e) {
+                for (var obj : descriptionElements) {
+                    if (obj != null) {
+                        htmlBuilder.append(obj.toString().trim()).append("\n");
+                    }
+                }
+                return htmlBuilder.toString().trim();
+            }
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class LangTextNode {
+
+        @XmlAttribute(name = "lang", namespace = "http://www.w3.org/XML/1998/namespace")
+        private String lang;
+
+        @XmlValue
+        private String text;
+
+        public String getLang() {
+            return lang;
+        }
+
         public String getText() {
             return text;
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class MetadataNode {
 
-        @JacksonXmlProperty(localName = "value")
-        @JacksonXmlElementWrapper(useWrapping = false)
+        @XmlElement(name = "value")
         private List<ValueNode> values;
 
         public List<ValueNode> getValues() {
@@ -279,10 +258,10 @@ public class AppStreamPackage {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class ReleaseNode {
 
-        @JacksonXmlProperty(isAttribute = true, localName = "timestamp")
+        @XmlAttribute(name = "timestamp")
         private String timestamp;
 
         public String getTimestamp() {
@@ -290,13 +269,13 @@ public class AppStreamPackage {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class UrlNode {
 
-        @JacksonXmlProperty(isAttribute = true, localName = "type")
+        @XmlAttribute(name = "type")
         private String type;
 
-        @JacksonXmlText
+        @XmlValue
         private String value;
 
         public String getType() {
@@ -308,12 +287,13 @@ public class AppStreamPackage {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class ValueNode {
 
-        @JacksonXmlProperty(isAttribute = true, localName = "key")
+        @XmlAttribute(name = "key")
         private String key;
-        @JacksonXmlText
+
+        @XmlValue
         private String value;
 
         public String getKey() {
