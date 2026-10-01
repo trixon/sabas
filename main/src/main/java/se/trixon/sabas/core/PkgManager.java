@@ -92,20 +92,15 @@ public class PkgManager {
         externalExecutor("Clearing cache...", getBridge().onProvideCacheClearCommand(), mNoOp);
     }
 
-    public void cacheUpdate(Runnable postPostRunnable) {
+    public void cacheUpdate(boolean alwaysFeedback) {
         if (isBridgeInvalid()) {
             return;
         }
-        Runnable postExecution = () -> {
-            populatePackages();
-            if (postPostRunnable != null) {
-                postPostRunnable.run();
-            }
-        };
-        externalExecutor("Updating cache...", getOperationCacheUpdate(), postExecution);
+
+        externalExecutor("Updating cache...", getOperationCacheUpdate(), () -> populatePackages(alwaysFeedback));
     }
 
-    public void checkForUpdates(boolean alwaysFeedback) {
+    private void checkForUpdates(boolean alwaysFeedback) {
         Thread.ofVirtual().name("updateChecker").start(() -> {
             var packages = mAllItems.stream()
                     .filter(pkg -> pkg.isUpgradable())
@@ -113,11 +108,11 @@ public class PkgManager {
 
             if (!packages.isEmpty()) {
                 var maxLengthName = packages.stream().mapToInt(p -> p.getName().length()).max().orElse(0);
-                var maxLengthVersionNew = packages.stream().mapToInt(p -> p.getVersionNew().length()).max().orElse(0);
+                var maxLengthVersionNew = packages.stream().mapToInt(p -> StringUtils.defaultString(p.getVersionNew()).length()).max().orElse(0);
                 var lines = packages.stream()
                         .map(p -> "%s  %s  (%s)".formatted(
                                 StringUtils.rightPad(p.getName(), maxLengthName),
-                                StringUtils.rightPad(p.getVersionNew(), maxLengthVersionNew),
+                                StringUtils.rightPad(StringUtils.defaultString(p.getVersionNew()), maxLengthVersionNew),
                                 p.getVersion()
                         ))
                         .toList();
@@ -212,7 +207,7 @@ public class PkgManager {
         }
 
         var bridgeExecutor = getOperationInstall(getSelectedPkg().getNameTransaction());
-        externalExecutor("Installing...", bridgeExecutor, () -> populatePackages());
+        externalExecutor("Installing...", bridgeExecutor, () -> populatePackages(false));
     }
 
     public boolean isLongTaskRunning() {
@@ -253,7 +248,7 @@ public class PkgManager {
         });
     }
 
-    public void populatePackages() {
+    public void populatePackages(boolean alwaysFeedback) {
         if (isBridgeInvalid()) {
             return;
         }
@@ -283,6 +278,7 @@ public class PkgManager {
                 setFilteredItems(packages);
 //                PkgDictionary.getInstance().debugPrint();
                 displayStatus("Loading", SystemHelper.age(start));
+                checkForUpdates(alwaysFeedback);
 
                 setLongTaskRunning(false);
             });
@@ -295,7 +291,7 @@ public class PkgManager {
         }
 
         var bridgeExecutor = getOperationRemove(getSelectedPkg().getNameTransaction());
-        externalExecutor("Removing...", bridgeExecutor, () -> populatePackages());
+        externalExecutor("Removing...", bridgeExecutor, () -> populatePackages(false));
     }
 
     public void setAllItems(List<Pkg> newFilteredList) {
@@ -303,8 +299,6 @@ public class PkgManager {
         mAllItems.addAll(newFilteredList);
 
         Sabas.getGlobalState().send(KEY_ALL_ITEMS, List.copyOf(mAllItems));
-
-        checkForUpdates(false);
     }
 
     public void setBridge(Bridge bridge) {
@@ -338,7 +332,7 @@ public class PkgManager {
         }
 
         var bridgeExecutor = getOperationUpgrade();
-        externalExecutor("Upgrading...", bridgeExecutor, () -> populatePackages());
+        externalExecutor("Upgrading...", bridgeExecutor, () -> populatePackages(false));
     }
 
     private Cancellable createCanceller(Set<Process> processes, AtomicReference<Thread> threadRef) {
@@ -459,7 +453,7 @@ public class PkgManager {
 
     private void initListeners() {
         Sabas.getGlobalState().addListener(gsce -> {
-            cacheUpdate(null);
+            cacheUpdate(false);
         }, PkgManager.KEY_BRIDGE);
     }
 

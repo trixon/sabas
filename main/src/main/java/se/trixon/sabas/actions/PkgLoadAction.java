@@ -43,6 +43,6 @@ public final class PkgLoadAction extends PkgBaseAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        mPkgManager.populatePackages();
+        mPkgManager.populatePackages(false);
     }
 }

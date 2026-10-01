@@ -46,7 +46,7 @@ public class DoOnShowing implements Runnable {
             }
         });
 
-        Almond.openTopComponent("ActionsTopComponent");
+//        Almond.openTopComponent("ActionsTopComponent");
         Almond.openAndActivateTopComponent("FilterTopComponent");
         Almond.hideTabs("output");
         Sabas.displaySystemInformation();
@@ -61,9 +61,9 @@ public class DoOnShowing implements Runnable {
             SwingUtilities.invokeLater(() -> {
                 var makeFullInit = false;
                 if (makeFullInit) {
-                    mPkgManager.cacheUpdate(null);
+                    mPkgManager.cacheUpdate(false);
                 } else {
-                    mPkgManager.populatePackages();
+                    mPkgManager.populatePackages(false);
                 }
             });
         }

@@ -43,6 +43,6 @@ public final class PkgUpdateAction extends PkgBaseAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        mPkgManager.cacheUpdate(null);
+        mPkgManager.cacheUpdate(false);
     }
 }
