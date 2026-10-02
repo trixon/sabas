@@ -172,9 +172,9 @@ public final class PackagesTopComponent extends BaseTopComponent {
         var selected = "";
         var selectedIndex = packagesList.getSelectedIndex();
         if (selectedIndex != -1) {
-            selected = "@%,d/".formatted(selectedIndex + 1);
+            selected = "@%,d : ".formatted(selectedIndex + 1);
         }
-        footerLabel.setText("%s%,d/%,d".formatted(
+        footerLabel.setText("%s%,d : %,d".formatted(
                 selected,
                 mPkgManager.getFilteredItems().size(),
                 mPkgManager.getAllItems().size()

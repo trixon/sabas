@@ -106,12 +106,14 @@ public class PackageTopComponent extends TopComponent {
             sizeDownloadLabel.setText(formatSize(pkg.getSizeDownload()));
             sizeInstallLabel.setText(formatSize(pkg.getSizeInstall()));
             vendorLabel.setText(pkg.getVendor());
-            urlLabel.setText(pkg.getUrl());
+//            urlLabel.setText(pkg.getUrl());
+            urlLabel.setToolTipText(pkg.getUrl());
             urlLabel.setUri(pkg.getUrl() == null ? "" : pkg.getUrl());
             repositoryLabel.setText(pkg.getRepository());
             packagerLabel.setText(StringUtils.abbreviate(pkg.getPackager(), 50));
             releaseLabel.setText(pkg.getRelease());
             archLabel.setText(pkg.getArch());
+            categoryLabel.setText(pkg.getCategory().toString());
             groupLabel.setText(pkg.getGroup());
             updateBuildTime(pkg);
             if (pkg.getTimeInstalled() == 0) {
@@ -201,7 +203,9 @@ public class PackageTopComponent extends TopComponent {
         buildSeparatorLabel = new javax.swing.JLabel();
         vendorSeparatorLabel = new javax.swing.JLabel();
         statusLabel = new javax.swing.JLabel();
+        categoryLabel = new javax.swing.JLabel();
         groupLabel = new javax.swing.JLabel();
+        buildSeparatorLabel1 = new javax.swing.JLabel();
         infoTabbedPane = new javax.swing.JTabbedPane();
         descriptionScrollPane = new javax.swing.JScrollPane();
         descriptionTextPane = new javax.swing.JTextPane();
@@ -220,7 +224,7 @@ public class PackageTopComponent extends TopComponent {
         );
         emptyCardPanelLayout.setVerticalGroup(
             emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 496, Short.MAX_VALUE)
+            .addGap(0, 490, Short.MAX_VALUE)
         );
 
         add(emptyCardPanel, "empty");
@@ -290,8 +294,13 @@ public class PackageTopComponent extends TopComponent {
         org.openide.awt.Mnemonics.setLocalizedText(statusLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.statusLabel.text")); // NOI18N
         statusLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.statusLabel.toolTipText")); // NOI18N
 
+        org.openide.awt.Mnemonics.setLocalizedText(categoryLabel, "CATEGORY"); // NOI18N
+        categoryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.categoryLabel.toolTipText")); // NOI18N
+
         org.openide.awt.Mnemonics.setLocalizedText(groupLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.groupLabel.text")); // NOI18N
         groupLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.groupLabel.toolTipText")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(buildSeparatorLabel1, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.buildSeparatorLabel1.text")); // NOI18N
 
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);
@@ -310,7 +319,7 @@ public class PackageTopComponent extends TopComponent {
                         .addComponent(vendorSeparatorLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(packagerLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 648, Short.MAX_VALUE)
                         .addComponent(sizeInstallLabel)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -352,8 +361,13 @@ public class PackageTopComponent extends TopComponent {
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(groupLabel)
-                    .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
+                        .addComponent(categoryLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buildSeparatorLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(groupLabel)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         infoHeaderPanelLayout.setVerticalGroup(
@@ -392,7 +406,10 @@ public class PackageTopComponent extends TopComponent {
                     .addComponent(idLabel)
                     .addComponent(statusLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(groupLabel)
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(categoryLabel)
+                    .addComponent(buildSeparatorLabel1)
+                    .addComponent(groupLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -451,7 +468,9 @@ public class PackageTopComponent extends TopComponent {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel archLabel;
     private javax.swing.JLabel buildSeparatorLabel;
+    private javax.swing.JLabel buildSeparatorLabel1;
     private javax.swing.JLabel buildTimeLabel;
+    private javax.swing.JLabel categoryLabel;
     private javax.swing.JScrollPane descriptionScrollPane;
     private javax.swing.JTextPane descriptionTextPane;
     private javax.swing.JPanel emptyCardPanel;

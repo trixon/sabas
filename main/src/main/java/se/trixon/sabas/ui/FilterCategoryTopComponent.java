@@ -26,42 +26,42 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
-import se.trixon.sabas.api.PkgStatus;
+import se.trixon.sabas.api.PkgCategory;
 import se.trixon.sabas.ui.parts.ZebraListCellRenderer;
 
 /**
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//se.trixon.sabas.ui//FilterStatus//EN",
+        dtd = "-//se.trixon.sabas.ui//FilterCategory//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "FilterStatusTopComponent",
+        preferredID = "FilterCategoryTopComponent",
         //iconBase="SET/PATH/TO/ICON/HERE",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "left2", openAtStartup = true, position = 1)
-@ActionID(category = "Window", id = "se.trixon.sabas.ui.FilterStatusTopComponent")
+@ActionID(category = "Window", id = "se.trixon.sabas.ui.FilterCategoryTopComponent")
 @ActionReferences({
-    @ActionReference(path = "Menu/Window", position = 9),
-    @ActionReference(path = "Shortcuts", name = "D-0")
+    @ActionReference(path = "Menu/Window", position = 10),
+    @ActionReference(path = "Shortcuts", name = "D-1")
 })
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_FilterStatusAction",
-        preferredID = "FilterStatusTopComponent"
+        displayName = "#CTL_FilterCategoryAction",
+        preferredID = "FilterCategoryTopComponent"
 )
 @Messages({
-    "CTL_FilterStatusAction=Status",
-    "CTL_FilterStatusTopComponent=Status"
+    "CTL_FilterCategoryAction=Category",
+    "CTL_FilterCategoryTopComponent=Category"
 })
-public final class FilterStatusTopComponent extends BaseFilterTopComponent {
+public final class FilterCategoryTopComponent extends BaseFilterTopComponent {
 
-    private JList<PkgStatus> list;
+    private JList<PkgCategory> list;
 
-    public FilterStatusTopComponent() {
-        super(DictionarySection.STATUS, pkg -> -1);
-        setName(Bundle.CTL_FilterStatusTopComponent());
+    public FilterCategoryTopComponent() {
+        super(DictionarySection.CATEGORY, pkg -> -1);
+        setName(Bundle.CTL_FilterCategoryTopComponent());
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         init();
     }
@@ -69,25 +69,11 @@ public final class FilterStatusTopComponent extends BaseFilterTopComponent {
     @Override
     public boolean filter(Pkg pkg) {
         var selectedValues = list.getSelectedValuesList();
-        if (selectedValues.isEmpty() || selectedValues.contains(PkgStatus.ALL)) {
-            return true;
-        }
-        if (pkg.isUpgradable() && selectedValues.contains(PkgStatus.UPGRADABLE)) {
-            return true;
-        }
-        if (pkg.isOrphaned() && selectedValues.contains(PkgStatus.ORPHANED)) {
-            return true;
-        }
-        if (pkg.isInstalled() && selectedValues.contains(PkgStatus.INSTALLED)) {
+        if (selectedValues.isEmpty() || selectedValues.contains(PkgCategory.ALL)) {
             return true;
         }
 
-        if (!pkg.isInstalled() && selectedValues.contains(PkgStatus.AVAILABLE)) {
-            return true;
-        }
-
-        return false;
-
+        return selectedValues.contains(pkg.getCategory());
     }
 
     @Override
@@ -108,8 +94,8 @@ public final class FilterStatusTopComponent extends BaseFilterTopComponent {
     }
 
     private void init() {
-        var statusModel = new DefaultListModel<PkgStatus>();
-        statusModel.addAll(List.of(PkgStatus.values()));
+        var statusModel = new DefaultListModel<PkgCategory>();
+        statusModel.addAll(List.of(PkgCategory.values()));
         list = new JList<>(statusModel);
         list.setCellRenderer(new ZebraListCellRenderer());
         list.setSelectedIndex(0);

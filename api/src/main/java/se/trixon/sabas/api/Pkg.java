@@ -24,6 +24,7 @@ public class Pkg {
     private static final PkgDictionary DICTIONARY = PkgDictionary.getInstance();
 
     private int mArchId = -1;
+    private PkgCategory mCategory = PkgCategory.OTHER;
     private String mDescription;
     private String mDescriptionLower;
     private Details mDetails;
@@ -60,6 +61,10 @@ public class Pkg {
 
     public int getArchId() {
         return mArchId;
+    }
+
+    public PkgCategory getCategory() {
+        return mCategory;
     }
 
     public String getDescription() {
@@ -209,6 +214,10 @@ public class Pkg {
 
     public void setArchId(int archId) {
         mArchId = archId;
+    }
+
+    public void setCategory(PkgCategory category) {
+        mCategory = category;
     }
 
     public void setDescription(String description) {
