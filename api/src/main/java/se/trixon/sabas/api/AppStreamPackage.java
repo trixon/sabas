@@ -57,9 +57,12 @@ public class AppStreamPackage {
     private List<LangTextNode> mNames;
     @XmlElement(name = "release")
     private List<ReleaseNode> mReleases;
+    private String mRepo;
     @XmlElement(name = "summary")
     private List<LangTextNode> mSummaries;
     private Map<String, String> mSummaryMap;
+    @XmlAttribute(name = "type")
+    private String mType;
     @XmlElement(name = "url")
     private List<UrlNode> mUrls;
 
@@ -104,8 +107,16 @@ public class AppStreamPackage {
         return getLocalizedValue(mNameMap, langArgs);
     }
 
+    public String getRepo() {
+        return mRepo;
+    }
+
     public String getSummary(String... langArgs) {
         return getLocalizedValue(mSummaryMap, langArgs);
+    }
+
+    public String getType() {
+        return StringUtils.trim(mType);
     }
 
     public String getUrl(String type) {
@@ -117,6 +128,10 @@ public class AppStreamPackage {
                 .map(UrlNode::getValue)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public void setRepo(String repo) {
+        mRepo = repo;
     }
 
     /*

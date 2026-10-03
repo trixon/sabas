@@ -24,20 +24,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.openide.util.Exceptions;
@@ -86,43 +82,37 @@ public class AppStreamPopulator extends BridgePopulator {
 //        });
     }
 
-    public void populateAppStream(Map<String, Pkg> packageMap) {
-        var activeRepositories = getActiveRepositories();
-        var basePaths = List.of(
-                Path.of("/var/lib/flatpak/appstream"),
-                Path.of(FileUtils.getUserDirectoryPath(), ".local/share/flatpak/appstream")
-        );
-        for (var basePath : basePaths) {
-            if (!Files.isDirectory(basePath)) {
-                continue;
-            }
-
-            try {
-                try (var repoStream = Files.walk(basePath, 2)) {
-                    repoStream.filter(p -> p.getNameCount() == basePath.getNameCount() + 2)
-                            .filter(Files::isDirectory)
-                            .forEach(repoArchDir -> {
-                                parseLatestXmlFromRepo(activeRepositories, repoArchDir, packageMap);
-                            });
-                }
-            } catch (Exception e) {
-                Exceptions.printStackTrace(e);
-            }
+    public void populate(Path path, boolean isGz, Map<String, Pkg> packageMap, String repo) {
+        System.out.println("Parse: " + path);
+        try (var fileStream = new FileInputStream(path.toFile())) {
+            var finalStream = isGz ? new GZIPInputStream(fileStream) : fileStream;
+            populate(finalStream, packageMap, repo);
+        } catch (Exception e) {
+            Exceptions.printStackTrace(e);
         }
     }
 
-    public void setEnricher(BiConsumer<AppStreamPackage, Pkg> enricher) {
-        mEnricher = enricher;
-    }
-
-    private void applyXml(String repo, InputStream fileStream, Map<String, Pkg> packageMap) throws XMLStreamException, IOException, JAXBException {
+    public void populate(InputStream fileStream, Map<String, Pkg> packageMap, String repo) throws XMLStreamException, IOException, JAXBException {
         var factory = XMLInputFactory.newInstance();
         factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
         factory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, true);
         factory.setProperty(XMLInputFactory.IS_COALESCING, true);
-
+        var set = new TreeSet<String>();
+        String currentOrigin = "unknown";
         try (var streamReader = new InputStreamReader(fileStream, StandardCharsets.UTF_8); var bufferedReader = new BufferedReader(streamReader)) {
             var reader = factory.createXMLStreamReader(bufferedReader);
+
+            while (reader.hasNext()) {
+                int event = reader.next();
+                if (event == XMLStreamConstants.START_ELEMENT && "components".equals(reader.getLocalName())) {
+                    String originAttr = reader.getAttributeValue(null, "origin");
+                    if (StringUtils.isNotBlank(originAttr)) {
+                        currentOrigin = originAttr.trim().toLowerCase(Locale.ROOT);
+                    }
+                    break;
+                }
+            }
+
             while (reader.hasNext()) {
                 int event = reader.getEventType();
 
@@ -131,8 +121,9 @@ public class AppStreamPopulator extends BridgePopulator {
                         try {
                             var jaxbElement = mUnmarshaller.unmarshal(reader, AppStreamPackage.class);
                             var asp = jaxbElement.getValue();
+                            asp.setRepo(repo);
                             var id = repo + asp.getId();
-
+                            set.add(Objects.toString(asp.getType(), "-"));
                             var pkg = packageMap.getOrDefault(id, packageMap.get(Strings.CI.removeEnd(id, ".desktop")));
                             if (pkg != null) {
                                 if (mEnricher != null) {
@@ -153,102 +144,14 @@ public class AppStreamPopulator extends BridgePopulator {
                 }
             }
         }
+
+        System.out.println("ORIGIN " + currentOrigin);
+        System.out.println("FOUND TYPES");
+        System.out.println(String.join("\n", set));
     }
 
-    private void parseLatestXmlFromRepo(Set<String> activeRepositories, Path repoArchDir, Map<String, Pkg> packageMap) {
-        try {
-            var activeGz = repoArchDir.resolve("active/appstream.xml.gz");
-            var activeXml = repoArchDir.resolve("active/appstream.xml");
-
-            if (Files.isRegularFile(activeGz)) {
-                runParser(activeGz, true, packageMap, activeRepositories);
-                return;
-            } else if (Files.isRegularFile(activeXml)) {
-                runParser(activeXml, false, packageMap, activeRepositories);
-                return;
-            }
-
-            Path bestFile = null;
-            long latestTime = 0;
-            boolean isGz = false;
-
-            try (var fileStream = Files.walk(repoArchDir, 2)) {
-                var files = fileStream
-                        .filter(Files::isRegularFile)
-                        .filter(p -> !p.toString().contains("active"))
-                        .toList();
-
-                for (var p : files) {
-                    var name = p.getFileName().toString().toLowerCase();
-                    if (name.equals("appstream.xml") || name.equals("appstream.xml.gz")) {
-                        var fileTime = Files.getLastModifiedTime(p).toMillis();
-
-                        if (fileTime > latestTime) {
-                            latestTime = fileTime;
-                            bestFile = p;
-                            isGz = name.endsWith(".gz");
-                        }
-                    }
-                }
-            }
-
-            if (bestFile != null) {
-                runParser(bestFile, isGz, packageMap, activeRepositories);
-            }
-        } catch (IOException e) {
-            Exceptions.printStackTrace(e);
-        }
+    public void setEnricher(BiConsumer<AppStreamPackage, Pkg> enricher) {
+        mEnricher = enricher;
     }
 
-    private void runParser(Path path, boolean isGz, Map<String, Pkg> packageMap, Set<String> activeRepositories) {
-        System.out.println("Parse: " + path);
-        try (var fileStream = new FileInputStream(path.toFile())) {
-            var finalStream = isGz ? new GZIPInputStream(fileStream) : fileStream;
-            String repo = "";
-            for (int i = 0; i < path.getNameCount(); i++) {
-                if ("appstream".equals(path.getName(i).toString())) {
-                    repo = path.getName(i + 1).toString().toLowerCase(Locale.ROOT);
-                    break;
-                }
-            }
-            if (activeRepositories.contains(repo)) {
-                applyXml(repo, finalStream, packageMap);
-            }
-        } catch (Exception e) {
-            Exceptions.printStackTrace(e);
-        }
-    }
-
-    private Set<String> getActiveRepositories() {
-        var command = List.of(
-                "flatpak",
-                //                FLATPAK,
-                "remotes",
-                "--columns=name"
-        );
-
-        var pb = Bridge.createProcessBuilder(command);
-        pb.environment().put("LANGUAGE", "en_US");
-        try {
-            var process = pb.start();
-            String commandOutput;
-            try (var stream = process.getInputStream()) {
-                commandOutput = IOUtils.toString(stream, StandardCharsets.UTF_8).trim();
-            }
-
-            int exitCode = process.waitFor();
-
-            if (exitCode == 0) {
-                return commandOutput.lines()
-                        //                        .skip(1)
-                        .map(String::trim)
-                        .filter(StringUtils::isNotBlank)
-                        .collect(Collectors.toSet());
-            }
-        } catch (IOException | InterruptedException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-
-        return Set.of();
-    }
 }

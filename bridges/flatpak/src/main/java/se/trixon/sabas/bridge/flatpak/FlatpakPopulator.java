@@ -25,8 +25,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -144,7 +146,7 @@ public class FlatpakPopulator extends BridgePopulator {
                     idToPkgMap.put(key, pkg);
                 }
             }
-            mAppStreamPopulator.populateAppStream(idToPkgMap);
+            new AppStreamReader().read(idToPkgMap);
             process.waitFor();
         } catch (IOException | InterruptedException e) {
             Exceptions.printStackTrace(e);
@@ -252,4 +254,124 @@ public class FlatpakPopulator extends BridgePopulator {
         mAppStreamPopulator.setEnricher(biConsumer);
     }
 
+    class AppStreamReader {
+
+        public void read(HashMap<String, Pkg> packageMap) {
+            var activeRepositories = getActiveRepositories();
+            var basePaths = List.of(
+                    Path.of("/var/lib/flatpak/appstream"),
+                    Path.of(FileUtils.getUserDirectoryPath(), ".local/share/flatpak/appstream")
+            );
+            for (var basePath : basePaths) {
+                if (!Files.isDirectory(basePath)) {
+                    continue;
+                }
+
+                try {
+                    try (var repoStream = Files.walk(basePath, 2)) {
+                        repoStream.filter(p -> p.getNameCount() == basePath.getNameCount() + 2)
+                                .filter(Files::isDirectory)
+                                .forEach(repoArchDir -> {
+                                    parseLatestXmlFromRepo(activeRepositories, repoArchDir, packageMap);
+                                });
+                    }
+                } catch (Exception e) {
+                    Exceptions.printStackTrace(e);
+                }
+            }
+        }
+
+        private Set<String> getActiveRepositories() {
+            var command = List.of(
+                    FLATPAK,
+                    "remotes",
+                    "--columns=name"
+            );
+
+            var pb = Bridge.createProcessBuilder(command);
+            pb.environment().put("LANGUAGE", "en_US");
+            try {
+                var process = pb.start();
+                String commandOutput;
+                try (var stream = process.getInputStream()) {
+                    commandOutput = IOUtils.toString(stream, StandardCharsets.UTF_8).trim();
+                }
+
+                int exitCode = process.waitFor();
+
+                if (exitCode == 0) {
+                    return commandOutput.lines()
+                            //                        .skip(1)
+                            .map(String::trim)
+                            .filter(StringUtils::isNotBlank)
+                            .collect(Collectors.toSet());
+                }
+            } catch (IOException | InterruptedException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+
+            return Set.of();
+        }
+
+        private String getRepoNameForPath(Path path) {
+            String repo = "";
+            for (int i = 0; i < path.getNameCount(); i++) {
+                if ("appstream".equals(path.getName(i).toString())) {
+                    repo = path.getName(i + 1).toString().toLowerCase(Locale.ROOT);
+                    break;
+                }
+            }
+            return repo;
+        }
+
+        private void parseLatestXmlFromRepo(Set<String> activeRepositories, Path repoArchDir, Map<String, Pkg> packageMap) {
+            try {
+                var activeGz = repoArchDir.resolve("active/appstream.xml.gz");
+                var activeXml = repoArchDir.resolve("active/appstream.xml");
+
+                if (Files.isRegularFile(activeGz)) {
+                    mAppStreamPopulator.populate(activeGz, true, packageMap, getRepoNameForPath(activeGz));
+                    return;
+                } else if (Files.isRegularFile(activeXml)) {
+                    mAppStreamPopulator.populate(activeXml, false, packageMap, getRepoNameForPath(activeXml));
+                    return;
+                }
+
+                Path bestFile = null;
+                long latestTime = 0;
+                boolean isGz = false;
+
+                try (var fileStream = Files.walk(repoArchDir, 2)) {
+                    var files = fileStream
+                            .filter(Files::isRegularFile)
+                            .filter(p -> !p.toString().contains("active"))
+                            .toList();
+
+                    for (var p : files) {
+                        var name = p.getFileName().toString().toLowerCase();
+                        if (name.equals("appstream.xml") || name.equals("appstream.xml.gz")) {
+                            var fileTime = Files.getLastModifiedTime(p).toMillis();
+
+                            if (fileTime > latestTime) {
+                                latestTime = fileTime;
+                                bestFile = p;
+                                isGz = name.endsWith(".gz");
+                            }
+                        }
+                    }
+                }
+
+                if (bestFile != null) {
+                    var repo = getRepoNameForPath(bestFile);
+                    if (activeRepositories.contains(repo)) {
+                        mAppStreamPopulator.populate(bestFile, isGz, packageMap, repo);
+                    }
+
+                }
+            } catch (IOException e) {
+                Exceptions.printStackTrace(e);
+            }
+        }
+
+    }
 }
