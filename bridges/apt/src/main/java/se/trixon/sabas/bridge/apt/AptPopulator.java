@@ -28,11 +28,13 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.openide.util.Exceptions;
 import static se.trixon.sabas.api.Bridge.createProcessBuilder;
 import se.trixon.sabas.api.BridgePopulator;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
+import se.trixon.sabas.api.PkgCategory;
 import static se.trixon.sabas.bridge.apt.AptBridge.APT_GET;
 
 /**
@@ -52,6 +54,7 @@ public class AptPopulator extends BridgePopulator {
 
         for (var blockPkg : rawBlocksList) {
             var name = blockPkg.getName();
+            blockPkg.setCategory(computeCategory(blockPkg));
 
             if (upgradablePackages.keySet().contains(name)) {
                 blockPkg.setUpgradable(true);
@@ -139,6 +142,27 @@ public class AptPopulator extends BridgePopulator {
         }
 
         return details;
+    }
+
+    private PkgCategory computeCategory(Pkg pkg) {
+        var category = PkgCategory.OTHER;
+
+        if (Strings.CI.startsWith(pkg.getName(), "lib")) {
+            category = PkgCategory.LIB;
+        }
+
+        if (Strings.CI.contains(pkg.getName(), "theme")) {
+            category = PkgCategory.THEME;
+        }
+        if (Strings.CI.containsAny(pkg.getName(), "systemd", "service")) {
+            category = PkgCategory.SERVICE;
+        }
+
+        if (Strings.CI.contains(pkg.getName(), "font")) {
+            category = PkgCategory.FONT;
+        }
+
+        return category;
     }
 
     private String getPkgDetailsFiles(Set<Process> processes, String name) {
@@ -513,7 +537,7 @@ public class AptPopulator extends BridgePopulator {
                             var tokens = StringUtils.split(afterNameBlock);
                             if (tokens != null && tokens.length > 0) {
                                 String newVersion = tokens[0].trim();
-                                upgradableMap.put(pkgName, newVersion);
+                                upgradableMap.put(pkgName, StringUtils.substringBefore(newVersion, "~"));
                             }
                         }
                     }
