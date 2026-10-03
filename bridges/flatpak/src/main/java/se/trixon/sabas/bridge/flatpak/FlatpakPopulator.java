@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -57,7 +58,7 @@ public class FlatpakPopulator extends BridgePopulator {
     @Override
     public List<Pkg> populate(Set<Process> processes) {
         var rawPackagesList = new ArrayList<Pkg>();
-        var idToPkgMap = new HashMap<String, Pkg>();
+        var idToPkgMap = new ConcurrentHashMap<String, Pkg>();
         var idToInstallTimeMap = new HashMap< String, Long>();
         var installedApps = getInstalled(idToInstallTimeMap);
         var upgradableApps = getUpgradable(processes);
@@ -256,12 +257,14 @@ public class FlatpakPopulator extends BridgePopulator {
 
     class AppStreamReader {
 
-        public void read(HashMap<String, Pkg> packageMap) {
+        public void read(Map<String, Pkg> packageMap) {
             var activeRepositories = getActiveRepositories();
             var basePaths = List.of(
                     Path.of("/var/lib/flatpak/appstream"),
                     Path.of(FileUtils.getUserDirectoryPath(), ".local/share/flatpak/appstream")
             );
+
+            var paths = new ArrayList<Path>();
             for (var basePath : basePaths) {
                 if (!Files.isDirectory(basePath)) {
                     continue;
@@ -269,16 +272,19 @@ public class FlatpakPopulator extends BridgePopulator {
 
                 try {
                     try (var repoStream = Files.walk(basePath, 2)) {
-                        repoStream.filter(p -> p.getNameCount() == basePath.getNameCount() + 2)
+                        paths.addAll(repoStream.filter(p -> p.getNameCount() == basePath.getNameCount() + 2)
                                 .filter(Files::isDirectory)
-                                .forEach(repoArchDir -> {
-                                    parseLatestXmlFromRepo(activeRepositories, repoArchDir, packageMap);
-                                });
+                                .toList()
+                        );
                     }
                 } catch (Exception e) {
                     Exceptions.printStackTrace(e);
                 }
             }
+
+            paths.parallelStream().forEach(repoArchDir -> {
+                parseLatestXmlFromRepo(activeRepositories, repoArchDir, packageMap);
+            });
         }
 
         private Set<String> getActiveRepositories() {
@@ -372,6 +378,5 @@ public class FlatpakPopulator extends BridgePopulator {
                 Exceptions.printStackTrace(e);
             }
         }
-
     }
 }

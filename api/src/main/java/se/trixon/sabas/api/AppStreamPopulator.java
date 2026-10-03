@@ -84,22 +84,21 @@ public class AppStreamPopulator extends BridgePopulator {
 
     public void populate(Path path, boolean isGz, Map<String, Pkg> packageMap, String repo) {
         System.out.println("Parse: " + path);
-        try (var fileStream = new FileInputStream(path.toFile())) {
-            var finalStream = isGz ? new GZIPInputStream(fileStream) : fileStream;
+        try (var fileStream = new FileInputStream(path.toFile()); var finalStream = isGz ? new GZIPInputStream(fileStream) : fileStream) {
             populate(finalStream, packageMap, repo);
         } catch (Exception e) {
             Exceptions.printStackTrace(e);
         }
     }
 
-    public void populate(InputStream fileStream, Map<String, Pkg> packageMap, String repo) throws XMLStreamException, IOException, JAXBException {
+    public void populate(InputStream inputStream, Map<String, Pkg> packageMap, String repo) throws XMLStreamException, IOException, JAXBException {
         var factory = XMLInputFactory.newInstance();
         factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
         factory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, true);
         factory.setProperty(XMLInputFactory.IS_COALESCING, true);
         var set = new TreeSet<String>();
         String currentOrigin = "unknown";
-        try (var streamReader = new InputStreamReader(fileStream, StandardCharsets.UTF_8); var bufferedReader = new BufferedReader(streamReader)) {
+        try (var streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8); var bufferedReader = new BufferedReader(streamReader)) {
             var reader = factory.createXMLStreamReader(bufferedReader);
 
             while (reader.hasNext()) {
@@ -126,7 +125,7 @@ public class AppStreamPopulator extends BridgePopulator {
                             set.add(Objects.toString(asp.getType(), "-"));
                             var pkg = packageMap.getOrDefault(id, packageMap.get(Strings.CI.removeEnd(id, ".desktop")));
                             if (pkg != null) {
-                                if (mEnricher != null) {
+                                synchronized (pkg) {
                                     mEnricher.accept(asp, pkg);
                                 }
                             } else {
