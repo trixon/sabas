@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.trixon.sabas.bridge.flatpak;
+package se.trixon.sabas.api;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -41,10 +41,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.openide.util.Exceptions;
-import se.trixon.sabas.api.Bridge;
-import se.trixon.sabas.api.BridgePopulator;
-import se.trixon.sabas.api.Pkg;
-import static se.trixon.sabas.bridge.flatpak.FlatpakBridge.FLATPAK;
 
 /**
  *
@@ -56,16 +52,11 @@ public class AppStreamPopulator extends BridgePopulator {
     private Unmarshaller mUnmarshaller;
 
     public AppStreamPopulator() {
-        var originalClassLoader = Thread.currentThread().getContextClassLoader();
-
         try {
-            Thread.currentThread().setContextClassLoader(AppStreamPopulator.class.getClassLoader());
             var jaxbContext = JAXBContext.newInstance(AppStreamPackage.class);
             mUnmarshaller = jaxbContext.createUnmarshaller();
         } catch (JAXBException e) {
             Exceptions.printStackTrace(e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(originalClassLoader);
         }
 
 //        mUnmarshaller.setListener(new Unmarshaller.Listener() {
@@ -230,7 +221,8 @@ public class AppStreamPopulator extends BridgePopulator {
 
     private Set<String> getActiveRepositories() {
         var command = List.of(
-                FLATPAK,
+                "flatpak",
+                //                FLATPAK,
                 "remotes",
                 "--columns=name"
         );

@@ -65,3 +65,4 @@ replay_pid*
 /bridges/dnf kopia/target/
 /bridges/pkgman/target/
 /bridges/eopkg/target/
+/target/

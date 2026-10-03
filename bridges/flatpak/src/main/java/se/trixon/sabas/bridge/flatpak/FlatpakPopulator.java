@@ -32,6 +32,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.openide.util.Exceptions;
+import se.trixon.sabas.api.AppStreamPackage;
+import se.trixon.sabas.api.AppStreamPopulator;
 import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.BridgePopulator;
 import se.trixon.sabas.api.DictionarySection;
