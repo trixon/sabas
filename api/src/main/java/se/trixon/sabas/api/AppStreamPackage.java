@@ -23,12 +23,14 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlValue;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
@@ -36,10 +38,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "component")
 public class AppStreamPackage {
+
+    public static final Set<String> ACCEPTABLE_LANGUAGES = Set.of("", "en", Locale.getDefault().getLanguage().toLowerCase(Locale.ROOT));
 
     private Map<String, String> mDescriptionMap;
     @XmlElement(name = "description")
@@ -55,6 +60,11 @@ public class AppStreamPackage {
     private Map<String, String> mNameMap;
     @XmlElement(name = "name")
     private List<LangTextNode> mNames;
+    @XmlElement(name = "pkgname")
+    /**
+     * Debian
+     */
+    private String mPkgName;
     @XmlElement(name = "release")
     private List<ReleaseNode> mReleases;
     private String mRepo;
@@ -107,6 +117,15 @@ public class AppStreamPackage {
         return getLocalizedValue(mNameMap, langArgs);
     }
 
+    /**
+     * Debian
+     *
+     * @return
+     */
+    public String getPkgName() {
+        return StringUtils.trim(mPkgName);
+    }
+
     public String getRepo() {
         return mRepo;
     }
@@ -123,8 +142,9 @@ public class AppStreamPackage {
         if (mUrls == null) {
             return null;
         }
+
         return mUrls.stream()
-                .filter(u -> StringUtils.equalsIgnoreCase(u.getType(), type))
+                .filter(u -> Strings.CI.equals(u.getType(), type))
                 .map(UrlNode::getValue)
                 .findFirst()
                 .orElse(null);
@@ -138,27 +158,34 @@ public class AppStreamPackage {
     This one is a keeper...
      */
     private void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
-        mNameMap = createLangNodeMap(mNames);
-        mSummaryMap = createLangNodeMap(mSummaries);
-
-        mDescriptionMap = new HashMap<>();
-        if (mDescriptions != null) {
-            for (var desc : mDescriptions) {
-                var langKey = desc.getLang() != null ? desc.getLang().toLowerCase(Locale.ROOT) : "";
-                mDescriptionMap.put(langKey, desc.getHtmlContent());
-            }
-        }
+        mNameMap = createLocalizedTextMap(mNames);
+        mSummaryMap = createLocalizedTextMap(mSummaries);
+        mDescriptionMap = createLocalizedTextMap(mDescriptions);
+//        try {
+//            System.out.println("%d\t%d\t%d\t\t%d\t%d\t%d".formatted(
+//                    mNames.size(), mSummaries.size(), mDescriptions.size(),
+//                    mNameMap.size(), mSummaryMap.size(), mDescriptionMap.size()
+//            ));
+//        } catch (Exception e) {
+//        }
     }
 
-    private Map<String, String> createLangNodeMap(List<LangTextNode> langNodes) {
+    private Map<String, String> createLocalizedTextMap(List<? extends LocalizedText> langNodes) {
         if (langNodes == null) {
             return new HashMap<>();
         }
-        return langNodes.stream().collect(Collectors.toMap(
-                p -> Objects.toString(p.getLang(), "").toLowerCase(Locale.ROOT),
-                p -> Objects.toString(p.getText(), ""),
-                (existingValue, newValue) -> newValue
-        ));
+
+        var map = langNodes.stream()
+                .filter(p -> ACCEPTABLE_LANGUAGES.contains(Objects.toString(p.getLang(), "")))
+                .collect(Collectors.toMap(
+                        p -> Objects.toString(p.getLang(), "").toLowerCase(Locale.ROOT),
+                        p -> Objects.toString(p.getText(), ""),
+                        (existingValue, newValue) -> newValue
+                ));
+
+        langNodes.clear();
+
+        return map;
     }
 
     private String getLocalizedValue(Map<String, String> map, String... langArgs) {
@@ -188,13 +215,14 @@ public class AppStreamPackage {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    public static class DescriptionNode {
+    public static class DescriptionNode implements LocalizedText {
 
         @XmlAttribute(name = "lang", namespace = "http://www.w3.org/XML/1998/namespace")
         private String lang;
         @XmlAnyElement
         private List<Object> descriptionElements = new ArrayList<>();
 
+        @Override
         public String getLang() {
             return lang;
         }
@@ -214,7 +242,7 @@ public class AppStreamPackage {
 
                 for (var obj : descriptionElements) {
                     if (obj instanceof org.w3c.dom.Element element) {
-                        var writer = new java.io.StringWriter();
+                        var writer = new StringWriter();
                         transformer.transform(new DOMSource(element), new StreamResult(writer));
                         var rawXml = writer.toString().trim();
                         if (!rawXml.isEmpty()) {
@@ -242,10 +270,15 @@ public class AppStreamPackage {
                 return htmlBuilder.toString().trim();
             }
         }
+
+        @Override
+        public String getText() {
+            return getHtmlContent();
+        }
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    public static class LangTextNode {
+    public static class LangTextNode implements LocalizedText {
 
         @XmlAttribute(name = "lang", namespace = "http://www.w3.org/XML/1998/namespace")
         private String lang;
@@ -253,10 +286,12 @@ public class AppStreamPackage {
         @XmlValue
         private String text;
 
+        @Override
         public String getLang() {
             return lang;
         }
 
+        @Override
         public String getText() {
             return text;
         }
@@ -318,6 +353,13 @@ public class AppStreamPackage {
         public String getValue() {
             return value;
         }
+    }
+
+    public interface LocalizedText {
+
+        String getLang();
+
+        String getText();
     }
 
 }

@@ -15,6 +15,7 @@
  */
 package se.trixon.sabas.bridge.apt;
 
+import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -24,12 +25,19 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import javax.xml.stream.XMLStreamException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.openide.util.Exceptions;
+import se.trixon.sabas.api.AppStreamPackage;
+import se.trixon.sabas.api.AppStreamPopulator;
 import static se.trixon.sabas.api.Bridge.createProcessBuilder;
 import se.trixon.sabas.api.BridgePopulator;
 import se.trixon.sabas.api.DictionarySection;
@@ -43,9 +51,16 @@ import static se.trixon.sabas.bridge.apt.AptBridge.APT_GET;
  */
 public class AptPopulator extends BridgePopulator {
 
+    private final AppStreamPopulator mAppStreamPopulator = new AppStreamPopulator();
+    private final AppStreamReader mAppStreamReader = new AppStreamReader();
+
+    public AptPopulator() {
+        initEnricher();
+    }
+
     @Override
     public List<Pkg> populate(Set<Process> processes) {
-        var nameToPackageMap = new HashMap<String, Pkg>();
+        var nameToPackageMap = new ConcurrentHashMap<String, Pkg>(80_000);
         var nameToRepoMap = getPkgRepoMap();
         var installedPackages = getPkgInstalled();
         var orphanedPackages = getPkgOrphaned();
@@ -54,14 +69,13 @@ public class AptPopulator extends BridgePopulator {
 
         for (var blockPkg : rawBlocksList) {
             var name = blockPkg.getName();
-            blockPkg.setCategory(computeCategory(blockPkg));
 
             if (upgradablePackages.keySet().contains(name)) {
                 blockPkg.setUpgradable(true);
                 blockPkg.setVersionNew(upgradablePackages.get(name));
             }
 
-            var repoName = nameToRepoMap.getOrDefault(name, "-");
+            var repoName = nameToRepoMap.getOrDefault(name, "LOCAL");
             blockPkg.setRepositoryId(mDictionary.getOrCreateId(DictionarySection.REPOSITORY, repoName));
 
             if (installedPackages.contains(name)) {
@@ -86,11 +100,13 @@ public class AptPopulator extends BridgePopulator {
                     }
                 }
             }
-
-            if (!nameToPackageMap.containsKey(name)) {
-                nameToPackageMap.put(name, blockPkg);
+            String keyRepo = mDictionary.getString(DictionarySection.REPOSITORY, blockPkg.getRepositoryId());
+            String keyName = blockPkg.getName();
+            var key = StringUtils.substringAfter(keyRepo, "-") + ":" + keyName;
+            if (!nameToPackageMap.containsKey(key)) {
+                nameToPackageMap.put(key, blockPkg);
             } else {
-                var existing = nameToPackageMap.get(name);
+                var existing = nameToPackageMap.get(key);
 
                 var existingDesc = existing.getDescription() != null ? existing.getDescription() : "";
                 var blockDesc = blockPkg.getDescription() != null ? blockPkg.getDescription() : "";
@@ -106,10 +122,15 @@ public class AptPopulator extends BridgePopulator {
 
                 if (blockPkg.isInstalled()) {
                     blockPkg.setDescription(existing.getDescription());
-                    nameToPackageMap.put(name, blockPkg);
+                    nameToPackageMap.put(key, blockPkg);
                 }
             }
         }
+
+        Thread.ofVirtual().name("initAppStream").start(() -> {
+            mAppStreamReader.read(nameToPackageMap);
+            //Force reload of selected package
+        });
 
         return nameToPackageMap.values().stream()
                 .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
@@ -144,25 +165,28 @@ public class AptPopulator extends BridgePopulator {
         return details;
     }
 
-    private PkgCategory computeCategory(Pkg pkg) {
-        var category = PkgCategory.OTHER;
+    private void computeCategory(Pkg pkg) {
+        if (pkg.getCategory() == null || pkg.getCategory() == PkgCategory.OTHER) {
+            var category = PkgCategory.OTHER;
+            if (Strings.CI.startsWith(pkg.getName(), "lib")) {
+                category = PkgCategory.LIB;
+            }
 
-        if (Strings.CI.startsWith(pkg.getName(), "lib")) {
-            category = PkgCategory.LIB;
+            if (Strings.CI.contains(pkg.getName(), "theme")) {
+                category = PkgCategory.THEME;
+            }
+
+            if (Strings.CI.containsAny(pkg.getName(), "systemd", "service")) {
+                category = PkgCategory.SERVICE;
+            }
+
+            if (Strings.CI.contains(pkg.getName(), "font")) {
+                category = PkgCategory.FONT;
+            }
+
+            pkg.setCategory(category);
         }
 
-        if (Strings.CI.contains(pkg.getName(), "theme")) {
-            category = PkgCategory.THEME;
-        }
-        if (Strings.CI.containsAny(pkg.getName(), "systemd", "service")) {
-            category = PkgCategory.SERVICE;
-        }
-
-        if (Strings.CI.contains(pkg.getName(), "font")) {
-            category = PkgCategory.FONT;
-        }
-
-        return category;
     }
 
     private String getPkgDetailsFiles(Set<Process> processes, String name) {
@@ -494,13 +518,51 @@ public class AptPopulator extends BridgePopulator {
                         if (filename.endsWith("_Packages")) {
                             var repoName = "Online Components";
                             if (filename.contains("_dists_")) {
-                                var distPart = StringUtils.substringAfter(filename, "_dists_");
-                                repoName = distPart.replace("_binary-amd64_Packages", "")
-                                        .replace("_binary-all_Packages", "")
-                                        .replace("_main", "/main")
-                                        .replace("_contrib", "/contrib")
-                                        .replace("_non-free", "/non-free")
-                                        .replace("_", "-");
+                                var rawBase = StringUtils.substringBefore(filename, "_dists_").toLowerCase(Locale.ROOT);
+                                var distPart = StringUtils.substringAfter(filename, "_dists_").toLowerCase(Locale.ROOT);
+                                String[] distParts = StringUtils.split(distPart, "_");
+                                if (distParts != null && distParts.length > 1) {
+                                    var suite = distParts[0];
+                                    var component = distParts[1];
+
+                                    if (component.equals("non-free") && distParts.length > 2 && distParts[2].equals("firmware")) {
+                                        component = "non-free-firmware";
+                                    }
+                                    var domain = StringUtils.substringBefore(rawBase, "_");
+                                    String[] domainSegments = StringUtils.split(domain, ".");
+
+                                    String osBase = "unknown";
+                                    if (domainSegments != null && domainSegments.length > 1) {
+                                        if (domainSegments[0].equals("deb") || domainSegments[0].equals("security") || domainSegments[0].equals("download") || domainSegments[0].equals("dl")) {
+                                            osBase = domainSegments[1];
+                                        } else {
+                                            osBase = domainSegments[0];
+                                        }
+                                    }
+
+                                    if (domain.contains("opensuse")) {
+                                        osBase = "debian";
+                                    }
+
+                                    repoName = osBase + "-" + suite + "-" + component;
+                                }
+                            } else {
+                                if (Strings.CI.contains(filename, "opensuse.org")) {
+                                    var cleanPath = StringUtils.substringAfter(filename.toLowerCase(Locale.ROOT), "_home:_");
+                                    cleanPath = StringUtils.substringBeforeLast(cleanPath, "_packages");
+
+                                    cleanPath = StringUtils.replace(cleanPath, ":_", "-");
+                                    cleanPath = StringUtils.replace(cleanPath, "%5f", "_");
+
+                                    repoName = "opensuse.org-" + cleanPath;
+                                } else {
+                                    var domain = StringUtils.substringBefore(filename.toLowerCase(Locale.ROOT), "_");
+                                    if (domain.contains(".")) {
+                                        repoName = StringUtils.substringAfter(domain, ".");
+                                    } else {
+                                        repoName = domain;
+                                    }
+                                }
                             }
 
                             try (var lineIt = IOUtils.lineIterator(Files.newInputStream(path), StandardCharsets.UTF_8)) {
@@ -551,4 +613,87 @@ public class AptPopulator extends BridgePopulator {
         return upgradableMap;
     }
 
+    private void initEnricher() {
+        BiConsumer<AppStreamPackage, Pkg> biConsumer = (asp, pkg) -> {
+//            System.out.println("enriching " + pkg.getName());
+//            System.out.println("  with " + asp.getPkgName());
+//            if ("caja-dropbox".equalsIgnoreCase(pkg.getName())) {
+//                System.out.println("PAUSE");
+//            }
+            pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, asp.getLicense()));
+            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, asp.getDeveloperName()));
+            pkg.setUrl(asp.getUrl("homepage"));
+            var summary = asp.getSummary();
+            if (StringUtils.isNotBlank(summary)) {
+                pkg.setSummary(summary);
+            }
+            var name = asp.getName();
+            if (StringUtils.isNotBlank(name)) {
+//                pkg.setName(name);
+            }
+            var description = asp.getDescription();
+            if (StringUtils.isNotBlank(description)) {
+                pkg.setDescription("<html>%s</html>".formatted(description));
+            }
+            computeCategory(pkg);
+//            asp.getLatestReleaseTimestamp();
+        };
+
+        mAppStreamPopulator.setEnricher(biConsumer);
+    }
+
+    class AppStreamReader {
+
+        public void read(Map<String, Pkg> nameToPackageMap) {
+            var yamlBaseDir = Path.of("/var/lib/swcatalog/yaml");
+            if (!Files.isDirectory(yamlBaseDir)) {
+                return;
+            }
+
+            var yamlFiles = new ArrayList<Path>();
+            try (var fileStream = Files.walk(yamlBaseDir, 1)) {
+                fileStream
+                        .filter(Files::isRegularFile)
+                        .filter(p -> {
+                            var name = p.getFileName().toString().toLowerCase(Locale.ROOT);
+                            return name.endsWith(".yml.gz") && name.contains("components");
+                        })
+                        .forEach(yamlFiles::add);
+            } catch (IOException e) {
+                Exceptions.printStackTrace(e);
+            }
+
+            yamlFiles.parallelStream().forEach(yamlPath -> {
+                var filename = yamlPath.getFileName().toString();
+                var repo = filename;
+                if (repo.contains("_dists_")) {
+                    repo = StringUtils.substringAfter(repo, "_dists_");
+                    repo = StringUtils.substringBefore(repo, "_dep11");
+                    repo = Strings.CI.replace(repo, "_", "-");
+                }
+
+                var pb = new ProcessBuilder(
+                        "appstreamcli",
+                        "convert",
+                        "--format",
+                        "xml",
+                        yamlPath.toString(),
+                        "-");
+
+                try {
+                    var process = pb.start();
+                    try (var processInputStream = process.getInputStream()) {
+                        var finalRepo = repo;
+                        mAppStreamPopulator.populate(processInputStream, nameToPackageMap, repo, asp -> {
+                            return finalRepo + ":" + asp.getPkgName();
+                        });
+                    }
+
+                    process.waitFor();
+                } catch (IOException | InterruptedException | XMLStreamException | JAXBException e) {
+                    Exceptions.printStackTrace(e);
+                }
+            });
+        }
+    }
 }

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -50,6 +51,8 @@ import static se.trixon.sabas.bridge.flatpak.FlatpakBridge.FLATPAK;
 public class FlatpakPopulator extends BridgePopulator {
 
     private final AppStreamPopulator mAppStreamPopulator = new AppStreamPopulator();
+    private final AppStreamReader mAppStreamReader = new AppStreamReader();
+    private final Map<Path, String> mRepoCache = new HashMap<>();
 
     public FlatpakPopulator() {
         initEnricher();
@@ -143,11 +146,11 @@ public class FlatpakPopulator extends BridgePopulator {
 
                     rawPackagesList.add(pkg);
 
-                    var key = fields[originIndex].toLowerCase(Locale.ROOT) + id;
+                    var key = fields[originIndex].toLowerCase(Locale.ROOT) + ":" + id;
                     idToPkgMap.put(key, pkg);
                 }
             }
-            new AppStreamReader().read(idToPkgMap);
+            mAppStreamReader.read(idToPkgMap);
             process.waitFor();
         } catch (IOException | InterruptedException e) {
             Exceptions.printStackTrace(e);
@@ -320,14 +323,20 @@ public class FlatpakPopulator extends BridgePopulator {
         }
 
         private String getRepoNameForPath(Path path) {
-            String repo = "";
-            for (int i = 0; i < path.getNameCount(); i++) {
-                if ("appstream".equals(path.getName(i).toString())) {
-                    repo = path.getName(i + 1).toString().toLowerCase(Locale.ROOT);
-                    break;
-                }
+            if (path == null) {
+                return "";
             }
-            return repo;
+
+            return mRepoCache.computeIfAbsent(path, p -> {
+                String repo = "";
+                for (int i = 0; i < p.getNameCount(); i++) {
+                    if ("appstream".equals(p.getName(i).toString())) {
+                        repo = p.getName(i + 1).toString().toLowerCase(Locale.ROOT);
+                        break;
+                    }
+                }
+                return repo;
+            });
         }
 
         private void parseLatestXmlFromRepo(Set<String> activeRepositories, Path repoArchDir, Map<String, Pkg> packageMap) {
@@ -336,10 +345,20 @@ public class FlatpakPopulator extends BridgePopulator {
                 var activeXml = repoArchDir.resolve("active/appstream.xml");
 
                 if (Files.isRegularFile(activeGz)) {
-                    mAppStreamPopulator.populate(activeGz, true, packageMap, getRepoNameForPath(activeGz));
+                    mAppStreamPopulator.populate(
+                            activeGz,
+                            true,
+                            packageMap,
+                            getRepoNameForPath(activeGz),
+                            createAppStreamToIdFunction(getRepoNameForPath(activeGz)));
                     return;
                 } else if (Files.isRegularFile(activeXml)) {
-                    mAppStreamPopulator.populate(activeXml, false, packageMap, getRepoNameForPath(activeXml));
+                    mAppStreamPopulator.populate(
+                            activeXml,
+                            false,
+                            packageMap,
+                            getRepoNameForPath(activeXml),
+                            createAppStreamToIdFunction(getRepoNameForPath(activeXml)));
                     return;
                 }
 
@@ -370,7 +389,12 @@ public class FlatpakPopulator extends BridgePopulator {
                 if (bestFile != null) {
                     var repo = getRepoNameForPath(bestFile);
                     if (activeRepositories.contains(repo)) {
-                        mAppStreamPopulator.populate(bestFile, isGz, packageMap, repo);
+                        mAppStreamPopulator.populate(
+                                bestFile,
+                                isGz,
+                                packageMap,
+                                repo,
+                                createAppStreamToIdFunction(repo));
                     }
 
                 }
@@ -378,5 +402,13 @@ public class FlatpakPopulator extends BridgePopulator {
                 Exceptions.printStackTrace(e);
             }
         }
+
+        public Function<AppStreamPackage, String> createAppStreamToIdFunction(String repo) {
+            return asp -> {
+                return repo + ":" + asp.getId();
+            };
+        }
+
     }
+
 }

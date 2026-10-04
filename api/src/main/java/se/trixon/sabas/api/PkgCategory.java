@@ -25,7 +25,7 @@ import java.util.ResourceBundle;
 public enum PkgCategory {
     ALL("category_all"),
     GUI("category_gui"),
-    TUI("category_tui"),
+    //    TUI("category_tui"),
     CLI("category_cli"),
     THEME("category_theme"),
     FONT("category_font"),

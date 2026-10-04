@@ -17,7 +17,6 @@ package se.trixon.sabas.api;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Unmarshaller;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -45,14 +45,13 @@ import org.openide.util.Exceptions;
 public class AppStreamPopulator extends BridgePopulator {
 
     private BiConsumer<AppStreamPackage, Pkg> mEnricher;
-    private Unmarshaller mUnmarshaller;
+    private JAXBContext mJaxbContext;
 
     public AppStreamPopulator() {
         try {
-            var jaxbContext = JAXBContext.newInstance(AppStreamPackage.class);
-            mUnmarshaller = jaxbContext.createUnmarshaller();
-        } catch (JAXBException e) {
-            Exceptions.printStackTrace(e);
+            mJaxbContext = JAXBContext.newInstance(AppStreamPackage.class);
+        } catch (JAXBException ex) {
+            Exceptions.printStackTrace(ex);
         }
 
 //        mUnmarshaller.setListener(new Unmarshaller.Listener() {
@@ -82,25 +81,29 @@ public class AppStreamPopulator extends BridgePopulator {
 //        });
     }
 
-    public void populate(Path path, boolean isGz, Map<String, Pkg> packageMap, String repo) {
-        System.out.println("Parse: " + path);
+    public void populate(Path path, boolean isGz, Map<String, Pkg> packageMap, String repo, Function<AppStreamPackage, String> keyStrategy) {
+        System.out.println("Pre-Parse: %s\t%s".formatted(repo, path));
         try (var fileStream = new FileInputStream(path.toFile()); var finalStream = isGz ? new GZIPInputStream(fileStream) : fileStream) {
-            populate(finalStream, packageMap, repo);
+            populate(finalStream, packageMap, repo, keyStrategy);
         } catch (Exception e) {
             Exceptions.printStackTrace(e);
         }
     }
 
-    public void populate(InputStream inputStream, Map<String, Pkg> packageMap, String repo) throws XMLStreamException, IOException, JAXBException {
+    public void populate(InputStream inputStream, Map<String, Pkg> packageMap, String repo, Function<AppStreamPackage, String> keyStrategy) throws XMLStreamException, IOException, JAXBException {
+        var startTime = System.currentTimeMillis();
+        var appCount = 0;
+        System.out.println("Parse: %s\t%s".formatted(repo, "inputStream"));
+        var unmarshaller = mJaxbContext.createUnmarshaller();
         var factory = XMLInputFactory.newInstance();
         factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
         factory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, true);
         factory.setProperty(XMLInputFactory.IS_COALESCING, true);
         var set = new TreeSet<String>();
+
         String currentOrigin = "unknown";
         try (var streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8); var bufferedReader = new BufferedReader(streamReader)) {
             var reader = factory.createXMLStreamReader(bufferedReader);
-
             while (reader.hasNext()) {
                 int event = reader.next();
                 if (event == XMLStreamConstants.START_ELEMENT && "components".equals(reader.getLocalName())) {
@@ -118,18 +121,56 @@ public class AppStreamPopulator extends BridgePopulator {
                 if (event == XMLStreamConstants.START_ELEMENT) {
                     if ("component".equals(reader.getLocalName())) {
                         try {
-                            var jaxbElement = mUnmarshaller.unmarshal(reader, AppStreamPackage.class);
+                            var jaxbElement = unmarshaller.unmarshal(reader, AppStreamPackage.class);
                             var asp = jaxbElement.getValue();
+                            appCount++;
                             asp.setRepo(repo);
-                            var id = repo + asp.getId();
+                            var id = keyStrategy.apply(asp);
                             set.add(Objects.toString(asp.getType(), "-"));
                             var pkg = packageMap.getOrDefault(id, packageMap.get(Strings.CI.removeEnd(id, ".desktop")));
                             if (pkg != null) {
+                                pkg.setAppStream(true);
+                                var category = switch (Objects.toString(asp.getType(), "")) {
+                                    case "desktop", "desktop-application" ->
+                                        PkgCategory.GUI;
+                                    case "console-application" ->
+                                        PkgCategory.CLI;
+                                    case "font" ->
+                                        PkgCategory.FONT;
+                                    case "icon-theme" ->
+                                        PkgCategory.THEME;
+                                    case "service" ->
+                                        PkgCategory.SERVICE;
+                                    default ->
+                                        PkgCategory.OTHER;
+                                };
+                                /*
+*[INFO] console-application
+*[INFO] desktop
+*[INFO] desktop-application
+*[INFO] font
+*[INFO] icon-theme
+*[INFO] service
+[INFO] addon
+[INFO] codec
+[INFO] firmware
+[INFO] inputmethod
+[INFO] operating-system
+[INFO] web-application
+==
+[INFO] generic
+[INFO] localization
+[INFO] runtime
+                                 */
+
+                                pkg.setCategory(category);
+
                                 synchronized (pkg) {
+                                    pkg.setValue(AppStreamPackage.class, asp);
                                     mEnricher.accept(asp, pkg);
                                 }
                             } else {
-                                //System.out.println("In xml but not in list: " + id);
+//                                System.out.println("In xml but not in list: " + id);
                             }
                             continue;
                         } catch (JAXBException ex) {
@@ -147,6 +188,7 @@ public class AppStreamPopulator extends BridgePopulator {
         System.out.println("ORIGIN " + currentOrigin);
         System.out.println("FOUND TYPES");
         System.out.println(String.join("\n", set));
+        System.out.println("initAppStream for %d packages took %d ms".formatted(appCount, System.currentTimeMillis() - startTime));
     }
 
     public void setEnricher(BiConsumer<AppStreamPackage, Pkg> enricher) {

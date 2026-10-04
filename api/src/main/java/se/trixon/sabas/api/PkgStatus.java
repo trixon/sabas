@@ -27,7 +27,8 @@ public enum PkgStatus {
     AVAILABLE("status_available"),
     INSTALLED("status_installed"),
     UPGRADABLE("status_upgradable"),
-    ORPHANED("status_orphaned");
+    ORPHANED("status_orphaned"),
+    APPSTREAM("status_appstream");
     private final String mKey;
     private final ResourceBundle mResourceBundle = ResourceBundle.getBundle(PkgStatus.class.getPackageName() + ".Bundle", Locale.getDefault());
 

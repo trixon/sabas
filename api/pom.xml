@@ -21,6 +21,8 @@
                         <publicPackage>se.trixon.sabas.api</publicPackage>
                         <publicPackage>com.fasterxml.jackson.*</publicPackage>
                         <publicPackage>org.apache.commons.*</publicPackage>
+                        <publicPackage>jakarta.xml.*</publicPackage>
+                        <publicPackage>jakarta.xml.bind.*</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>
@@ -48,12 +50,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.22.2</version>
+            <version>2.22.3</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.22.2</version>
+            <version>2.22.3</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>

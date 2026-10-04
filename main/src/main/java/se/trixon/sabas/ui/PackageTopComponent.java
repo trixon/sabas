@@ -87,8 +87,14 @@ public class PackageTopComponent extends TopComponent {
             idLabel.setText(pkg.getId());
             nameLabel.setText(pkg.getName());
             summaryLabel.setText(pkg.getSummary());
+            if (Strings.CI.startsWith(pkg.getDescription(), "<html>")) {
+                descriptionTextPane.setContentType("text/html");
+                var doc = (javax.swing.text.html.HTMLDocument) descriptionTextPane.getDocument();
+                doc.setAsynchronousLoadPriority(-1);
+            } else {
+                descriptionTextPane.setContentType("text/plain");
+            }
             descriptionTextPane.setText(pkg.getDescription());
-            descriptionTextPane.setContentType(Strings.CI.startsWith(pkg.getDescription(), "<html>") ? "text/html" : "text/plain");
             descriptionTextPane.setCaretPosition(0);
 //            if (pkg.getLicense().length() > maxLicenseLength) {
 //                descriptionLogPanel.println("\n FULL LICENSE");

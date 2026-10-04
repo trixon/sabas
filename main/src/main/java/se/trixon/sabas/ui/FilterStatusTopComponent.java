@@ -86,6 +86,10 @@ public final class FilterStatusTopComponent extends BaseFilterTopComponent {
             return true;
         }
 
+        if (pkg.hasAppStream() && selectedValues.contains(PkgStatus.APPSTREAM)) {
+            return true;
+        }
+
         return false;
 
     }

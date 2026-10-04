@@ -17,6 +17,7 @@ package se.trixon.sabas.api;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.StringUtils;
 
 public class Pkg {
@@ -48,9 +49,11 @@ public class Pkg {
     private long mTimeInstalled;
     private boolean mUpgradable;
     private String mUrl;
+    private transient final ConcurrentHashMap<Object, Object> mValues = new ConcurrentHashMap<>(2);
     private int mVendorId = -1;
     private String mVersion;
     private String mVersionNew;
+    private boolean mAppStream;
 
     public Pkg() {
     }
@@ -184,6 +187,23 @@ public class Pkg {
         return mUrl;
     }
 
+    public <T> T getValue(String key, Class<T> type) {
+        return type.cast(getValues().get(key));
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getValue(Object key) {
+        return (T) (getValues().get(key));
+    }
+
+    public Object getValue(Object key, Object defaultValue) {
+        return getValues().getOrDefault(key, defaultValue);
+    }
+
+    public ConcurrentHashMap<Object, Object> getValues() {
+        return mValues;
+    }
+
     public String getVendor() {
         return DICTIONARY.getString(DictionarySection.VENDOR, mVendorId);
     }
@@ -200,6 +220,10 @@ public class Pkg {
         return mVersionNew;
     }
 
+    public boolean hasAppStream() {
+        return mAppStream;
+    }
+
     public boolean isInstalled() {
         return mInstalled;
     }
@@ -210,6 +234,10 @@ public class Pkg {
 
     public boolean isUpgradable() {
         return mUpgradable;
+    }
+
+    public void setAppStream(boolean appStream) {
+        mAppStream = appStream;
     }
 
     public void setArchId(int archId) {
@@ -301,6 +329,10 @@ public class Pkg {
 
     public void setUrl(String url) {
         mUrl = url;
+    }
+
+    public Object setValue(Object key, Object value) {
+        return mValues.put(key, value);
     }
 
     public void setVendorId(int vendorId) {
