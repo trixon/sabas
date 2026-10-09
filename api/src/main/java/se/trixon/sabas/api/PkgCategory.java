@@ -27,6 +27,8 @@ public enum PkgCategory {
     GUI("category_gui"),
     //    TUI("category_tui"),
     CLI("category_cli"),
+    DEV("category_dev"),
+    DOC("category_doc"),
     THEME("category_theme"),
     FONT("category_font"),
     SERVICE("category_service"),
