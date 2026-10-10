@@ -77,15 +77,25 @@ public class DnfPopulator extends BridgePopulator {
             var installedPackages = installedFuture.get();
             var availablePackages = availableFuture.get();
             var upgradablePackages = upgradableFuture.get();
-
             var onlineByName = new HashMap<String, Pkg>();
+
             for (var pkg : availablePackages.values()) {
-                onlineByName.put(pkg.getName(), pkg);
+                var uniqueKey = pkg.getName() + ":" + pkg.getArchId();
+                var existingPkg = onlineByName.get(uniqueKey);
+
+                if (existingPkg == null) {
+                    onlineByName.put(uniqueKey, pkg);
+                } else {
+                    if (pkg.getTimeBuild() > existingPkg.getTimeBuild()) {
+                        onlineByName.put(uniqueKey, pkg);
+                    }
+                }
             }
 
             for (var entry : installedPackages.entrySet()) {
                 var installedPkg = entry.getValue();
-                var mainPkg = onlineByName.get(installedPkg.getName());
+                var uniqueKey = installedPkg.getName() + ":" + installedPkg.getArchId();
+                var mainPkg = onlineByName.get(uniqueKey);
 
                 if (mainPkg != null) {
                     mainPkg.setInstalled(true);
@@ -95,7 +105,7 @@ public class DnfPopulator extends BridgePopulator {
                     installedPkg.setInstalled(true);
                     installedPkg.setOrphaned(true);
                     availablePackages.put(entry.getKey(), installedPkg);
-                    onlineByName.put(installedPkg.getName(), installedPkg);
+                    onlineByName.put(uniqueKey, installedPkg);
                 }
             }
 
@@ -110,12 +120,12 @@ public class DnfPopulator extends BridgePopulator {
             }
 
             Thread.ofVirtual().name("initAppStream").start(() -> {
-                mAppStreamReader.read(availablePackages);
-                availablePackages.values().forEach(pkg -> computeCategory(pkg));
+                mAppStreamReader.read(onlineByName);
+                onlineByName.values().forEach(pkg -> computeCategory(pkg));
                 //Force reload of selected package
             });
 
-            return availablePackages.values().stream()
+            return onlineByName.values().stream()
                     .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
                     .toList();
         } catch (InterruptedException | ExecutionException e) {
@@ -317,9 +327,18 @@ public class DnfPopulator extends BridgePopulator {
             if (StringUtils.isNotBlank(name)) {
 //                pkg.setName(name);
             }
+
             var description = asp.getDescription();
             if (StringUtils.isNotBlank(description)) {
-                pkg.setDescription("<html>%s</html>".formatted(description));
+                var cleanText = description
+                        .replaceAll("<[^>]*>", "")
+                        .replace("\n", "")
+                        .trim();
+                boolean isOnlyNull = cleanText.matches("^(\\s*\\(null\\)\\s*)+$");
+
+                if (!cleanText.isEmpty() && !isOnlyNull) {
+                    pkg.setDescription("<html>%s</html>".formatted(description));
+                }
             }
 
 //            asp.getLatestReleaseTimestamp();
