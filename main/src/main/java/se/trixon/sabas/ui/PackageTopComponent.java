@@ -18,6 +18,8 @@ package se.trixon.sabas.ui;
 import java.awt.CardLayout;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import javax.swing.JTextPane;
+import javax.swing.text.html.HTMLDocument;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -76,6 +78,19 @@ public class PackageTopComponent extends TopComponent {
         setName(Bundle.CTL_PackageTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
+
+        var doc = (HTMLDocument) descHtmlTextPane.getDocument();
+        doc.setAsynchronousLoadPriority(-1);
+    }
+
+    private void displayDesc(String key, String desc, JTextPane textPane) {
+        var cardLayout = (CardLayout) descriptionPanel.getLayout();
+        cardLayout.show(descriptionPanel, key);
+
+        textPane.setText(desc);
+        textPane.setCaretPosition(0);
+
+//        System.out.println(">%s<".formatted(desc));
     }
 
     private void displayPackageInfo(Pkg pkg) {
@@ -85,17 +100,17 @@ public class PackageTopComponent extends TopComponent {
         if (pkg != null) {
             int maxLicenseLength = 60;
             idLabel.setText(pkg.getId());
-            nameLabel.setText(pkg.getName());
+            var namePrefix = pkg.hasAppStream() ? "* " : "";
+            nameLabel.setText(namePrefix + pkg.getName());
             summaryLabel.setText(pkg.getSummary());
-            if (Strings.CI.startsWith(pkg.getDescription(), "<html>")) {
-                descriptionTextPane.setContentType("text/html");
-                var doc = (javax.swing.text.html.HTMLDocument) descriptionTextPane.getDocument();
-                doc.setAsynchronousLoadPriority(-1);
+
+            var desc = pkg.getDescription();
+            if (Strings.CI.startsWith(desc, "<html>")) {
+                displayDesc("DESC_HTML", desc, descHtmlTextPane);
             } else {
-                descriptionTextPane.setContentType("text/plain");
+                displayDesc("DESC_PLAIN", desc, descPlainTextPane);
             }
-            descriptionTextPane.setText(pkg.getDescription());
-            descriptionTextPane.setCaretPosition(0);
+
 //            if (pkg.getLicense().length() > maxLicenseLength) {
 //                descriptionLogPanel.println("\n FULL LICENSE");
 //                descriptionLogPanel.println("\n" + pkg.getLicense());
@@ -157,12 +172,14 @@ public class PackageTopComponent extends TopComponent {
 
     private void initListeners() {
         Sabas.getGlobalState().addListener(gsce -> {
-            displayPackageInfo(gsce.getValue());
+            SwingHelper.runLater(() -> {
+                displayPackageInfo(gsce.getValue());
+            });
         }, PkgManager.KEY_SELECTED_PKG);
 
         Sabas.getGlobalState().addListener(gsce -> {
             if (mPkgManager.getSelectedPkg() == mPkgManager.getDetailedPkg()) {
-                displayPackageInfoDetails(gsce.getValue());
+                SwingHelper.runLater(() -> displayPackageInfoDetails(gsce.getValue()));
             }
         }, PkgManager.KEY_SELECTED_PKG_DETAILS);
 
@@ -213,8 +230,11 @@ public class PackageTopComponent extends TopComponent {
         groupLabel = new javax.swing.JLabel();
         buildSeparatorLabel1 = new javax.swing.JLabel();
         infoTabbedPane = new javax.swing.JTabbedPane();
-        descriptionScrollPane = new javax.swing.JScrollPane();
-        descriptionTextPane = new javax.swing.JTextPane();
+        descriptionPanel = new javax.swing.JPanel();
+        descHtmlScrollPane = new javax.swing.JScrollPane();
+        descHtmlTextPane = new javax.swing.JTextPane();
+        descPlainScrollPane = new javax.swing.JScrollPane();
+        descPlainTextPane = new javax.swing.JTextPane();
         filesLogPanel = new se.trixon.almond.util.swing.LogPanel();
         requiresLogPanel = new se.trixon.almond.util.swing.LogPanel();
         requiredLogPanel = new se.trixon.almond.util.swing.LogPanel();
@@ -426,11 +446,21 @@ public class PackageTopComponent extends TopComponent {
         infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
         infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
 
-        descriptionTextPane.setEditable(false);
-        descriptionTextPane.setContentType("text/html"); // NOI18N
-        descriptionScrollPane.setViewportView(descriptionTextPane);
+        descriptionPanel.setLayout(new java.awt.CardLayout());
 
-        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.descriptionScrollPane.TabConstraints.tabTitle"), descriptionScrollPane); // NOI18N
+        descHtmlTextPane.setEditable(false);
+        descHtmlTextPane.setContentType("text/html"); // NOI18N
+        descHtmlTextPane.setText(""); // NOI18N
+        descHtmlScrollPane.setViewportView(descHtmlTextPane);
+
+        descriptionPanel.add(descHtmlScrollPane, "DESC_HTML");
+
+        descPlainTextPane.setEditable(false);
+        descPlainScrollPane.setViewportView(descPlainTextPane);
+
+        descriptionPanel.add(descPlainScrollPane, "DESC_PLAIN");
+
+        infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.descriptionPanel.TabConstraints.tabTitle"), descriptionPanel); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.filesLogPanel.TabConstraints.tabTitle"), filesLogPanel); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.requiresLogPanel.TabConstraints.tabTitle"), requiresLogPanel); // NOI18N
         infoTabbedPane.addTab(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.requiredLogPanel.TabConstraints.tabTitle"), requiredLogPanel); // NOI18N
@@ -477,8 +507,11 @@ public class PackageTopComponent extends TopComponent {
     private javax.swing.JLabel buildSeparatorLabel1;
     private javax.swing.JLabel buildTimeLabel;
     private javax.swing.JLabel categoryLabel;
-    private javax.swing.JScrollPane descriptionScrollPane;
-    private javax.swing.JTextPane descriptionTextPane;
+    private javax.swing.JScrollPane descHtmlScrollPane;
+    private javax.swing.JTextPane descHtmlTextPane;
+    private javax.swing.JScrollPane descPlainScrollPane;
+    private javax.swing.JTextPane descPlainTextPane;
+    private javax.swing.JPanel descriptionPanel;
     private javax.swing.JPanel emptyCardPanel;
     private javax.swing.JLabel epochLabel;
     private se.trixon.almond.util.swing.LogPanel filesLogPanel;

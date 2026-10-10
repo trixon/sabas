@@ -148,6 +148,7 @@ public final class PackagesTopComponent extends BaseTopComponent {
                     mPkgListModel.updateData();
                     if (mPkgListModel.getSize() > 0) {
                         packagesList.setSelectedIndex(0);
+                        packagesList.ensureIndexIsVisible(0);
                     }
                 }
                 updateFooter();

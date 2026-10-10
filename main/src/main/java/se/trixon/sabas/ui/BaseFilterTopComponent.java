@@ -56,6 +56,7 @@ public abstract class BaseFilterTopComponent extends BaseTopComponent implements
     @Override
     public void reset() {
         list.setSelectedIndex(0);
+        list.ensureIndexIsVisible(0);
     }
 
     /**
