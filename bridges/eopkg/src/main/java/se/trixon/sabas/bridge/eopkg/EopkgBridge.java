@@ -97,7 +97,12 @@ public class EopkgBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideTransactionUpgrade() {
-        return BridgeOperation.ofProcess(List.of(EOPKG, "upgrade"),
+        return BridgeOperation.ofProcess(
+                List.of(
+                        EOPKG,
+                        "upgrade",
+                        "--yes-all"
+                ),
                 mDefaultEnvironment
         );
     }

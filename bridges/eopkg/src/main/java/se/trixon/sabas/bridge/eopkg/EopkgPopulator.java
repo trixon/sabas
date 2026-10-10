@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +35,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -40,10 +44,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.openide.util.Exceptions;
+import se.trixon.sabas.api.AppStreamPackage;
+import se.trixon.sabas.api.AppStreamPopulator;
 import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.BridgePopulator;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
+import se.trixon.sabas.api.PkgCategory;
 import static se.trixon.sabas.bridge.eopkg.EopkgBridge.EOPKG;
 
 /**
@@ -52,13 +59,18 @@ import static se.trixon.sabas.bridge.eopkg.EopkgBridge.EOPKG;
  */
 public class EopkgPopulator extends BridgePopulator {
 
+    private final AppStreamPopulator mAppStreamPopulator = new AppStreamPopulator();
+    private final AppStreamReader mAppStreamReader = new AppStreamReader();
     private final DateTimeFormatter mFormatter = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm", Locale.ENGLISH);
+
+    public EopkgPopulator() {
+        initEnricher();
+    }
 
     @Override
     public List<Pkg> populate(Set<Process> processes) {
         var nameToPackageMap = new ConcurrentHashMap<String, Pkg>();
         var command = List.of(EOPKG, "list-available", "--long", "--no-color");
-//        var command = List.of("cat", "/home/pata/eopkg.txt");
 
         Process process = null;
         try {
@@ -107,6 +119,7 @@ public class EopkgPopulator extends BridgePopulator {
                             details.setProvides(currentProvides);
                             details.setRequires(Strings.CI.replace(currentDependencies, " ", "\n"));
                             pkg.setDetails(details);
+//                            var key = mDictionary.getString(DictionarySection.REPOSITORY, pkg.getRepositoryId()).toLowerCase(Locale.ROOT) + ":" + currentName;
                             nameToPackageMap.put(currentName, pkg);
                         }
 
@@ -186,6 +199,12 @@ public class EopkgPopulator extends BridgePopulator {
         applyInstalled(processes, nameToPackageMap);
         applyOrphaned(processes, nameToPackageMap);
         applyUpgradable(processes, nameToPackageMap);
+
+        Thread.ofVirtual().name("initAppStream").start(() -> {
+            mAppStreamReader.read(nameToPackageMap);
+            nameToPackageMap.values().forEach(pkg -> computeCategory(pkg));
+            //Force reload of selected package
+        });
 
         return nameToPackageMap.values().stream()
                 .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
@@ -343,7 +362,7 @@ public class EopkgPopulator extends BridgePopulator {
 
                         if (xmlPackage.getSource() != null) {
                             pkg.setUrl(xmlPackage.getSource().getHomepage());
-
+                            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, extractDomain(pkg.getUrl())));
                             if (xmlPackage.getSource().getPackager() != null) {
                                 var packagerName = StringUtils.trim(xmlPackage.getSource().getPackager().getName());
                                 pkg.setPackagerId(mDictionary.getOrCreateId(DictionarySection.PACKAGER, packagerName));
@@ -367,6 +386,60 @@ public class EopkgPopulator extends BridgePopulator {
                     }
                 }
             }
+        }
+    }
+
+    private void computeCategory(Pkg pkg) {
+        if (pkg.getCategory() == null || pkg.getCategory() == PkgCategory.OTHER) {
+            var category = PkgCategory.OTHER;
+            var name = pkg.getName();
+            var ci = Strings.CI;
+
+            if (ci.startsWith(name, "lib") || ci.endsWith(name, "-libs")) {
+                category = PkgCategory.LIB;
+            } else if (ci.endsWithAny(name, "-devel", "-build")) {
+                category = PkgCategory.DEV;
+            } else if (ci.endsWithAny(name, "-doc", "-docs")) {
+                category = PkgCategory.DOC;
+            } else if (ci.contains(name, "font") || ci.endsWith(name, "-fonts")) {
+                category = PkgCategory.FONT;
+            } else if (ci.containsAny(name, "theme", "-icon-")) {
+                category = PkgCategory.THEME;
+            } else if (ci.containsAny(name, "systemd", "service", "daemon", "agent")) {
+                category = PkgCategory.SERVICE;
+            }
+
+            pkg.setCategory(category);
+        }
+    }
+
+    private String extractDomain(String urlString) {
+        if (urlString == null || urlString.isBlank()) {
+            return "Unknown";
+        }
+
+        try {
+            URI uri = new URI(urlString.trim());
+            String host = uri.getHost();
+
+            if (host == null) {
+                return "Unknown";
+            }
+
+            int lastDot = host.lastIndexOf('.');
+            if (lastDot == -1) {
+                return host.toLowerCase();
+            }
+
+            int secondToLastDot = host.lastIndexOf('.', lastDot - 1);
+
+            if (secondToLastDot == -1) {
+                return host.toLowerCase();
+            }
+
+            return host.substring(secondToLastDot + 1).toLowerCase();
+        } catch (URISyntaxException e) {
+            return "Unknown";
         }
     }
 
@@ -399,6 +472,89 @@ public class EopkgPopulator extends BridgePopulator {
         }
 
         return activeRepositories;
+    }
+
+    private void initEnricher() {
+        BiConsumer<AppStreamPackage, Pkg> biConsumer = (asp, pkg) -> {
+            pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, asp.getLicense()));
+            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, asp.getDeveloperName()));
+            pkg.setUrl(asp.getUrl("homepage"));
+            var summary = asp.getSummary();
+            if (StringUtils.isNotBlank(summary)) {
+                pkg.setSummary(summary);
+            }
+            var name = asp.getName();
+            if (StringUtils.isNotBlank(name)) {
+//                pkg.setName(name);
+            }
+            var description = asp.getDescription();
+            if (StringUtils.isNotBlank(description)) {
+                pkg.setDescription("<html>%s</html>".formatted(description));
+            }
+//            asp.getLatestReleaseTimestamp();
+        };
+
+        mAppStreamPopulator.setEnricher(biConsumer);
+
+    }
+
+    class AppStreamReader {
+
+        public void read(Map<String, Pkg> packageMap) {
+            var basePath = Path.of("/usr/share/swcatalog/xml/");
+
+            if (!Files.isDirectory(basePath)) {
+                return;
+            }
+
+            try (var fileStream = Files.list(basePath)) {
+                var xmlFiles = fileStream
+                        .filter(Files::isRegularFile)
+                        .filter(p -> {
+                            var name = p.getFileName().toString().toLowerCase(Locale.ROOT);
+                            return name.endsWith(".xml") || name.endsWith(".xml.gz");
+                        })
+                        .toList();
+
+//                var remappedMap = packageMap.values().parallelStream()
+//                        .collect(Collectors.toConcurrentMap(
+//                                pkg -> mDictionary.getString(DictionarySection.REPOSITORY, pkg.getRepositoryId()) + ":" + pkg.getName(),
+//                                pkg -> pkg,
+//                                (existing, replacement) -> existing
+//                        ));
+                xmlFiles.parallelStream().forEach(xmlPath -> {
+                    parseXmlFile(xmlPath, packageMap);
+                });
+            } catch (Exception e) {
+                Exceptions.printStackTrace(e);
+            }
+        }
+
+        private Function<AppStreamPackage, String> createAppStreamToIdFunction(String repo) {
+            return asp -> {
+                return asp.getPkgName();
+            };
+        }
+
+        private void parseXmlFile(Path xmlPath, Map<String, Pkg> packageMap) {
+            var filename = xmlPath.getFileName().toString();
+            var repo = filename.toLowerCase(Locale.ROOT);
+            repo = StringUtils.substringBefore(repo, ".xml");
+
+            var isGz = filename.toLowerCase(Locale.ROOT).endsWith(".gz");
+
+            try {
+                mAppStreamPopulator.populate(
+                        xmlPath,
+                        isGz,
+                        packageMap,
+                        "",//TODO Adapt to future cganges
+                        createAppStreamToIdFunction(repo)
+                );
+            } catch (Exception e) {
+                Exceptions.printStackTrace(e);
+            }
+        }
     }
 
 }
