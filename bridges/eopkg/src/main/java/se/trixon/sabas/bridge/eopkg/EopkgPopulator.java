@@ -67,6 +67,50 @@ public class EopkgPopulator extends BridgePopulator {
         initEnricher();
     }
 
+    public String extractDomainBase(String urlString) {
+        if (urlString == null || urlString.isBlank()) {
+            return "Unknown";
+        }
+
+        try {
+            var uri = new URI(urlString.trim());
+            var host = uri.getHost();
+
+            if (host == null || host.isBlank()) {
+                return "Unknown";
+            }
+
+            int lastDot = host.lastIndexOf('.');
+            if (lastDot == -1) {
+                return host.toLowerCase();
+            }
+            int secondToLastDot = host.lastIndexOf('.', lastDot - 1);
+
+            var baseDomain = (secondToLastDot == -1)
+                    ? host.toLowerCase()
+                    : host.substring(secondToLastDot + 1).toLowerCase();
+
+            if (Strings.CI.containsAny(baseDomain, "github.com", "gitlab.com")) {
+                var path = uri.getPath();
+
+                if (path != null && path.length() > 1) {
+                    String[] parts = path.split("/");
+                    if (parts.length > 1) {
+                        var username = parts[1];
+                        if (!username.isBlank()) {
+                            return baseDomain + "/" + username;
+                        }
+                    }
+                }
+            }
+
+            return baseDomain;
+
+        } catch (URISyntaxException e) {
+            return "Unknown";
+        }
+    }
+
     @Override
     public List<Pkg> populate(Set<Process> processes) {
         var nameToPackageMap = new ConcurrentHashMap<String, Pkg>();
@@ -108,8 +152,6 @@ public class EopkgPopulator extends BridgePopulator {
 
                             pkg.setGroupId(mDictionary.getOrCreateId(DictionarySection.GROUP, currentGroup));
                             pkg.setRepositoryId(mDictionary.getOrCreateId(DictionarySection.REPOSITORY, currentRepo));
-                            //TODO Vendor
-//                            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, "Solus Community"));
                             pkg.setArchId(mDictionary.getOrCreateId(DictionarySection.ARCH, currentArch));
                             if (currentLicense != null) {
                                 pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, currentLicense));
@@ -365,7 +407,7 @@ public class EopkgPopulator extends BridgePopulator {
 
                         if (xmlPackage.getSource() != null) {
                             pkg.setUrl(xmlPackage.getSource().getHomepage());
-                            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, extractDomain(pkg.getUrl())));
+                            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, extractDomainBase(pkg.getUrl())));
                             if (xmlPackage.getSource().getPackager() != null) {
                                 var packagerName = StringUtils.trim(xmlPackage.getSource().getPackager().getName());
                                 pkg.setPackagerId(mDictionary.getOrCreateId(DictionarySection.PACKAGER, packagerName));

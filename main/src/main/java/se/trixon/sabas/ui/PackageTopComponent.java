@@ -16,6 +16,7 @@
 package se.trixon.sabas.ui;
 
 import java.awt.CardLayout;
+import java.awt.Insets;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JTextPane;
@@ -28,8 +29,8 @@ import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
-import se.trixon.sabas.api.Sabas;
 import se.trixon.sabas.api.Pkg;
+import se.trixon.sabas.api.Sabas;
 import se.trixon.sabas.core.Options;
 import se.trixon.sabas.core.PkgManager;
 
@@ -81,6 +82,7 @@ public class PackageTopComponent extends TopComponent {
 
         var doc = (HTMLDocument) descHtmlTextPane.getDocument();
         doc.setAsynchronousLoadPriority(-1);
+        descPlainTextPane.setMargin(new Insets(16, 4, 8, 4));
     }
 
     private void displayDesc(String key, String desc, JTextPane textPane) {
