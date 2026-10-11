@@ -10,7 +10,7 @@
 
     <groupId>se.trixon.sabas</groupId>
     <artifactId>parent</artifactId>
-    <version>26.07x</version>
+    <version>26.10</version>
     <packaging>pom</packaging>
     <modules>
         <module>branding</module>
