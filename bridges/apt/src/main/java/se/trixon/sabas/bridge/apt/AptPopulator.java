@@ -129,6 +129,7 @@ public class AptPopulator extends BridgePopulator {
 
         Thread.ofVirtual().name("initAppStream").start(() -> {
             mAppStreamReader.read(nameToPackageMap);
+            nameToPackageMap.values().forEach(pkg -> computeCategory(pkg));
             //Force reload of selected package
         });
 
@@ -168,25 +169,25 @@ public class AptPopulator extends BridgePopulator {
     private void computeCategory(Pkg pkg) {
         if (pkg.getCategory() == null || pkg.getCategory() == PkgCategory.OTHER) {
             var category = PkgCategory.OTHER;
-            if (Strings.CI.startsWith(pkg.getName(), "lib")) {
+            var name = pkg.getName();
+            var ci = Strings.CI;
+
+            if (ci.startsWithAny(name, "lib")) {
                 category = PkgCategory.LIB;
-            }
-
-            if (Strings.CI.contains(pkg.getName(), "theme")) {
-                category = PkgCategory.THEME;
-            }
-
-            if (Strings.CI.containsAny(pkg.getName(), "systemd", "service")) {
-                category = PkgCategory.SERVICE;
-            }
-
-            if (Strings.CI.contains(pkg.getName(), "font")) {
+            } else if (ci.endsWithAny(name, "-dev", "-build")) {
+                category = PkgCategory.DEV;
+            } else if (ci.endsWithAny(name, "-doc", "-manual")) {
+                category = PkgCategory.DOC;
+            } else if (ci.containsAny(name, "font", "fonts-")) {
                 category = PkgCategory.FONT;
+            } else if (ci.containsAny(name, "theme", "-icon-")) {
+                category = PkgCategory.THEME;
+            } else if (ci.containsAny(name, "systemd", "service", "daemon", "agent")) {
+                category = PkgCategory.SERVICE;
             }
 
             pkg.setCategory(category);
         }
-
     }
 
     private String getPkgDetailsFiles(Set<Process> processes, String name) {
@@ -635,7 +636,6 @@ public class AptPopulator extends BridgePopulator {
             if (StringUtils.isNotBlank(description)) {
                 pkg.setDescription("<html>%s</html>".formatted(description));
             }
-            computeCategory(pkg);
 //            asp.getLatestReleaseTimestamp();
         };
 
