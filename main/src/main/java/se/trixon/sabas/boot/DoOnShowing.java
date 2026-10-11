@@ -50,18 +50,19 @@ public class DoOnShowing implements Runnable {
             }
         });
 
-//        Almond.openTopComponent("ActionsTopComponent");
         Almond.openAndActivateTopComponent("FilterTopComponent");
         Almond.hideTabs("output");
         displaySystemInformation();
 
         if (mPkgManager.getBridge() == null) {
             var message = """
-                        You need to select a bridge in order to get started.
+                        In order to get started, you need to select a bridge in the absolute lower right corner of the window.
+
                         If no one is available, activate at least one plugin via menu Tools/Plugins.
                           Make your choise in the 'Installed' tab.""";
 
             NbMessage.warning("No bridge configured", message);
+            NbMessage.information("Lower right corner", "... then you're good to go.");
         } else {
             SwingUtilities.invokeLater(() -> {
                 var makeFullInit = false;
