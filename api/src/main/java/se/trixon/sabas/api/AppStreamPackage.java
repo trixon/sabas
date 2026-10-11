@@ -26,6 +26,7 @@ import jakarta.xml.bind.annotation.XmlValue;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -44,7 +45,11 @@ import org.apache.commons.lang3.Strings;
 @XmlRootElement(name = "component")
 public class AppStreamPackage {
 
-    public static final Set<String> ACCEPTABLE_LANGUAGES = Set.of("", "en", Locale.getDefault().getLanguage().toLowerCase(Locale.ROOT));
+    public static final Set<String> ACCEPTABLE_LANGUAGES = new HashSet<>(List.of(
+            "",
+            "en",
+            Locale.getDefault().getLanguage().toLowerCase(Locale.ROOT)
+    ));
 
     private Map<String, String> mDescriptionMap;
     @XmlElement(name = "description")
