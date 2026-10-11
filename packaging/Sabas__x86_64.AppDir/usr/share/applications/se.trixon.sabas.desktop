@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Sabas
+Comment=Artifact Browsing, At Spead
+Exec=sabas %F
+Icon=se.trixon.sabas
+Terminal=false
+Categories=System;
+StartupNotify=true
+StartupWMClass=SABAS
+
