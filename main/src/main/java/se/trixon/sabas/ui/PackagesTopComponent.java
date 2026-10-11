@@ -24,8 +24,8 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
-import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.Pkg;
+import se.trixon.sabas.api.Sabas;
 import se.trixon.sabas.core.PkgManager;
 import se.trixon.sabas.ui.parts.PkgRenderer;
 
@@ -155,15 +155,6 @@ public final class PackagesTopComponent extends BaseTopComponent {
             });
         }, PkgManager.KEY_FILTERED_ITEMS);
 
-//        Sabas.getGlobalState().addListener(gsce -> {
-//            displayPackageInfo(gsce.getValue());
-//        }, PkgManager.KEY_SELECTED_PKG);
-//
-//        Sabas.getGlobalState().addListener(gsce -> {
-//            if (mPkgManager.getSelectedPkg() == mPkgManager.getDetailedPkg()) {
-//                displayPackageInfoDetails(gsce.getValue());
-//            }
-//        }, PkgManager.KEY_SELECTED_PKG_DETAILS);
         Sabas.getGlobalState().addListener(gsce -> {
             SwingHelper.enableComponents(this, !gsce.<Boolean>getValue());
         }, PkgManager.KEY_TASK_RUNNING);

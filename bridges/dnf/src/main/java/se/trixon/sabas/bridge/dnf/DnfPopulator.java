@@ -111,23 +111,26 @@ public class DnfPopulator extends BridgePopulator {
 
             for (var entry : upgradablePackages.entrySet()) {
                 var upgradePkg = entry.getValue();
-                var mainPkg = onlineByName.get(upgradePkg.getName());
-
+                var uniqueKey = upgradePkg.getName() + ":" + upgradePkg.getArchId();
+                var mainPkg = onlineByName.get(uniqueKey);
                 if (mainPkg != null && mainPkg.isInstalled()) {
                     mainPkg.setUpgradable(true);
                     mainPkg.setVersionNew(upgradePkg.getVersion());
                 }
             }
 
-            Thread.ofVirtual().name("initAppStream").start(() -> {
-                mAppStreamReader.read(onlineByName);
-                onlineByName.values().forEach(pkg -> computeCategory(pkg));
-                //Force reload of selected package
-            });
-
-            return onlineByName.values().stream()
+            var packages = onlineByName.values().stream()
                     .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
                     .toList();
+
+            postAsyncPopulate(() -> {
+                mAppStreamReader.read(onlineByName);
+                packages.forEach(pkg -> computeCategory(pkg));
+            });
+
+            mDictionary.retainOnlyActiveItems(packages);
+
+            return packages;
         } catch (InterruptedException | ExecutionException e) {
             Exceptions.printStackTrace(e);
             return List.of();

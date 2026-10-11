@@ -23,9 +23,10 @@ import org.apache.commons.lang3.StringUtils;
 public class Pkg {
 
     private static final PkgDictionary DICTIONARY = PkgDictionary.getInstance();
-
+    private boolean mAppStream;
     private int mArchId = -1;
     private PkgCategory mCategory = PkgCategory.OTHER;
+    private int mCategoryId = -1;
     private String mDescription;
     private String mDescriptionLower;
     private Details mDetails;
@@ -53,7 +54,6 @@ public class Pkg {
     private int mVendorId = -1;
     private String mVersion;
     private String mVersionNew;
-    private boolean mAppStream;
 
     public Pkg() {
     }
@@ -68,6 +68,10 @@ public class Pkg {
 
     public PkgCategory getCategory() {
         return mCategory;
+    }
+
+    public int getCategoryId() {
+        return mCategoryId;
     }
 
     public String getDescription() {
@@ -246,6 +250,10 @@ public class Pkg {
 
     public void setCategory(PkgCategory category) {
         mCategory = category;
+    }
+
+    public void setCategoryId(int categoryId) {
+        mCategoryId = categoryId;
     }
 
     public void setDescription(String description) {

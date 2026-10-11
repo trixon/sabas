@@ -15,8 +15,6 @@
  */
 package se.trixon.sabas.ui;
 
-import java.util.List;
-import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -25,9 +23,7 @@ import org.openide.awt.ActionReferences;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import se.trixon.sabas.api.DictionarySection;
-import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgCategory;
-import se.trixon.sabas.ui.parts.ZebraListCellRenderer;
 
 /**
  * Top component which displays something.
@@ -60,25 +56,8 @@ public final class FilterCategoryTopComponent extends BaseFilterTopComponent {
     private JList<PkgCategory> list;
 
     public FilterCategoryTopComponent() {
-        super(DictionarySection.CATEGORY, pkg -> -1);
+        super(DictionarySection.CATEGORY, pkg -> pkg.getCategoryId());
         setName(Bundle.CTL_FilterCategoryTopComponent());
-        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
-        init();
-    }
-
-    @Override
-    public boolean filter(Pkg pkg) {
-        var selectedValues = list.getSelectedValuesList();
-        if (selectedValues.isEmpty() || selectedValues.contains(PkgCategory.ALL)) {
-            return true;
-        }
-
-        return selectedValues.contains(pkg.getCategory());
-    }
-
-    @Override
-    public void reset() {
-        list.setSelectedIndex(0);
     }
 
     void readProperties(java.util.Properties p) {
@@ -93,20 +72,4 @@ public final class FilterCategoryTopComponent extends BaseFilterTopComponent {
         // TODO store your settings
     }
 
-    private void init() {
-        var statusModel = new DefaultListModel<PkgCategory>();
-        statusModel.addAll(List.of(PkgCategory.values()));
-        list = new JList<>(statusModel);
-        list.setCellRenderer(new ZebraListCellRenderer());
-        list.setSelectedIndex(0);
-        removeAll();
-        add(list);
-
-        list.addListSelectionListener(event -> {
-            if (!event.getValueIsAdjusting()) {
-                mFilterManager.requestFiltering();
-            }
-        });
-
-    }
 }

@@ -17,7 +17,7 @@ package se.trixon.sabas.api;
 
 public enum DictionarySection {
     ARCH,
-    CATEGORY,//Only a dummy for BaseFilterTopComponent
+    CATEGORY,
     GROUP,
     LICENSE,
     PACKAGER,

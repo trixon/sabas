@@ -127,15 +127,18 @@ public class AptPopulator extends BridgePopulator {
             }
         }
 
-        Thread.ofVirtual().name("initAppStream").start(() -> {
-            mAppStreamReader.read(nameToPackageMap);
-            nameToPackageMap.values().forEach(pkg -> computeCategory(pkg));
-            //Force reload of selected package
-        });
-
-        return nameToPackageMap.values().stream()
+        var packages = nameToPackageMap.values().stream()
                 .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
+
+        postAsyncPopulate(() -> {
+            mAppStreamReader.read(nameToPackageMap);
+            packages.forEach(pkg -> computeCategory(pkg));
+        });
+
+        mDictionary.retainOnlyActiveItems(packages);
+
+        return packages;
     }
 
     @Override

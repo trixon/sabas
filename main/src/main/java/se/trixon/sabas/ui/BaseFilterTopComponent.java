@@ -20,10 +20,10 @@ import java.util.Set;
 import java.util.function.Function;
 import javax.swing.DefaultListModel;
 import se.trixon.almond.util.swing.SwingHelper;
-import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
+import se.trixon.sabas.api.Sabas;
 import se.trixon.sabas.core.Filter;
 import se.trixon.sabas.core.FilterManager;
 import se.trixon.sabas.core.PkgManager;
@@ -85,7 +85,7 @@ public abstract class BaseFilterTopComponent extends BaseTopComponent implements
     private void initListeners() {
         Sabas.getGlobalState().addListener(gsce -> {
             populateList();
-        }, PkgManager.KEY_ALL_ITEMS);
+        }, PkgManager.KEY_ALL_ITEMS, Sabas.KEY_POST_LOAD_DONE);
 
         Sabas.getGlobalState().addListener(gsce -> {
             var enabled = !gsce.<Boolean>getValue();

@@ -48,11 +48,11 @@ import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.almond.util.swing.LogPanel;
 import se.trixon.almond.util.swing.SwingHelper;
-import se.trixon.sabas.Sabas;
 import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.api.BridgeOperation;
 import se.trixon.sabas.api.Pkg;
 import se.trixon.sabas.api.PkgDictionary;
+import se.trixon.sabas.api.Sabas;
 
 /**
  *
@@ -98,51 +98,6 @@ public class PkgManager {
         }
 
         externalExecutor("Updating cache...", getOperationCacheUpdate(), () -> populatePackages(alwaysFeedback));
-    }
-
-    private void checkForUpdates(boolean alwaysFeedback) {
-        Thread.ofVirtual().name("updateChecker").start(() -> {
-            var packages = mAllItems.stream()
-                    .filter(pkg -> pkg.isUpgradable())
-                    .toList();
-
-            if (!packages.isEmpty()) {
-                var maxLengthName = packages.stream().mapToInt(p -> p.getName().length()).max().orElse(0);
-                var maxLengthVersionNew = packages.stream().mapToInt(p -> StringUtils.defaultString(p.getVersionNew()).length()).max().orElse(0);
-                var lines = packages.stream()
-                        .map(p -> "%s  %s  (%s)".formatted(
-                                StringUtils.rightPad(p.getName(), maxLengthName),
-                                StringUtils.rightPad(StringUtils.defaultString(p.getVersionNew()), maxLengthVersionNew),
-                                p.getVersion()
-                        ))
-                        .toList();
-                var cancelButton = new JButton(Dict.CANCEL.toString());
-                var upgradeButton = new JButton(Dict.UPDATE.toString());
-                var logPanel = new LogPanel();
-                var bullet = " • ";
-                logPanel.println(bullet + String.join("\n" + bullet, lines));
-                logPanel.scrollToTop();
-                logPanel.setPreferredSize(SwingHelper.getUIScaledDim(550, 600));
-                Object[] buttons = {cancelButton, upgradeButton};
-                var d = new DialogDescriptor(
-                        logPanel,
-                        NbBundle.getMessage(PkgManager.class, "title_updates_available"),
-                        true,
-                        buttons,
-                        upgradeButton,
-                        DialogDescriptor.DEFAULT_ALIGN,
-                        null,
-                        null
-                );
-
-                SwingHelper.runLaterDelayed(10, () -> upgradeButton.requestFocus());
-                if (upgradeButton == DialogDisplayer.getDefault().notify(d)) {
-                    upgrade();
-                }
-            } else if (alwaysFeedback) {
-                NbMessage.information("Checked for updates", "No updates found");
-            }
-        });
     }
 
     public void displayVersion() {
@@ -333,6 +288,51 @@ public class PkgManager {
 
         var bridgeExecutor = getOperationUpgrade();
         externalExecutor("Upgrading...", bridgeExecutor, () -> populatePackages(false));
+    }
+
+    private void checkForUpdates(boolean alwaysFeedback) {
+        Thread.ofVirtual().name("updateChecker").start(() -> {
+            var packages = mAllItems.stream()
+                    .filter(pkg -> pkg.isUpgradable())
+                    .toList();
+
+            if (!packages.isEmpty()) {
+                var maxLengthName = packages.stream().mapToInt(p -> p.getName().length()).max().orElse(0);
+                var maxLengthVersionNew = packages.stream().mapToInt(p -> StringUtils.defaultString(p.getVersionNew()).length()).max().orElse(0);
+                var lines = packages.stream()
+                        .map(p -> "%s  %s  (%s)".formatted(
+                                StringUtils.rightPad(p.getName(), maxLengthName),
+                                StringUtils.rightPad(StringUtils.defaultString(p.getVersionNew()), maxLengthVersionNew),
+                                p.getVersion()
+                        ))
+                        .toList();
+                var cancelButton = new JButton(Dict.CANCEL.toString());
+                var upgradeButton = new JButton(Dict.UPDATE.toString());
+                var logPanel = new LogPanel();
+                var bullet = " • ";
+                logPanel.println(bullet + String.join("\n" + bullet, lines));
+                logPanel.scrollToTop();
+                logPanel.setPreferredSize(SwingHelper.getUIScaledDim(550, 600));
+                Object[] buttons = {cancelButton, upgradeButton};
+                var d = new DialogDescriptor(
+                        logPanel,
+                        NbBundle.getMessage(PkgManager.class, "title_updates_available"),
+                        true,
+                        buttons,
+                        upgradeButton,
+                        DialogDescriptor.DEFAULT_ALIGN,
+                        null,
+                        null
+                );
+
+                SwingHelper.runLaterDelayed(10, () -> upgradeButton.requestFocus());
+                if (upgradeButton == DialogDisplayer.getDefault().notify(d)) {
+                    upgrade();
+                }
+            } else if (alwaysFeedback) {
+                NbMessage.information("Checked for updates", "No updates found");
+            }
+        });
     }
 
     private Cancellable createCanceller(Set<Process> processes, AtomicReference<Thread> threadRef) {

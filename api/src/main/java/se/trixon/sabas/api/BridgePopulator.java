@@ -41,6 +41,13 @@ public abstract class BridgePopulator {
         return null;
     }
 
+    public void postAsyncPopulate(Runnable runnable) {
+        Thread.ofVirtual().name("postAsyncPopulate").start(() -> {
+            runnable.run();
+            Sabas.getGlobalState().send(Sabas.KEY_POST_LOAD_DONE, System.currentTimeMillis());
+        });
+    }
+
     protected long getSize(String sizeString) {
         if (sizeString == null || sizeString.trim().isEmpty() || "Available".equalsIgnoreCase(sizeString)) {
             return 0;

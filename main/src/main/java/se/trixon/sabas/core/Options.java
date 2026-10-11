@@ -17,7 +17,7 @@ package se.trixon.sabas.core;
 
 import org.openide.util.NbPreferences;
 import se.trixon.almond.util.OptionsBase;
-import se.trixon.sabas.Sabas;
+import se.trixon.sabas.api.Sabas;
 
 /**
  *

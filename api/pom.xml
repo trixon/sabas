@@ -18,7 +18,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
-                        <publicPackage>se.trixon.sabas.api</publicPackage>
+                        <publicPackage>se.trixon.sabas.api.*</publicPackage>
+                        <publicPackage>se.trixon.almond.util.*</publicPackage>
+                        <publicPackage>se.trixon.almond.util.swing.*</publicPackage>
                         <publicPackage>com.fasterxml.jackson.*</publicPackage>
                         <publicPackage>org.apache.commons.*</publicPackage>
                         <publicPackage>jakarta.xml.*</publicPackage>
@@ -79,6 +81,24 @@
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
             <version>4.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>se.trixon.almond</groupId>
+            <artifactId>almond-util</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.oshi</groupId>
+                    <artifactId>oshi-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-csv</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-text</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

@@ -18,8 +18,10 @@ package se.trixon.sabas.api;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -94,6 +96,32 @@ public class PkgDictionary {
 
     public synchronized String getString(DictionarySection section, int id) {
         return mIdToStringMap.get(section).getOrDefault(id, "");
+    }
+
+    public void retainOnlyActiveItems(List<Pkg> packages) {
+        var vendors = new HashSet<Integer>();
+
+        for (var pkg : packages) {
+            vendors.add(pkg.getVendorId());
+        }
+
+        retainOnlyActiveItems(DictionarySection.VENDOR, vendors);
+    }
+
+    private void retainOnlyActiveItems(DictionarySection section, Set<Integer> activeIds) {
+        if (section == null || activeIds == null) {
+            return;
+        }
+
+        var idToString = mIdToStringMap.get(section);
+        var stringToId = mStringToIdMap.get(section);
+
+        if (idToString == null || stringToId == null) {
+            return;
+        }
+
+        idToString.entrySet().removeIf(entry -> !activeIds.contains(entry.getKey()));
+        stringToId.entrySet().removeIf(entry -> !activeIds.contains(entry.getValue()));
     }
 
     private static class Holder {

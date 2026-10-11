@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,6 @@ import se.trixon.almond.nbp.dialogs.NbAbout;
 import se.trixon.almond.util.PomInfo;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.almond.util.swing.AboutModel;
-import se.trixon.sabas.Sabas;
 
 @ActionID(
         category = "Help",
@@ -33,7 +32,7 @@ public final class AboutAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        var clazz = Sabas.class;
+        var clazz = AboutAction.class;
         var pomInfo = new PomInfo(clazz, "se.trixon.sabas", "main");
         var aboutModel = new AboutModel(SystemHelper.getBundle(clazz, "about"), SystemHelper.getResourceAsImageIcon(clazz, "about_logo.png"));
         aboutModel.setAppDate(ModuleHelper.getBuildTime(clazz));

@@ -200,15 +200,18 @@ public class EopkgPopulator extends BridgePopulator {
         applyOrphaned(processes, nameToPackageMap);
         applyUpgradable(processes, nameToPackageMap);
 
-        Thread.ofVirtual().name("initAppStream").start(() -> {
-            mAppStreamReader.read(nameToPackageMap);
-            nameToPackageMap.values().forEach(pkg -> computeCategory(pkg));
-            //Force reload of selected package
-        });
-
-        return nameToPackageMap.values().stream()
+        var packages = nameToPackageMap.values().stream()
                 .sorted(Comparator.comparing(Pkg::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
+
+        postAsyncPopulate(() -> {
+            mAppStreamReader.read(nameToPackageMap);
+            packages.forEach(pkg -> computeCategory(pkg));
+        });
+
+        mDictionary.retainOnlyActiveItems(packages);
+
+        return packages;
     }
 
     @Override
@@ -410,6 +413,7 @@ public class EopkgPopulator extends BridgePopulator {
             }
 
             pkg.setCategory(category);
+            pkg.setCategoryId(mDictionary.getOrCreateId(DictionarySection.CATEGORY, category.toString()));
         }
     }
 
@@ -477,7 +481,6 @@ public class EopkgPopulator extends BridgePopulator {
     private void initEnricher() {
         BiConsumer<AppStreamPackage, Pkg> biConsumer = (asp, pkg) -> {
             pkg.setLicenseId(mDictionary.getOrCreateId(DictionarySection.LICENSE, asp.getLicense()));
-            pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, asp.getDeveloperName()));
             pkg.setUrl(asp.getUrl("homepage"));
             var summary = asp.getSummary();
             if (StringUtils.isNotBlank(summary)) {

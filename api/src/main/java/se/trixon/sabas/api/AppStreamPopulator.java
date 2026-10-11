@@ -99,7 +99,7 @@ public class AppStreamPopulator extends BridgePopulator {
         factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
         factory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, true);
         factory.setProperty(XMLInputFactory.IS_COALESCING, true);
-        var set = new TreeSet<String>();
+        var unsupportedTypes = new TreeSet<String>();
 
         String currentOrigin = "unknown";
         try (var streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8); var bufferedReader = new BufferedReader(streamReader)) {
@@ -126,15 +126,35 @@ public class AppStreamPopulator extends BridgePopulator {
                             appCount++;
                             asp.setRepo(repo);
                             var id = keyStrategy.apply(asp);
-                            set.add(Objects.toString(asp.getType(), "-"));
                             var pkg = packageMap.getOrDefault(id, packageMap.get(Strings.CI.removeEnd(id, ".desktop")));
                             if (pkg != null) {
                                 pkg.setAppStream(true);
-                                var category = switch (Objects.toString(asp.getType(), "")) {
+                                var type = asp.getType();
+                                var category = switch (Objects.toString(type, "")) {
                                     case "desktop", "desktop-application" ->
-                                        PkgCategory.GUI;
+                                        PkgCategory.DESKTOP;
                                     case "console-application" ->
-                                        PkgCategory.CLI;
+                                        PkgCategory.CONSOLE;
+                                    case "web-application" ->
+                                        PkgCategory.WEB;
+                                    case "addon" ->
+                                        PkgCategory.ADDON;
+                                    case "codec" ->
+                                        PkgCategory.CODEC;
+                                    case "firmware" ->
+                                        PkgCategory.FIRMWARE;
+                                    case "inputmethod" ->
+                                        PkgCategory.INPUTMETHOD;
+                                    case "operating-system" ->
+                                        PkgCategory.OPERATING_SYSTEM;
+                                    case "generic" ->
+                                        PkgCategory.GENERIC;
+                                    case "localization" ->
+                                        PkgCategory.LOCALIZATION;
+                                    case "runtime" ->
+                                        PkgCategory.RUNTIME;
+                                    case "driver" ->
+                                        PkgCategory.DRIVER;
                                     case "font" ->
                                         PkgCategory.FONT;
                                     case "icon-theme" ->
@@ -144,27 +164,13 @@ public class AppStreamPopulator extends BridgePopulator {
                                     default ->
                                         PkgCategory.OTHER;
                                 };
-                                /*
-*[INFO] console-application
-*[INFO] desktop
-*[INFO] desktop-application
-*[INFO] font
-*[INFO] icon-theme
-*[INFO] service
-[INFO] addon
-[INFO] codec
-[INFO] firmware
-[INFO] inputmethod
-[INFO] operating-system
-[INFO] web-application
-==
-[INFO] generic
-[INFO] localization
-[INFO] runtime
-                                 */
 
                                 pkg.setCategory(category);
+                                pkg.setCategoryId(mDictionary.getOrCreateId(DictionarySection.CATEGORY, category.toString()));
+                                if (category == PkgCategory.OTHER && type != null) {
+                                    unsupportedTypes.add(type);
 
+                                }
                                 synchronized (pkg) {
                                     pkg.setValue(AppStreamPackage.class, asp);
                                     mEnricher.accept(asp, pkg);
@@ -185,9 +191,10 @@ public class AppStreamPopulator extends BridgePopulator {
             }
         }
 
-        System.out.println("ORIGIN " + currentOrigin);
-        System.out.println("FOUND TYPES");
-        System.out.println(String.join("\n", set));
+        if (!unsupportedTypes.isEmpty()) {
+            System.out.println("UNSUPPORTED TYPES");
+            System.out.println(String.join("\n", unsupportedTypes));
+        }
         System.out.println("initAppStream for %d packages took %d ms".formatted(appCount, System.currentTimeMillis() - startTime));
     }
 

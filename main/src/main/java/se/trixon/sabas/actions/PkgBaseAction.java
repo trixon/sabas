@@ -17,7 +17,7 @@ package se.trixon.sabas.actions;
 
 import javax.swing.AbstractAction;
 import se.trixon.almond.util.swing.SwingHelper;
-import se.trixon.sabas.Sabas;
+import se.trixon.sabas.api.Sabas;
 import se.trixon.sabas.core.PkgManager;
 
 /**

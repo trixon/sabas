@@ -15,16 +15,20 @@
  */
 package se.trixon.sabas.boot;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import javax.swing.SwingUtilities;
 import org.openide.awt.HtmlBrowser;
 import org.openide.util.Exceptions;
+import org.openide.windows.IOProvider;
 import org.openide.windows.OnShowing;
 import se.trixon.almond.nbp.Almond;
 import se.trixon.almond.nbp.dialogs.NbMessage;
+import se.trixon.almond.nbp.output.OutputHelper;
+import se.trixon.almond.nbp.output.OutputLineMode;
+import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
-import se.trixon.sabas.Sabas;
 import se.trixon.sabas.core.PkgManager;
 
 /**
@@ -49,7 +53,8 @@ public class DoOnShowing implements Runnable {
 //        Almond.openTopComponent("ActionsTopComponent");
         Almond.openAndActivateTopComponent("FilterTopComponent");
         Almond.hideTabs("output");
-        Sabas.displaySystemInformation();
+        displaySystemInformation();
+
         if (mPkgManager.getBridge() == null) {
             var message = """
                         You need to select a bridge in order to get started.
@@ -66,6 +71,19 @@ public class DoOnShowing implements Runnable {
                     mPkgManager.populatePackages(false);
                 }
             });
+        }
+    }
+
+    private void displaySystemInformation() {
+        var io = IOProvider.getDefault().getIO(Dict.INFORMATION.toString(), false);
+        var outputHelper = new OutputHelper(Dict.INFORMATION.toString(), io, false);
+
+        io.select();
+        try (var out = io.getOut()) {
+            out.reset();
+            outputHelper.println(OutputLineMode.INFO, SystemHelper.getSystemInfo());
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
         }
     }
 

@@ -94,11 +94,6 @@ public final class FilterStatusTopComponent extends BaseFilterTopComponent {
 
     }
 
-    @Override
-    public void reset() {
-        list.setSelectedIndex(0);
-    }
-
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version

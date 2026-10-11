@@ -22,7 +22,7 @@ import org.openide.awt.ActionReferences;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.util.swing.SwingHelper;
-import se.trixon.sabas.Sabas;
+import se.trixon.sabas.api.Sabas;
 import se.trixon.sabas.core.PkgManager;
 
 /**
