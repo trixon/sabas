@@ -50,6 +50,8 @@ public class AppStreamPackage {
             "en",
             Locale.getDefault().getLanguage().toLowerCase(Locale.ROOT)
     ));
+    @XmlElement(name = "bundle")
+    private BundleNode mBundle;
 
     private Map<String, String> mDescriptionMap;
     @XmlElement(name = "description")
@@ -82,6 +84,10 @@ public class AppStreamPackage {
     private List<UrlNode> mUrls;
 
     public AppStreamPackage() {
+    }
+
+    public String getBundle() {
+        return mBundle != null ? StringUtils.trim(mBundle.getValue()) : null;
     }
 
     public String getDescription(String... langArgs) {
@@ -217,6 +223,24 @@ public class AppStreamPackage {
         }
 
         return map.values().stream().findFirst().orElse(null);
+    }
+
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class BundleNode {
+
+        @XmlAttribute(name = "type")
+        private String type;
+
+        @XmlValue
+        private String value;
+
+        public String getType() {
+            return type;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
