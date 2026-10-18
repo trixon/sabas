@@ -91,7 +91,12 @@ public final class FilterStatusTopComponent extends BaseFilterTopComponent {
         }
 
         return false;
+    }
 
+    @Override
+    public void reset() {
+        list.setSelectedIndex(0);
+        list.ensureIndexIsVisible(0);
     }
 
     void readProperties(java.util.Properties p) {
