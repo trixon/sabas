@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,6 +33,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.openide.util.Exceptions;
 import se.trixon.sabas.api.AppStreamPackage;
 import se.trixon.sabas.api.AppStreamPopulator;
@@ -51,7 +51,7 @@ public class FlatpakPopulator extends BridgePopulator {
 
     private final AppStreamPopulator mAppStreamPopulator = new AppStreamPopulator();
     private final AppStreamReader mAppStreamReader = new AppStreamReader();
-    private final Map<Path, String> mRepoCache = new HashMap<>();
+    private final Map<Path, String> mRepoCache = new ConcurrentHashMap<>();
 
     public FlatpakPopulator() {
         initEnricher();
@@ -61,8 +61,7 @@ public class FlatpakPopulator extends BridgePopulator {
     public List<Pkg> populate(Set<Process> processes) {
         var rawPackagesList = new ArrayList<Pkg>();
         var idToPkgMap = new ConcurrentHashMap<String, Pkg>();
-        var idToInstallTimeMap = new HashMap< String, Long>();
-        var installedApps = getInstalled(idToInstallTimeMap);
+        var installedApps = getInstalled(processes);
         var upgradableApps = getUpgradable(processes);
         var command = List.of(
                 FLATPAK,
@@ -136,12 +135,28 @@ public class FlatpakPopulator extends BridgePopulator {
                     pkg.setSizeDownload(getSize(fields[dSizeIndex]));
                     pkg.setSizeInstall(getSize(fields[iSizeIndex]));
 
-                    if (installedApps.contains(id)) {
-                        pkg.setInstalled(true);
-                        pkg.setTimeInstalled(idToInstallTimeMap.get(id));
-                        pkg.setUpgradable(upgradableApps.contains(fields[refIndex]));
-                    }
+                    var refKey = fields[refIndex];
+                    if (installedApps.containsKey(refKey)) {
+                        var localPkg = installedApps.get(refKey);
 
+                        pkg.setInstalled(true);
+                        pkg.setTimeInstalled(localPkg.installTime());
+
+                        if (StringUtils.isNotBlank(localPkg.version())) {
+                            pkg.setVersion(localPkg.version());
+                        }
+
+                        if (upgradableApps.containsKey(refKey)) {
+                            pkg.setUpgradable(true);
+
+                            var newVersion = upgradableApps.get(refKey);
+                            if (StringUtils.isNotBlank(newVersion)) {
+                                pkg.setVersionNew(newVersion);
+                            } else {
+                                pkg.setVersionNew("?");
+                            }
+                        }
+                    }
                     rawPackagesList.add(pkg);
 
                     var key = fields[originIndex].toLowerCase(Locale.ROOT) + ":" + fields[refIndex];
@@ -173,59 +188,56 @@ public class FlatpakPopulator extends BridgePopulator {
         return details;
     }
 
-    private Set<String> getInstalled(HashMap<String, Long> idToInstallTimeMap) {
-        var installedSet = new HashSet<String>();
-        var basePaths = List.of("/var/lib", FileUtils.getUserDirectoryPath() + "/.local/share");
-
-        var subDirs = List.of("app", "runtime");
-
-        for (var basePath : basePaths) {
-            for (var subDir : subDirs) {
-                var path = Path.of("%s/flatpak/%s".formatted(basePath, subDir));
-                if (Files.isDirectory(path)) {
-                    try (var stream = Files.newDirectoryStream(path)) {
-                        for (var versionDir : stream) {
-                            if (Files.isDirectory(versionDir)) {
-                                String appId = versionDir.getFileName().toString();
-                                installedSet.add(appId);
-                                try {
-                                    var fileTime = Files.getLastModifiedTime(versionDir);
-                                    long installEpochSeconds = fileTime.toInstant().getEpochSecond();
-                                    idToInstallTimeMap.put(appId, installEpochSeconds);
-                                } catch (IOException e) {
-                                    //
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        //
-                    }
-                }
-            }
-        }
-
-        return installedSet;
-    }
-
-    private Set<String> getUpgradable(Set<Process> processes) {
-        var upgradeableSet = new HashSet<String>();
+    private Map<String, InstalledPkg> getInstalled(Set<Process> processes) {
+        var installedMap = new HashMap<String, InstalledPkg>();
         var command = List.of(
                 FLATPAK,
-                "remote-ls",
-                "--updates",
-                "--columns=ref"
+                "list",
+                "--columns=ref,version,active"
         );
 
         Process process = null;
         try {
-            process = Bridge.createProcessBuilder(command).start();
+            var pb = Bridge.createProcessBuilder(command);
+            pb.environment().put("LANGUAGE", "en_US");
+            process = pb.start();
             processes.add(process);
 
             try (var it = IOUtils.lineIterator(process.getInputStream(), StandardCharsets.UTF_8)) {
                 while (it.hasNext()) {
-                    String line = it.next().trim();
-                    if (!line.isEmpty() && !line.startsWith("Ref")) {
-                        upgradeableSet.add(line);
+                    var line = it.next().trim();
+
+                    if (line.isEmpty() || !line.contains("/")) {
+                        continue;
+                    }
+
+                    var fields = StringUtils.splitPreserveAllTokens(line, "\t");
+                    if (fields.length >= 3) {
+                        var ref = fields[0].trim();
+                        var version = fields[1].trim();
+                        var activeCommit = fields[2].trim();
+                        var installTime = System.currentTimeMillis() / 1000;
+                        var refParts = StringUtils.split(ref, "/");
+
+                        if (refParts.length > 1) {
+                            var basePaths = List.of("/var/lib", FileUtils.getUserDirectoryPath() + "/.local/share");
+                            for (var basePath : basePaths) {
+                                var pkgPath = Path.of(basePath, "flatpak").resolve(Path.of("", refParts));
+                                if (Files.isDirectory(pkgPath)) {
+                                    try {
+                                        installTime = Files.getLastModifiedTime(pkgPath).toInstant().getEpochSecond();
+                                        break;
+                                    } catch (IOException ex) {
+                                        //
+                                    }
+                                }
+                            }
+                        }
+
+                        var prefix = Strings.CI.containsAny(ref, "Platform", "Extension", "Sdk") ? "runtime/" : "app/";
+                        var fullRefKey = prefix + ref;
+
+                        installedMap.put(fullRefKey, new InstalledPkg(version, activeCommit, installTime));
                     }
                 }
             }
@@ -238,7 +250,49 @@ public class FlatpakPopulator extends BridgePopulator {
             }
         }
 
-        return upgradeableSet;
+        return installedMap;
+    }
+
+    private Map<String, String> getUpgradable(Set<Process> processes) {
+        var upgradeableMap = new HashMap<String, String>();
+        var command = List.of(
+                FLATPAK,
+                "remote-ls",
+                "--updates",
+                "--columns=ref,version"
+        );
+
+        Process process = null;
+        try {
+            process = Bridge.createProcessBuilder(command).start();
+            processes.add(process);
+
+            try (var it = IOUtils.lineIterator(process.getInputStream(), StandardCharsets.UTF_8)) {
+                while (it.hasNext()) {
+                    var line = it.next().trim();
+                    if (line.isEmpty() || !line.contains("/")) {
+                        continue;
+                    }
+
+                    var fields = StringUtils.splitPreserveAllTokens(line, "\t");
+                    if (fields.length >= 1) {
+                        var ref = fields[0].trim();
+                        var version = (fields.length > 1) ? fields[1].trim() : "";
+
+                        upgradeableMap.put(ref, version);
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            Exceptions.printStackTrace(e);
+        } finally {
+            if (process != null) {
+                processes.remove(process);
+            }
+        }
+
+        return upgradeableMap;
     }
 
     private void initEnricher() {
@@ -424,5 +478,7 @@ public class FlatpakPopulator extends BridgePopulator {
         }
 
     }
+
+    private record InstalledPkg(String version, String activeCommit, long installTime) {}
 
 }
