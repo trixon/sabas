@@ -49,7 +49,11 @@ public interface BridgeOperations {
 
     default BridgeOperation onProvideCacheUpdateCommand() {
         return BridgeOperation.ofProcess(
-                List.of(PKCON, "refresh"),
+                List.of(
+                        PKCON,
+                        "refresh",
+                        "force"
+                ),
                 Map.of()
         );
     }
