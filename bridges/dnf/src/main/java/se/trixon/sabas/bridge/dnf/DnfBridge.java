@@ -76,7 +76,11 @@ public class DnfBridge extends Bridge {
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
         return BridgeOperation.ofProcess(
-                List.of(DNF_COMMAND, "makecache"),
+                List.of(
+                        DNF_COMMAND,
+                        "makecache",
+                        "--refresh"
+                ),
                 mDefaultEnvironment
         );
     }

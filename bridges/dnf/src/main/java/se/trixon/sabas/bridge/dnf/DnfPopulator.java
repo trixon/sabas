@@ -101,6 +101,7 @@ public class DnfPopulator extends BridgePopulator {
                     mainPkg.setInstalled(true);
                     mainPkg.setTimeInstalled(installedPkg.getTimeInstalled());
                     mainPkg.setOrphaned(false);
+                    mainPkg.setVersion(installedPkg.getVersion());
                 } else {
                     installedPkg.setInstalled(true);
                     installedPkg.setOrphaned(true);
