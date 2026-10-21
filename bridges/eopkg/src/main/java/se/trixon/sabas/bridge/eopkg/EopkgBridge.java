@@ -69,7 +69,21 @@ public class EopkgBridge extends Bridge {
 
     @Override
     public BridgeOperation onProvideCacheUpdateCommand() {
-        return BridgeOperation.ofProcess(List.of(EOPKG, "update-repo"),
+        return BridgeOperation.ofProcess(List.of(
+                EOPKG,
+                "update-repo"
+        ),
+                mDefaultEnvironment
+        );
+    }
+
+    @Override
+    public BridgeOperation onProvideCacheUpdateForceCommand() {
+        return BridgeOperation.ofProcess(List.of(
+                EOPKG,
+                "update-repo",
+                "--force"
+        ),
                 mDefaultEnvironment
         );
     }

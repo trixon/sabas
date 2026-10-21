@@ -30,24 +30,34 @@ public interface BridgeOperations {
     public static final String PKCON = "pkcon";
     public static final String PKEXEC = "pkexec";
 
-    default public List<Pkg> onGetPackageAll(Set<Process> processes) {
+    String getCommand();
+
+    default List<Pkg> onGetPackageAll(Set<Process> processes) {
         return new ArrayList<>();
     }
 
-    default public Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
+    default Pkg.Details onGetPackageDetails(Set<Process> processes, Pkg pkg) {
         return null;
     }
 
-    default public String onGetVersion(Set<Process> processes) {
+    default String onGetVersion(Set<Process> processes) {
         return "NO-OP";
     }
-
-    String getCommand();
 
     @Deprecated(forRemoval = true)
     BridgeOperation onProvideCacheClearCommand();
 
     default BridgeOperation onProvideCacheUpdateCommand() {
+        return BridgeOperation.ofProcess(
+                List.of(
+                        PKCON,
+                        "refresh"
+                ),
+                Map.of()
+        );
+    }
+
+    default BridgeOperation onProvideCacheUpdateForceCommand() {
         return BridgeOperation.ofProcess(
                 List.of(
                         PKCON,

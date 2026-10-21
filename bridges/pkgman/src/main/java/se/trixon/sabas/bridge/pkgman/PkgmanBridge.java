@@ -75,11 +75,16 @@ public class PkgmanBridge extends Bridge {
     }
 
     @Override
+    public BridgeOperation onProvideCacheUpdateForceCommand() {
+        return onProvideCacheUpdateCommand();
+    }
+
+    @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
         return BridgeOperation.ofProcess(List.of(PKGMAN,
-                        "install",
-                        String.join(" ", packages)
-                ),
+                "install",
+                String.join(" ", packages)
+        ),
                 mDefaultEnvironment
         );
     }
@@ -87,9 +92,9 @@ public class PkgmanBridge extends Bridge {
     @Override
     public BridgeOperation onProvideTransactionRemove(String... packages) {
         return BridgeOperation.ofProcess(List.of(PKGMAN,
-                        "uninstall",
-                        String.join(" ", packages)
-                ),
+                "uninstall",
+                String.join(" ", packages)
+        ),
                 mDefaultEnvironment
         );
     }

@@ -140,6 +140,11 @@ public class SdkManBridge extends Bridge {
     }
 
     @Override
+    public BridgeOperation onProvideCacheUpdateForceCommand() {
+        return onProvideCacheUpdateCommand();
+    }
+
+    @Override
     public BridgeOperation onProvideTransactionInstall(String... packages) {
         return BridgeOperation.ofProcess(
                 List.of(),
