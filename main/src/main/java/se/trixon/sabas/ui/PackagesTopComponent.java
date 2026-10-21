@@ -82,11 +82,13 @@ public final class PackagesTopComponent extends BaseTopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        bridgeComboBox = new se.trixon.sabas.ui.parts.BridgeComboBox();
         packagesScrollPane = new javax.swing.JScrollPane();
         packagesList = new javax.swing.JList<>();
         footerLabel = new javax.swing.JLabel();
 
         setLayout(new java.awt.BorderLayout());
+        add(bridgeComboBox, java.awt.BorderLayout.PAGE_START);
 
         packagesScrollPane.setMinimumSize(new java.awt.Dimension(250, 23));
         packagesScrollPane.setPreferredSize(new java.awt.Dimension(300, 260));
@@ -114,6 +116,7 @@ public final class PackagesTopComponent extends BaseTopComponent {
     }//GEN-LAST:event_packagesListValueChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private se.trixon.sabas.ui.parts.BridgeComboBox bridgeComboBox;
     private javax.swing.JLabel footerLabel;
     private javax.swing.JList<Pkg> packagesList;
     private javax.swing.JScrollPane packagesScrollPane;

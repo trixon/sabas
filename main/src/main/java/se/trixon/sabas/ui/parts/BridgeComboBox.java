@@ -15,60 +15,64 @@
  */
 package se.trixon.sabas.ui.parts;
 
-import java.awt.Component;
-import java.awt.Dimension;
 import java.util.Comparator;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
-import javax.swing.border.EmptyBorder;
-import org.openide.awt.StatusLineElementProvider;
 import org.openide.util.Lookup;
-import org.openide.util.lookup.ServiceProvider;
 import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.api.Bridge;
+import se.trixon.sabas.api.Sabas;
 import se.trixon.sabas.core.PkgManager;
 
 /**
  *
  * @author Patrik Karlström
  */
-@ServiceProvider(service = StatusLineElementProvider.class, position = 599)
-public class BridgeStatusLineElement implements StatusLineElementProvider {
+public class BridgeComboBox extends JComboBox<Bridge> {
 
-    private JComboBox<Bridge> mComboBox;
     private final PkgManager mPkgManager = PkgManager.getInstance();
+    private boolean mInstantChange = true;
 
-    public BridgeStatusLineElement() {
+    public BridgeComboBox() {
+        init();
+        initListeners();
+        Object a = getSelectedItem();
     }
 
-    @Override
-    public Component getStatusLineElement() {
-        if (mComboBox == null) {
-            init();
-            initListeners();
-        }
+    public boolean isInstantChange() {
+        return mInstantChange;
+    }
 
-        return mComboBox;
+    public void setInstantChange(boolean instantChange) {
+        mInstantChange = instantChange;
     }
 
     private void init() {
-        mComboBox = new JComboBox<>();
-        mComboBox.setBorder(new EmptyBorder(0, 0, 0, 0));
-        mComboBox.setRenderer(new BridgeSelectorRenderer());
-        mComboBox.setPreferredSize(new Dimension(200, mComboBox.getPreferredSize().height));
-//        mComboBox.setMinimumSize(SwingHelper.getUIScaledDim(200, 1));
+        setRenderer(new BridgeSelectorRenderer());
         Lookup.getDefault().lookupResult(Bridge.class).addLookupListener(lookupEvent -> {
             updateBridges();
         });
         updateBridges();
 
-        mComboBox.setSelectedItem(mPkgManager.getBridge());
+        setSelectedItem(mPkgManager.getBridge());
     }
 
     private void initListeners() {
-        mComboBox.addActionListener(actionEvent -> {
-            mPkgManager.setBridge((Bridge) mComboBox.getSelectedItem());
+        addActionListener(actionEvent -> {
+            if (mInstantChange) {
+                var newBridge = (Bridge) getSelectedItem();
+                if (newBridge != mPkgManager.getBridge()) {
+                    mPkgManager.setBridge(newBridge);
+                }
+            }
         });
+
+        Sabas.getGlobalState().addListener(gsce -> {
+            Bridge bridge = gsce.getValue();
+            if (bridge != getSelectedItem()) {
+                setSelectedItem(bridge);
+            }
+        }, PkgManager.KEY_BRIDGE);
     }
 
     private void updateBridges() {
@@ -78,7 +82,7 @@ public class BridgeStatusLineElement implements StatusLineElementProvider {
                     .sorted(Comparator.comparing(Bridge::getName, String.CASE_INSENSITIVE_ORDER))
                     .toArray(Bridge[]::new);
             var comboBoxCheckModel = new DefaultComboBoxModel<Bridge>(bridges);
-            mComboBox.setModel(comboBoxCheckModel);
+            setModel(comboBoxCheckModel);
         });
     }
 }

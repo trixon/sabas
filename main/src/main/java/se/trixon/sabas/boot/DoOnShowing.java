@@ -18,18 +18,21 @@ package se.trixon.sabas.boot;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import javax.swing.JButton;
 import javax.swing.SwingUtilities;
+import org.openide.DialogDescriptor;
+import org.openide.DialogDisplayer;
 import org.openide.awt.HtmlBrowser;
 import org.openide.util.Exceptions;
 import org.openide.windows.IOProvider;
 import org.openide.windows.OnShowing;
 import se.trixon.almond.nbp.Almond;
-import se.trixon.almond.nbp.dialogs.NbMessage;
 import se.trixon.almond.nbp.output.OutputHelper;
 import se.trixon.almond.nbp.output.OutputLineMode;
 import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.SystemHelper;
 import se.trixon.sabas.core.PkgManager;
+import se.trixon.sabas.ui.parts.WelcomePanel;
 
 /**
  *
@@ -55,14 +58,7 @@ public class DoOnShowing implements Runnable {
         displaySystemInformation();
 
         if (mPkgManager.getBridge() == null) {
-            var message = """
-                        In order to get started, you need to select a bridge in the absolute lower right corner of the window.
-
-                        If no one is available, activate at least one plugin via menu Tools/Plugins.
-                          Make your choise in the 'Installed' tab.""";
-
-            NbMessage.warning("No bridge configured", message);
-            NbMessage.information("Lower right corner", "... then you're good to go.");
+            showWelcomeDialog();
         } else {
             SwingUtilities.invokeLater(() -> {
                 var makeFullInit = false;
@@ -88,4 +84,23 @@ public class DoOnShowing implements Runnable {
         }
     }
 
+    private void showWelcomeDialog() {
+        var welcomePanel = new WelcomePanel();
+        var closeButton = new JButton(Dict.CLOSE.toString());
+        var d = new DialogDescriptor(
+                welcomePanel,
+                Dict.INFORMATION.toString(),
+                true,
+                new Object[]{closeButton},
+                closeButton,
+                DialogDescriptor.BOTTOM_ALIGN,
+                null,
+                null
+        );
+        d.setValid(true);
+        welcomePanel.setDescriptor(d, closeButton);
+        if (DialogDisplayer.getDefault().notify(d) == closeButton) {
+            welcomePanel.save();
+        }
+    }
 }
