@@ -156,6 +156,14 @@ public class PkgManager {
         return Sabas.getGlobalState().get(KEY_SELECTED_PKG);
     }
 
+    public void launch() {
+        if (isBridgeInvalid() || getSelectedPkg() == null) {
+            return;
+        }
+        System.out.println(getSelectedPkg().getDesktopId());
+        AppLauncher.launch(getSelectedPkg());
+    }
+
     public void install() {
         if (isBridgeInvalid() && getSelectedPkg() != null) {
             return;

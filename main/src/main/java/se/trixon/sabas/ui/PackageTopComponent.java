@@ -27,6 +27,7 @@ import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
+import se.trixon.almond.util.Dict;
 import se.trixon.almond.util.swing.DelayedResetRunner;
 import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.api.Pkg;
@@ -100,6 +101,9 @@ public class PackageTopComponent extends TopComponent {
         cardLayout.show(this, pkg == null ? "empty" : "info");
 
         if (pkg != null) {
+            removeButton.setEnabled(pkg.isInstalled());
+            addButton.setEnabled(!pkg.isInstalled());
+            startButton.setEnabled(pkg.isInstalled());
             int maxLicenseLength = 60;
             idLabel.setText(pkg.getId());
             var namePrefix = pkg.hasAppStream() ? "* " : "";
@@ -206,16 +210,22 @@ public class PackageTopComponent extends TopComponent {
 
         emptyCardPanel = new javax.swing.JPanel();
         infoCardPanel = new javax.swing.JPanel();
+        jPanel1 = new javax.swing.JPanel();
+        toolBar = new javax.swing.JToolBar();
+        removeButton = new javax.swing.JButton();
+        addButton = new javax.swing.JButton();
+        startButton = new javax.swing.JButton();
+        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        urlLabel = new se.trixon.almond.util.swing.UriLabel();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(16, 0), new java.awt.Dimension(16, 0), new java.awt.Dimension(16, 0));
         infoHeaderPanel = new javax.swing.JPanel();
         nameLabel = new javax.swing.JLabel();
-        summaryLabel = new javax.swing.JLabel();
         versionLabel = new javax.swing.JLabel();
         licenseLabel = new javax.swing.JLabel();
         installSeparatorLabel = new javax.swing.JLabel();
         sizeInstallLabel = new javax.swing.JLabel();
         sizeDownloadLabel = new javax.swing.JLabel();
         vendorLabel = new javax.swing.JLabel();
-        urlLabel = new se.trixon.almond.util.swing.UriLabel();
         repositoryLabel = new javax.swing.JLabel();
         packagerLabel = new javax.swing.JLabel();
         releaseLabel = new javax.swing.JLabel();
@@ -231,6 +241,7 @@ public class PackageTopComponent extends TopComponent {
         categoryLabel = new javax.swing.JLabel();
         groupLabel = new javax.swing.JLabel();
         buildSeparatorLabel1 = new javax.swing.JLabel();
+        summaryLabel = new se.trixon.sabas.ui.parts.MultiLineLabel();
         infoTabbedPane = new javax.swing.JTabbedPane();
         descriptionPanel = new javax.swing.JPanel();
         descHtmlScrollPane = new javax.swing.JScrollPane();
@@ -248,23 +259,72 @@ public class PackageTopComponent extends TopComponent {
         emptyCardPanel.setLayout(emptyCardPanelLayout);
         emptyCardPanelLayout.setHorizontalGroup(
             emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1006, Short.MAX_VALUE)
+            .addGap(0, 806, Short.MAX_VALUE)
         );
         emptyCardPanelLayout.setVerticalGroup(
             emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 490, Short.MAX_VALUE)
+            .addGap(0, 708, Short.MAX_VALUE)
         );
 
         add(emptyCardPanel, "empty");
 
         infoCardPanel.setLayout(new java.awt.BorderLayout());
 
+        jPanel1.setLayout(new java.awt.BorderLayout());
+
+        toolBar.setRollover(true);
+
+        removeButton.setFont(removeButton.getFont().deriveFont(removeButton.getFont().getStyle() | java.awt.Font.BOLD, removeButton.getFont().getSize()+2));
+        org.openide.awt.Mnemonics.setLocalizedText(removeButton, "-"); // NOI18N
+        removeButton.setToolTipText(Dict.REMOVE.toString());
+        removeButton.setFocusable(false);
+        removeButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        removeButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        removeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeButtonActionPerformed(evt);
+            }
+        });
+        toolBar.add(removeButton);
+
+        addButton.setFont(addButton.getFont().deriveFont(addButton.getFont().getStyle() | java.awt.Font.BOLD, addButton.getFont().getSize()+2));
+        org.openide.awt.Mnemonics.setLocalizedText(addButton, "+"); // NOI18N
+        addButton.setToolTipText(Dict.ADD.toString());
+        addButton.setFocusable(false);
+        addButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        addButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        addButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addButtonActionPerformed(evt);
+            }
+        });
+        toolBar.add(addButton);
+
+        startButton.setFont(startButton.getFont().deriveFont(startButton.getFont().getStyle() | java.awt.Font.BOLD, startButton.getFont().getSize()+2));
+        org.openide.awt.Mnemonics.setLocalizedText(startButton, "▶"); // NOI18N
+        startButton.setToolTipText(Dict.START.toString());
+        startButton.setFocusable(false);
+        startButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        startButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        startButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startButtonActionPerformed(evt);
+            }
+        });
+        toolBar.add(startButton);
+        toolBar.add(filler1);
+
+        org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.urlLabel.text")); // NOI18N
+        urlLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.urlLabel.toolTipText")); // NOI18N
+        urlLabel.setMaximumSize(new java.awt.Dimension(236, 28));
+        toolBar.add(urlLabel);
+        toolBar.add(filler2);
+
+        jPanel1.add(toolBar, java.awt.BorderLayout.NORTH);
+
         nameLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "NAME"); // NOI18N
         nameLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.nameLabel.toolTipText")); // NOI18N
-
-        org.openide.awt.Mnemonics.setLocalizedText(summaryLabel, "SUMMARY"); // NOI18N
-        summaryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.summaryLabel.toolTipText")); // NOI18N
 
         versionLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         org.openide.awt.Mnemonics.setLocalizedText(versionLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.versionLabel.text")); // NOI18N
@@ -283,9 +343,6 @@ public class PackageTopComponent extends TopComponent {
 
         org.openide.awt.Mnemonics.setLocalizedText(vendorLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.vendorLabel.text")); // NOI18N
         vendorLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.vendorLabel.toolTipText")); // NOI18N
-
-        org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.urlLabel.text")); // NOI18N
-        urlLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.urlLabel.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(repositoryLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.repositoryLabel.text")); // NOI18N
         repositoryLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.repositoryLabel.toolTipText")); // NOI18N
@@ -330,6 +387,9 @@ public class PackageTopComponent extends TopComponent {
 
         org.openide.awt.Mnemonics.setLocalizedText(buildSeparatorLabel1, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.buildSeparatorLabel1.text")); // NOI18N
 
+        summaryLabel.setColumns(20);
+        summaryLabel.setText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.summaryLabel.text")); // NOI18N
+
         javax.swing.GroupLayout infoHeaderPanelLayout = new javax.swing.GroupLayout(infoHeaderPanel);
         infoHeaderPanel.setLayout(infoHeaderPanelLayout);
         infoHeaderPanelLayout.setHorizontalGroup(
@@ -337,19 +397,21 @@ public class PackageTopComponent extends TopComponent {
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, infoHeaderPanelLayout.createSequentialGroup()
-                        .addComponent(repositoryLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(sizeDownloadLabel))
+                    .addComponent(repositoryLabel)
                     .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                         .addComponent(vendorLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(vendorSeparatorLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(vendorSeparatorLabel)))
+                .addGap(396, 396, 396)
+                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, infoHeaderPanelLayout.createSequentialGroup()
+                        .addGap(140, 140, 140)
+                        .addComponent(sizeDownloadLabel))
+                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                         .addComponent(packagerLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 648, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(sizeInstallLabel)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(buildSeparatorLabel, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(installSeparatorLabel, javax.swing.GroupLayout.Alignment.TRAILING))
@@ -365,8 +427,8 @@ public class PackageTopComponent extends TopComponent {
                 .addComponent(archLabel)
                 .addContainerGap())
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
-                .addGap(6, 6, 6)
-                .addComponent(summaryLabel)
+                .addContainerGap()
+                .addComponent(summaryLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(epochLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -388,14 +450,11 @@ public class PackageTopComponent extends TopComponent {
                 .addContainerGap())
             .addGroup(infoHeaderPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(infoHeaderPanelLayout.createSequentialGroup()
-                        .addComponent(categoryLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buildSeparatorLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(groupLabel)))
+                .addComponent(categoryLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buildSeparatorLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(groupLabel)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         infoHeaderPanelLayout.setVerticalGroup(
@@ -407,10 +466,10 @@ public class PackageTopComponent extends TopComponent {
                     .addComponent(versionLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(summaryLabel)
                     .addComponent(releaseLabel)
                     .addComponent(releaseSeparatorLabel)
-                    .addComponent(epochLabel))
+                    .addComponent(epochLabel)
+                    .addComponent(summaryLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(infoHeaderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(licenseLabel)
@@ -438,15 +497,14 @@ public class PackageTopComponent extends TopComponent {
                     .addComponent(categoryLabel)
                     .addComponent(buildSeparatorLabel1)
                     .addComponent(groupLabel))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(urlLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        infoCardPanel.add(infoHeaderPanel, java.awt.BorderLayout.NORTH);
+        jPanel1.add(infoHeaderPanel, java.awt.BorderLayout.CENTER);
+
+        infoCardPanel.add(jPanel1, java.awt.BorderLayout.PAGE_START);
 
         infoTabbedPane.setMinimumSize(new java.awt.Dimension(80, 166));
-        infoTabbedPane.setPreferredSize(new java.awt.Dimension(698, 150));
 
         descriptionPanel.setLayout(new java.awt.CardLayout());
 
@@ -472,6 +530,19 @@ public class PackageTopComponent extends TopComponent {
 
         add(infoCardPanel, "info");
     }// </editor-fold>//GEN-END:initComponents
+
+    private void addButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addButtonActionPerformed
+        mPkgManager.install();
+    }//GEN-LAST:event_addButtonActionPerformed
+
+    private void removeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeButtonActionPerformed
+        mPkgManager.remove();
+    }//GEN-LAST:event_removeButtonActionPerformed
+
+    private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
+        mPkgManager.launch();
+    }//GEN-LAST:event_startButtonActionPerformed
+
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
@@ -504,6 +575,7 @@ public class PackageTopComponent extends TopComponent {
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton addButton;
     private javax.swing.JLabel archLabel;
     private javax.swing.JLabel buildSeparatorLabel;
     private javax.swing.JLabel buildSeparatorLabel1;
@@ -517,6 +589,8 @@ public class PackageTopComponent extends TopComponent {
     private javax.swing.JPanel emptyCardPanel;
     private javax.swing.JLabel epochLabel;
     private se.trixon.almond.util.swing.LogPanel filesLogPanel;
+    private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler2;
     private javax.swing.JLabel groupLabel;
     private javax.swing.JLabel idLabel;
     private javax.swing.JPanel infoCardPanel;
@@ -524,19 +598,23 @@ public class PackageTopComponent extends TopComponent {
     private javax.swing.JTabbedPane infoTabbedPane;
     private javax.swing.JLabel installSeparatorLabel;
     private javax.swing.JLabel installedTimeLabel;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel licenseLabel;
     private javax.swing.JLabel nameLabel;
     private javax.swing.JLabel packagerLabel;
     private se.trixon.almond.util.swing.LogPanel providesLogPanel;
     private javax.swing.JLabel releaseLabel;
     private javax.swing.JLabel releaseSeparatorLabel;
+    private javax.swing.JButton removeButton;
     private javax.swing.JLabel repositoryLabel;
     private se.trixon.almond.util.swing.LogPanel requiredLogPanel;
     private se.trixon.almond.util.swing.LogPanel requiresLogPanel;
     private javax.swing.JLabel sizeDownloadLabel;
     private javax.swing.JLabel sizeInstallLabel;
+    private javax.swing.JButton startButton;
     private javax.swing.JLabel statusLabel;
-    private javax.swing.JLabel summaryLabel;
+    private se.trixon.sabas.ui.parts.MultiLineLabel summaryLabel;
+    private javax.swing.JToolBar toolBar;
     private se.trixon.almond.util.swing.UriLabel urlLabel;
     private javax.swing.JLabel vendorLabel;
     private javax.swing.JLabel vendorSeparatorLabel;

@@ -134,6 +134,7 @@ public class FlatpakPopulator extends BridgePopulator {
                     pkg.setRepositoryId(mDictionary.getOrCreateId(DictionarySection.REPOSITORY, fields[originIndex]));
                     pkg.setSizeDownload(getSize(fields[dSizeIndex]));
                     pkg.setSizeInstall(getSize(fields[iSizeIndex]));
+                    pkg.setValue("isFlatpak", true);
 
                     var refKey = fields[refIndex];
                     if (installedApps.containsKey(refKey)) {

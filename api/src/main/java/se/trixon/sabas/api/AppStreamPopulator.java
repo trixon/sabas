@@ -169,8 +169,8 @@ public class AppStreamPopulator extends BridgePopulator {
                                 pkg.setCategoryId(mDictionary.getOrCreateId(DictionarySection.CATEGORY, category.toString()));
                                 if (category == PkgCategory.OTHER && type != null) {
                                     unsupportedTypes.add(type);
-
                                 }
+                                pkg.setDesktopId(asp.getDesktopId());
                                 synchronized (pkg) {
                                     pkg.setValue(AppStreamPackage.class, asp);
                                     mEnricher.accept(asp, pkg);

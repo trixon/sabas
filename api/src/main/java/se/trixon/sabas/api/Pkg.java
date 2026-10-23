@@ -29,6 +29,7 @@ public class Pkg {
     private int mCategoryId = -1;
     private String mDescription;
     private String mDescriptionLower;
+    private String mDesktopId;
     private Details mDetails;
     private int mEpoch;
     private int mGroupId = -1;
@@ -80,6 +81,10 @@ public class Pkg {
 
     public String getDescriptionLower() {
         return mDescriptionLower;
+    }
+
+    public String getDesktopId() {
+        return mDesktopId;
     }
 
     public Details getDetails() {
@@ -259,6 +264,10 @@ public class Pkg {
     public void setDescription(String description) {
         mDescription = description;
         mDescriptionLower = StringUtils.lowerCase(description);
+    }
+
+    public void setDesktopId(String desktopId) {
+        this.mDesktopId = desktopId;
     }
 
     public void setDetails(Details details) {

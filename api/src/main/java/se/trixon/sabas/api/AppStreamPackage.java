@@ -51,8 +51,7 @@ public class AppStreamPackage {
             Locale.getDefault().getLanguage().toLowerCase(Locale.ROOT)
     ));
     @XmlElement(name = "bundle")
-    private BundleNode mBundle;
-
+    private TypeNode mBundle;
     private Map<String, String> mDescriptionMap;
     @XmlElement(name = "description")
     private List<DescriptionNode> mDescriptions;
@@ -60,6 +59,8 @@ public class AppStreamPackage {
     private String mDeveloperName;
     @XmlElement(name = "id")
     private String mId;
+    @XmlElement(name = "launchable")
+    private List<TypeNode> mLaunchables;
     @XmlElement(name = "project_license")
     private String mLicense;
     @XmlElement(name = "metadata")
@@ -81,7 +82,7 @@ public class AppStreamPackage {
     @XmlAttribute(name = "type")
     private String mType;
     @XmlElement(name = "url")
-    private List<UrlNode> mUrls;
+    private List<TypeNode> mUrls;
 
     public AppStreamPackage() {
     }
@@ -92,6 +93,13 @@ public class AppStreamPackage {
 
     public String getDescription(String... langArgs) {
         return getLocalizedValue(mDescriptionMap, langArgs);
+    }
+
+    public String getDesktopId() {
+        if (mLaunchables == null) {
+            return null;
+        }
+        return getLaunchable("desktop-id");
     }
 
     public String getDeveloperName() {
@@ -118,6 +126,10 @@ public class AppStreamPackage {
             return null;
         }
         return mReleases.get(0).getTimestamp();
+    }
+
+    public String getLaunchable(String type) {
+        return getTypeNodeValue(mLaunchables, type);
     }
 
     public String getLicense() {
@@ -150,15 +162,7 @@ public class AppStreamPackage {
     }
 
     public String getUrl(String type) {
-        if (mUrls == null) {
-            return null;
-        }
-
-        return mUrls.stream()
-                .filter(u -> Strings.CI.equals(u.getType(), type))
-                .map(UrlNode::getValue)
-                .findFirst()
-                .orElse(null);
+        return getTypeNodeValue(mUrls, type);
     }
 
     public void setRepo(String repo) {
@@ -225,22 +229,16 @@ public class AppStreamPackage {
         return map.values().stream().findFirst().orElse(null);
     }
 
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class BundleNode {
-
-        @XmlAttribute(name = "type")
-        private String type;
-
-        @XmlValue
-        private String value;
-
-        public String getType() {
-            return type;
+    private String getTypeNodeValue(List<TypeNode> typeNodes, String type) {
+        if (typeNodes == null) {
+            return null;
         }
 
-        public String getValue() {
-            return value;
-        }
+        return typeNodes.stream()
+                .filter(item -> Strings.CI.equals(item.getType(), type))
+                .map(TypeNode::getValue)
+                .findFirst()
+                .orElse(null);
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
@@ -349,7 +347,7 @@ public class AppStreamPackage {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    public static class UrlNode {
+    public static class TypeNode {
 
         @XmlAttribute(name = "type")
         private String type;
