@@ -16,6 +16,7 @@
 package se.trixon.sabas.ui.parts;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import javax.swing.JTextArea;
 import javax.swing.UIManager;
@@ -49,4 +50,13 @@ public class MultiLineLabel extends JTextArea {
         }
     }
 
+    @Override
+    public Dimension getMaximumSize() {
+        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+    }
+
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(50, getPreferredSize().height);
+    }
 }
