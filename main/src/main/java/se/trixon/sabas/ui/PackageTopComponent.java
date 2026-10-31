@@ -97,7 +97,7 @@ public class PackageTopComponent extends TopComponent {
         var doc = (HTMLDocument) descHtmlTextPane.getDocument();
         doc.setAsynchronousLoadPriority(-1);
 
-        descHtmlTextPane.setMargin(new Insets(8, 16, 16, 16));
+        descHtmlTextPane.setMargin(new Insets(4, 16, 16, 16));
         descPlainTextPane.setMargin(new Insets(16, 16, 16, 16));
     }
 
@@ -116,12 +116,16 @@ public class PackageTopComponent extends TopComponent {
         cardLayout.show(this, pkg == null ? "empty" : "info");
 
         if (pkg != null) {
-            removeButton.setEnabled(pkg.isInstalled());
-            addButton.setEnabled(!pkg.isInstalled());
-            startButton.setEnabled(pkg.isInstalled());
+            if (pkg.isInstalled()) {
+                alterStateButton.setText("- %s".formatted(Dict.REMOVE.toString()));
+            } else {
+                alterStateButton.setText("+ %s".formatted(Dict.ADD.toString()));
+            }
+            startButton.setVisible(pkg.isInstalled() && StringUtils.isNotBlank(pkg.getDesktopId()));
+            statusLabel.setVisible(pkg.isOrphaned() || pkg.isUpgradable());
+            statusLabel.setText(pkg.getStatus());
             urlLabel.setToolTipText(pkg.getUrl());
             urlLabel.setUri(pkg.getUrl() == null ? "" : pkg.getUrl());
-            statusLabel.setText(pkg.getStatus());
 
             var namePrefix = pkg.hasAppStream() ? "* " : "";
             nameLabel.setText(namePrefix + pkg.getName());
@@ -295,6 +299,7 @@ public class PackageTopComponent extends TopComponent {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
 
         nameLabel = new javax.swing.JLabel();
         versionLabel = new javax.swing.JLabel();
@@ -308,12 +313,12 @@ public class PackageTopComponent extends TopComponent {
         timeBuildLabel = new javax.swing.JLabel();
         summaryLabel = new se.trixon.sabas.ui.parts.MultiLineLabel();
         licenseLabel = new se.trixon.sabas.ui.parts.MultiLineLabel();
+        emptyCardPanel = new javax.swing.JPanel();
         infoCardPanel = new javax.swing.JPanel();
         infoCardRootPanel = new javax.swing.JPanel();
-        toolBar = new javax.swing.JToolBar();
-        removeButton = new javax.swing.JButton();
-        addButton = new javax.swing.JButton();
+        commandPanel = new javax.swing.JPanel();
         startButton = new javax.swing.JButton();
+        alterStateButton = new javax.swing.JButton();
         statusLabel = new javax.swing.JLabel();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
         urlLabel = new se.trixon.almond.util.swing.UriLabel();
@@ -330,7 +335,6 @@ public class PackageTopComponent extends TopComponent {
         requiredLogPanel = new se.trixon.almond.util.swing.LogPanel();
         providesLogPanel = new se.trixon.almond.util.swing.LogPanel();
         miscLogPanel = new se.trixon.almond.util.swing.LogPanel();
-        emptyCardPanel = new javax.swing.JPanel();
 
         nameLabel.setFont(new java.awt.Font("Noto Sans", 1, 20)); // NOI18N
         nameLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.nameLabel.toolTipText")); // NOI18N
@@ -368,63 +372,66 @@ public class PackageTopComponent extends TopComponent {
 
         setLayout(new java.awt.CardLayout());
 
+        javax.swing.GroupLayout emptyCardPanelLayout = new javax.swing.GroupLayout(emptyCardPanel);
+        emptyCardPanel.setLayout(emptyCardPanelLayout);
+        emptyCardPanelLayout.setHorizontalGroup(
+            emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 775, Short.MAX_VALUE)
+        );
+        emptyCardPanelLayout.setVerticalGroup(
+            emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 429, Short.MAX_VALUE)
+        );
+
+        add(emptyCardPanel, "empty");
+
         infoCardPanel.setLayout(new java.awt.BorderLayout());
 
         infoCardRootPanel.setLayout(new java.awt.BorderLayout());
 
-        toolBar.setRollover(true);
+        commandPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        commandPanel.setLayout(new java.awt.GridBagLayout());
 
-        removeButton.setFont(removeButton.getFont().deriveFont(removeButton.getFont().getStyle() | java.awt.Font.BOLD, removeButton.getFont().getSize()+2));
-        org.openide.awt.Mnemonics.setLocalizedText(removeButton, "-"); // NOI18N
-        removeButton.setToolTipText(Dict.REMOVE.toString());
-        removeButton.setFocusable(false);
-        removeButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        removeButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        removeButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                removeButtonActionPerformed(evt);
-            }
-        });
-        toolBar.add(removeButton);
-
-        addButton.setFont(addButton.getFont().deriveFont(addButton.getFont().getStyle() | java.awt.Font.BOLD, addButton.getFont().getSize()+2));
-        org.openide.awt.Mnemonics.setLocalizedText(addButton, "+"); // NOI18N
-        addButton.setToolTipText(Dict.ADD.toString());
-        addButton.setFocusable(false);
-        addButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        addButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        addButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addButtonActionPerformed(evt);
-            }
-        });
-        toolBar.add(addButton);
-
-        startButton.setFont(startButton.getFont().deriveFont(startButton.getFont().getStyle() | java.awt.Font.BOLD, startButton.getFont().getSize()+2));
-        org.openide.awt.Mnemonics.setLocalizedText(startButton, "▶"); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(startButton, "▶ %s".formatted(Dict.START.toString()));
         startButton.setToolTipText(Dict.START.toString());
-        startButton.setFocusable(false);
-        startButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         startButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         startButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 startButtonActionPerformed(evt);
             }
         });
-        toolBar.add(startButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 8);
+        commandPanel.add(startButton, gridBagConstraints);
+
+        org.openide.awt.Mnemonics.setLocalizedText(alterStateButton, "+"); // NOI18N
+        alterStateButton.setToolTipText(Dict.ADD.toString());
+        alterStateButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        alterStateButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                alterStateButtonActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 8);
+        commandPanel.add(alterStateButton, gridBagConstraints);
 
         org.openide.awt.Mnemonics.setLocalizedText(statusLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.statusLabel.text")); // NOI18N
         statusLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.statusLabel.toolTipText")); // NOI18N
-        toolBar.add(statusLabel);
-        toolBar.add(filler1);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        commandPanel.add(statusLabel, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.weightx = 1.0;
+        commandPanel.add(filler1, gridBagConstraints);
 
         org.openide.awt.Mnemonics.setLocalizedText(urlLabel, org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.urlLabel.text")); // NOI18N
         urlLabel.setToolTipText(org.openide.util.NbBundle.getMessage(PackageTopComponent.class, "PackageTopComponent.urlLabel.toolTipText")); // NOI18N
         urlLabel.setMaximumSize(new java.awt.Dimension(236, 28));
-        toolBar.add(urlLabel);
-        toolBar.add(filler2);
+        commandPanel.add(urlLabel, new java.awt.GridBagConstraints());
+        commandPanel.add(filler2, new java.awt.GridBagConstraints());
 
-        infoCardRootPanel.add(toolBar, java.awt.BorderLayout.NORTH);
+        infoCardRootPanel.add(commandPanel, java.awt.BorderLayout.NORTH);
 
         infoHeaderPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 16, 16, 16));
         infoHeaderPanel.setLayout(new javax.swing.BoxLayout(infoHeaderPanel, javax.swing.BoxLayout.PAGE_AXIS));
@@ -458,28 +465,15 @@ public class PackageTopComponent extends TopComponent {
         infoCardPanel.add(infoTabbedPane, java.awt.BorderLayout.CENTER);
 
         add(infoCardPanel, "info");
-
-        javax.swing.GroupLayout emptyCardPanelLayout = new javax.swing.GroupLayout(emptyCardPanel);
-        emptyCardPanel.setLayout(emptyCardPanelLayout);
-        emptyCardPanelLayout.setHorizontalGroup(
-            emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 794, Short.MAX_VALUE)
-        );
-        emptyCardPanelLayout.setVerticalGroup(
-            emptyCardPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 375, Short.MAX_VALUE)
-        );
-
-        add(emptyCardPanel, "empty");
     }// </editor-fold>//GEN-END:initComponents
 
-    private void addButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addButtonActionPerformed
-        mPkgManager.install();
-    }//GEN-LAST:event_addButtonActionPerformed
-
-    private void removeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeButtonActionPerformed
-        mPkgManager.remove();
-    }//GEN-LAST:event_removeButtonActionPerformed
+    private void alterStateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_alterStateButtonActionPerformed
+        if (mPkgManager.getSelectedPkg().isInstalled()) {
+            mPkgManager.remove();
+        } else {
+            mPkgManager.install();
+        }
+    }//GEN-LAST:event_alterStateButtonActionPerformed
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
         mPkgManager.launch();
@@ -517,9 +511,10 @@ public class PackageTopComponent extends TopComponent {
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton addButton;
+    private javax.swing.JButton alterStateButton;
     private javax.swing.JLabel archLabel;
     private javax.swing.JLabel categoryLabel;
+    private javax.swing.JPanel commandPanel;
     private javax.swing.JScrollPane descHtmlScrollPane;
     private javax.swing.JTextPane descHtmlTextPane;
     private javax.swing.JScrollPane descPlainScrollPane;
@@ -538,7 +533,6 @@ public class PackageTopComponent extends TopComponent {
     private se.trixon.almond.util.swing.LogPanel miscLogPanel;
     private javax.swing.JLabel nameLabel;
     private se.trixon.almond.util.swing.LogPanel providesLogPanel;
-    private javax.swing.JButton removeButton;
     private javax.swing.JLabel repositoryLabel;
     private se.trixon.almond.util.swing.LogPanel requiredLogPanel;
     private se.trixon.almond.util.swing.LogPanel requiresLogPanel;
@@ -549,7 +543,6 @@ public class PackageTopComponent extends TopComponent {
     private se.trixon.sabas.ui.parts.MultiLineLabel summaryLabel;
     private javax.swing.JLabel timeBuildLabel;
     private javax.swing.JLabel timeInstalledLabel;
-    private javax.swing.JToolBar toolBar;
     private se.trixon.almond.util.swing.UriLabel urlLabel;
     private javax.swing.JLabel versionLabel;
     // End of variables declaration//GEN-END:variables
