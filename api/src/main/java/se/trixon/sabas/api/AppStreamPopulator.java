@@ -127,6 +127,16 @@ public class AppStreamPopulator extends BridgePopulator {
                             asp.setRepo(repo);
                             var id = keyStrategy.apply(asp);
                             var pkg = packageMap.getOrDefault(id, packageMap.get(Strings.CI.removeEnd(id, ".desktop")));
+
+                            if (pkg == null && id.contains(":")) {
+                                var targetPkgName = StringUtils.substringAfter(id, ":");
+
+                                pkg = packageMap.values().stream()
+                                        .filter(p -> targetPkgName.equalsIgnoreCase(p.getName()))
+                                        .findFirst()
+                                        .orElse(null);
+                            }
+
                             if (pkg != null) {
                                 pkg.setAppStream(true);
                                 var type = asp.getType();
@@ -170,7 +180,10 @@ public class AppStreamPopulator extends BridgePopulator {
                                 if (category == PkgCategory.OTHER && type != null) {
                                     unsupportedTypes.add(type);
                                 }
-                                pkg.setDesktopId(asp.getDesktopId());
+                                String newDesktopId = asp.getDesktopId();
+                                if (StringUtils.isNotBlank(newDesktopId)) {
+                                    pkg.setDesktopId(newDesktopId);
+                                }
                                 synchronized (pkg) {
                                     pkg.setValue(AppStreamPackage.class, asp);
                                     mEnricher.accept(asp, pkg);

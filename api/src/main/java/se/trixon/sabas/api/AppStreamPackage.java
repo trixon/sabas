@@ -96,10 +96,18 @@ public class AppStreamPackage {
     }
 
     public String getDesktopId() {
-        if (mLaunchables == null) {
-            return null;
+        if (mLaunchables != null) {
+            var launchableId = getLaunchable("desktop-id");
+            if (StringUtils.isNotBlank(launchableId)) {
+                return launchableId.trim();
+            }
         }
-        return getLaunchable("desktop-id");
+
+        if (mId != null && mId.toLowerCase(Locale.ROOT).endsWith(".desktop")) {
+            return mId.trim();
+        }
+
+        return null;
     }
 
     public String getDeveloperName() {
