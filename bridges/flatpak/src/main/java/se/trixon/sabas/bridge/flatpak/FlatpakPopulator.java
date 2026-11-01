@@ -126,8 +126,8 @@ public class FlatpakPopulator extends BridgePopulator {
                     pkg.setId(fields[refIndex]);
                     pkg.setName(fields[nameIndex]);
                     pkg.setNameTransaction(id);
-                    pkg.setSummary(fields[descriptionIndex]);
-                    pkg.setVersion(fields[versionIndex]);
+                    pkg.setSummary(fields[descriptionIndex].intern());
+                    pkg.setVersion(fields[versionIndex].intern());
                     pkg.setRelease(fields[branschIndex]);
                     pkg.setGroupId(mDictionary.getOrCreateId(DictionarySection.GROUP, fields[runtimeIndex]));
                     pkg.setArchId(mDictionary.getOrCreateId(DictionarySection.ARCH, fields[archIndex]));

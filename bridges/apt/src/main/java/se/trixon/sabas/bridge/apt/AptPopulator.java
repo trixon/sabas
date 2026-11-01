@@ -425,7 +425,7 @@ public class AptPopulator extends BridgePopulator {
                         currentPkg.setName(currentName);
                     } else {
                         if (line.startsWith("Version: ")) {
-                            String rawVersion = line.substring(9).trim();
+                            String rawVersion = line.substring(9).trim().intern();
 
                             String epoch = "0";
                             String versionAndRelease = rawVersion;
@@ -450,8 +450,8 @@ public class AptPopulator extends BridgePopulator {
                                 //
                             }
                             currentPkg.setEpoch(epochInt);
-                            currentPkg.setVersion(version);
-                            currentPkg.setRelease(release);
+                            currentPkg.setVersion(version.intern());
+                            currentPkg.setRelease(release.intern());
                         } else if (line.startsWith("Architecture: ")) {
                             currentPkg.setArchId(mDictionary.getOrCreateId(DictionarySection.ARCH, line.substring(14).trim()));
                         } else if (line.startsWith("Section: ")) {
@@ -466,7 +466,7 @@ public class AptPopulator extends BridgePopulator {
                             String explicitVendor = line.substring(8).trim();
                             currentPkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, explicitVendor));
                         } else if (line.startsWith("Homepage: ")) {
-                            currentPkg.setUrl(line.substring(10).trim());
+                            currentPkg.setUrl(line.substring(10).trim().intern());
                         } else if (line.startsWith("Size: ")) {
                             try {
                                 currentPkg.setSizeDownload(Long.parseLong(line.substring(6).trim()));
@@ -573,7 +573,7 @@ public class AptPopulator extends BridgePopulator {
                                 while (lineIt.hasNext()) {
                                     var line = lineIt.next();
                                     if (line.startsWith("Package: ")) {
-                                        packageToRepoMap.put(line.substring(9).trim(), repoName);
+                                        packageToRepoMap.put(line.substring(9).trim(), repoName.intern());
                                     }
                                 }
                             }

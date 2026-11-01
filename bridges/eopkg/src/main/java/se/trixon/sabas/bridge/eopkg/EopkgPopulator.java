@@ -142,8 +142,8 @@ public class EopkgPopulator extends BridgePopulator {
                         if (currentName != null) {
                             var pkg = new Pkg();
                             pkg.setName(currentName);
-                            pkg.setVersion(currentVersion != null ? currentVersion : "Available");
-                            pkg.setRelease(currentRelease != null ? currentRelease : "1");
+                            pkg.setVersion(currentVersion != null ? currentVersion.intern() : "Available".intern());
+                            pkg.setRelease(currentRelease != null ? currentRelease.intern() : "1".intern());
                             pkg.setSummary(currentSummary);
 
                             if (currentDescription != null) {
@@ -293,7 +293,7 @@ public class EopkgPopulator extends BridgePopulator {
                         var dateStr = items[5].trim();
                         pkg.setTimeInstalled(LocalDateTime.parse(dateStr, mFormatter).atZone(ZoneId.systemDefault()).toEpochSecond());
                         pkg.setVersionNew(pkg.getVersion());
-                        pkg.setVersion(StringUtils.trim(items[2]));
+                        pkg.setVersion(StringUtils.trim(items[2]).intern());
                     }
                 }
             }
@@ -406,7 +406,8 @@ public class EopkgPopulator extends BridgePopulator {
                         pkg.setId(StringUtils.substringAfterLast(xmlPackage.getPackageUri(), "/"));
 
                         if (xmlPackage.getSource() != null) {
-                            pkg.setUrl(xmlPackage.getSource().getHomepage());
+                            var homepage = xmlPackage.getSource().getHomepage();
+                            pkg.setUrl(homepage != null ? homepage.intern() : null);
                             pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, extractDomainBase(pkg.getUrl())));
                             if (xmlPackage.getSource().getPackager() != null) {
                                 var packagerName = StringUtils.trim(xmlPackage.getSource().getPackager().getName());

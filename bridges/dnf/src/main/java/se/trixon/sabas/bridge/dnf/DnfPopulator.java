@@ -283,7 +283,7 @@ public class DnfPopulator extends BridgePopulator {
                     pkg.setId(fields[full_nevraIndex]);
                     pkg.setName(fields[nameIndex]);
                     pkg.setGroupId(mDictionary.getOrCreateId(DictionarySection.GROUP, fields[groupIndex]));
-                    pkg.setVersion(fields[versionIndex]);
+                    pkg.setVersion(fields[versionIndex].intern());
                     pkg.setArchId(mDictionary.getOrCreateId(DictionarySection.ARCH, fields[archIndex]));
                     pkg.setSummary(fields[summaryIndex]);
                     pkg.setDescription(fields[descriptionIndex]);
@@ -297,11 +297,11 @@ public class DnfPopulator extends BridgePopulator {
                     pkg.setEpoch(epoch);
                     pkg.setSizeDownload(Long.parseLong(fields[downloadsizeIndex]));
                     pkg.setSizeInstall(Long.parseLong(fields[installsizeIndex]));
-                    pkg.setUrl(fields[urlIndex]);
+                    pkg.setUrl(fields[urlIndex].intern());
                     pkg.setVendorId(mDictionary.getOrCreateId(DictionarySection.VENDOR, fields[vendorIndex]));
                     pkg.setRepositoryId(mDictionary.getOrCreateId(DictionarySection.REPOSITORY, fields[repoidIndex]));
                     pkg.setPackagerId(mDictionary.getOrCreateId(DictionarySection.PACKAGER, fields[packagerIndex]));
-                    pkg.setRelease(fields[releaseIndex]);
+                    pkg.setRelease(fields[releaseIndex].intern());
                     pkg.setTimeBuild(Long.parseLong(fields[buildtimeIndex]));
                     pkg.setTimeInstalled(Long.parseLong(fields[installtimeIndex]));
 
