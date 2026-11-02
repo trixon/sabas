@@ -42,7 +42,8 @@ public enum PkgCategory {
     SERVICE("category_service"),
     THEME("category_theme"),
     WEB("category_web"),
-    OTHER("category_other");
+    OTHER("category_other"),
+    UNCLASSIFIED("category_unclassified");
     private final String mKey;
     private final ResourceBundle mResourceBundle = ResourceBundle.getBundle(PkgCategory.class.getPackageName() + ".Bundle", Locale.getDefault());
 

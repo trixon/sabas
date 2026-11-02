@@ -25,8 +25,8 @@ public class Pkg {
     private static final PkgDictionary DICTIONARY = PkgDictionary.getInstance();
     private boolean mAppStream;
     private int mArchId = -1;
-    private PkgCategory mCategory = PkgCategory.OTHER;
-    private int mCategoryId = -1;
+    private PkgCategory mCategory = PkgCategory.UNCLASSIFIED;
+    private int mCategoryId = DICTIONARY.getOrCreateId(DictionarySection.CATEGORY, PkgCategory.UNCLASSIFIED.toString());
     private String mDescription;
     private String mDescriptionLower;
     private String mDesktopId;
