@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2026 Patrik Karlström <patrik@trixon.se>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,9 @@
  */
 package se.trixon.sabas.ui.parts;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
@@ -33,6 +35,14 @@ public class PkgRenderer extends javax.swing.JPanel implements ListCellRenderer<
      */
     public PkgRenderer() {
         initComponents();
+
+        var versionFont = new Font(Font.MONOSPACED, 0, versionLabel.getFont().getSize() - 1);
+        versionLabel.setFont(versionFont);
+
+        versionLabel.setForeground(GraphicsHelper.getZebraStripe(versionLabel.getForeground()));
+        summaryLabel.setForeground(GraphicsHelper.getZebraStripe(versionLabel.getForeground()));
+        statusLabel.setFont(nameLabel.getFont());
+        summaryLabel.setPreferredSize(new Dimension(10, summaryLabel.getPreferredSize().height));
     }
 
     @Override
@@ -40,20 +50,38 @@ public class PkgRenderer extends javax.swing.JPanel implements ListCellRenderer<
         var bg = isSelected ? list.getSelectionBackground() : (index & 1) == 0 ? list.getBackground() : GraphicsHelper.getZebraStripe(list.getBackground());
         var fg = isSelected ? list.getSelectionForeground() : list.getForeground();
         setBackground(bg);
-        label1.setForeground(fg);
-        label2.setForeground(fg);
-        label3.setForeground(fg);
+        nameLabel.setForeground(fg);
+        statusLabel.setForeground(fg);
+        versionLabel.setForeground(GraphicsHelper.getZebraStripe(fg));
+        summaryLabel.setForeground(GraphicsHelper.getZebraStripe(fg));
 
         if (pkg != null) {
-            label1.setText(pkg.getName());
-            label2.setText(pkg.getVersion());
-            label3.setText(pkg.getSummary());
+            nameLabel.setText(pkg.getName());
+            versionLabel.setText(pkg.getVersion());
+            summaryLabel.setText(pkg.getSummary());
+
+            var statusText = "";
+            var statusColor = Color.BLACK;
+            if (pkg.isUpgradable()) {
+                statusText = "▲";
+                statusColor = Color.ORANGE;
+            } else if (pkg.isOrphaned()) {
+                statusText = "⬢";
+                statusColor = Color.RED;
+            } else if (pkg.isInstalled()) {
+                if (pkg.hasDesktopId()) {
+                    statusText = "▶";
+                } else {
+                    statusText = "●";
+                }
+                statusColor = new Color(46, 204, 113);
+            }
+
+            statusLabel.setText(statusText);
+            statusLabel.setForeground(statusColor);
         }
 
         setEnabled(list.isEnabled());
-        label1.setFont(list.getFont().deriveFont(Font.BOLD));
-        label3.setFont(list.getFont().deriveFont(Font.ITALIC));
-        setFont(list.getFont());
 
         return this;
     }
@@ -67,26 +95,41 @@ public class PkgRenderer extends javax.swing.JPanel implements ListCellRenderer<
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        label1 = new javax.swing.JLabel();
-        label2 = new javax.swing.JLabel();
-        label3 = new javax.swing.JLabel();
+        panel = new javax.swing.JPanel();
+        nameLabel = new javax.swing.JLabel();
+        statusLabel = new javax.swing.JLabel();
+        versionLabel = new javax.swing.JLabel();
+        summaryLabel = new javax.swing.JLabel();
 
-        setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(6, 8, 6, 8));
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.PAGE_AXIS));
 
-        org.openide.awt.Mnemonics.setLocalizedText(label1, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.label1.text")); // NOI18N
-        add(label1);
+        panel.setAlignmentX(0.0F);
+        panel.setOpaque(false);
+        panel.setLayout(new java.awt.BorderLayout());
 
-        org.openide.awt.Mnemonics.setLocalizedText(label2, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.label2.text")); // NOI18N
-        add(label2);
+        nameLabel.setFont(nameLabel.getFont().deriveFont(nameLabel.getFont().getStyle() | java.awt.Font.BOLD, nameLabel.getFont().getSize()+1));
+        org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "name"); // NOI18N
+        panel.add(nameLabel, java.awt.BorderLayout.CENTER);
 
-        org.openide.awt.Mnemonics.setLocalizedText(label3, org.openide.util.NbBundle.getMessage(PkgRenderer.class, "PkgRenderer.label3.text")); // NOI18N
-        add(label3);
+        org.openide.awt.Mnemonics.setLocalizedText(statusLabel, "●"); // NOI18N
+        panel.add(statusLabel, java.awt.BorderLayout.LINE_END);
+
+        add(panel);
+
+        org.openide.awt.Mnemonics.setLocalizedText(versionLabel, "version"); // NOI18N
+        add(versionLabel);
+
+        summaryLabel.setFont(summaryLabel.getFont().deriveFont((summaryLabel.getFont().getStyle() | java.awt.Font.ITALIC)));
+        org.openide.awt.Mnemonics.setLocalizedText(summaryLabel, "summary"); // NOI18N
+        add(summaryLabel);
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel label1;
-    private javax.swing.JLabel label2;
-    private javax.swing.JLabel label3;
+    private javax.swing.JLabel nameLabel;
+    private javax.swing.JPanel panel;
+    private javax.swing.JLabel statusLabel;
+    private javax.swing.JLabel summaryLabel;
+    private javax.swing.JLabel versionLabel;
     // End of variables declaration//GEN-END:variables
 }

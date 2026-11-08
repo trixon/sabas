@@ -15,11 +15,14 @@
  */
 package se.trixon.sabas.ui;
 
+import java.awt.event.ActionEvent;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
+import org.openide.awt.Actions;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.NbPreferences;
 import org.openide.windows.TopComponent;
 import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.api.Sabas;
@@ -104,7 +107,13 @@ public final class GraphicsTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        var prefs = NbPreferences.forModule(GraphicsTopComponent.class);
+        if (prefs.getBoolean("firstRun", true)) {
+            var minimizeModeAction = Actions.forID("Window", "org.netbeans.core.windows.actions.MinimizeModeAction");
+            requestActive();
+            minimizeModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, ""));
+            prefs.putBoolean("firstRun", false);
+        }
     }
 
     @Override
@@ -116,11 +125,9 @@ public final class GraphicsTopComponent extends TopComponent {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
         p.setProperty("version", "1.0");
-        // TODO store your settings
     }
 
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
-        // TODO read your settings according to their version
     }
 }

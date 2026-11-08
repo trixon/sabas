@@ -41,7 +41,7 @@ import se.trixon.sabas.ui.parts.ZebraListCellRenderer;
         //iconBase="SET/PATH/TO/ICON/HERE",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "left2", openAtStartup = true, position = 1)
+@TopComponent.Registration(mode = "left2", openAtStartup = true, position = 0)
 @ActionID(category = "Window", id = "se.trixon.sabas.ui.FilterStatusTopComponent")
 @ActionReferences({
     @ActionReference(path = "Menu/Window", position = 9),
@@ -86,10 +86,6 @@ public final class FilterStatusTopComponent extends BaseFilterTopComponent {
             return true;
         }
 
-        if (pkg.hasAppStream() && selectedValues.contains(PkgStatus.APPSTREAM)) {
-            return true;
-        }
-
         return false;
     }
 
@@ -117,9 +113,7 @@ public final class FilterStatusTopComponent extends BaseFilterTopComponent {
         list = new JList<>(statusModel);
         list.setCellRenderer(new ZebraListCellRenderer());
         list.setSelectedIndex(0);
-        removeAll();
-        add(list);
-
+        getScrollPane().setViewportView(list);
         list.addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting()) {
                 mFilterManager.requestFiltering();

@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 import javax.swing.DefaultListModel;
+import javax.swing.JScrollPane;
 import se.trixon.almond.util.swing.SwingHelper;
 import se.trixon.sabas.api.DictionarySection;
 import se.trixon.sabas.api.Pkg;
@@ -34,9 +35,9 @@ import se.trixon.sabas.ui.parts.ZebraListCellRenderer;
  */
 public abstract class BaseFilterTopComponent extends BaseTopComponent implements Filter {
 
+    protected final FilterManager mFilterManager = FilterManager.getInstance();
     protected final Set<Integer> mSelectedIds = new HashSet<>();
     private final DictionarySection mDictionarySection;
-    protected final FilterManager mFilterManager = FilterManager.getInstance();
     private final Function<Pkg, Integer> mFilterFunction;
 
     public BaseFilterTopComponent(DictionarySection dictionarySection, Function<Pkg, Integer> filterFunction) {
@@ -51,6 +52,10 @@ public abstract class BaseFilterTopComponent extends BaseTopComponent implements
     @Override
     public boolean filter(Pkg pkg) {
         return mSelectedIds.isEmpty() || mSelectedIds.contains(-1) || mSelectedIds.contains(mFilterFunction.apply(pkg));
+    }
+
+    public JScrollPane getScrollPane() {
+        return scrollPane;
     }
 
     @Override
@@ -70,6 +75,7 @@ public abstract class BaseFilterTopComponent extends BaseTopComponent implements
         scrollPane = new javax.swing.JScrollPane();
         list = new javax.swing.JList();
 
+        setMinimumSize(new java.awt.Dimension(200, 48));
         setLayout(new java.awt.BorderLayout());
 
         scrollPane.setViewportView(list);

@@ -233,12 +233,20 @@ public class Pkg {
         return mAppStream;
     }
 
+    public boolean hasDesktopId() {
+        return StringUtils.isNotBlank(mDesktopId);
+    }
+
     public boolean isInstalled() {
         return mInstalled;
     }
 
     public boolean isOrphaned() {
         return mOrphaned;
+    }
+
+    public boolean isStartable() {
+        return mInstalled && hasDesktopId();
     }
 
     public boolean isUpgradable() {

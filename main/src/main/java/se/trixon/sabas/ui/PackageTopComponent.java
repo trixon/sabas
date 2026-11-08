@@ -121,7 +121,7 @@ public class PackageTopComponent extends TopComponent {
             } else {
                 alterStateButton.setText("+ %s".formatted(Dict.ADD.toString()));
             }
-            startButton.setVisible(pkg.isInstalled() && StringUtils.isNotBlank(pkg.getDesktopId()));
+            startButton.setVisible(pkg.isStartable());
             statusLabel.setVisible(pkg.isOrphaned() || pkg.isUpgradable());
             statusLabel.setText(pkg.getStatus());
             urlLabel.setToolTipText(pkg.getUrl());

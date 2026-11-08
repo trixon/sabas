@@ -53,5 +53,6 @@
     </build>
     <properties>
         <brandingToken>sabas</brandingToken>
+        <jackson.version>2.23.0</jackson.version>
     </properties>
 </project>

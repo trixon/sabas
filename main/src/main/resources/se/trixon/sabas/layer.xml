@@ -79,7 +79,6 @@
             <file name="Windows.instance_hidden"/>
         </folder>
         <file name="General.instance_hidden"/>
-        <file name="Keymaps.instance_hidden"/>
     </folder>
 
     <folder name="QuickSearch">
@@ -93,16 +92,15 @@
     </folder>
     <folder name="Keymaps">
         <folder name="NetBeans">
+            <file name="D-F.shadow">
+                <attr name="originalFile" stringvalue="Actions/Sabas/se-trixon-sabas-actions-FilterActivateAction.instance"/>
+            </file>
             <file name="D-4.shadow_hidden_hidden"/>
             <file name="DOS-P.shadow_hidden"/>
         </folder>
     </folder>
     <folder name="Shortcuts">
-        <file name="DS-ENTER.shadow_hidden"/>
         <file name="OS-ENTER.shadow_hidden"/>
-        <!--        <file name="D-F.shadow">
-            <attr name="originalFile" stringvalue="Actions/Edit/org-netbeans-modules-quicksearch-QuickSearchAction.instance"/>
-        </file>-->
         <file name="D-COMMA.shadow">
             <attr name="originalFile" stringvalue="Actions/Window/org-netbeans-modules-options-OptionsWindowAction.instance"/>
         </file>
@@ -113,11 +111,16 @@
             <attr name="originalFile" stringvalue="Actions/System/org-netbeans-modules-autoupdate-ui-actions-PluginManagerAction.instance"/>
         </file>
     </folder>
-    <file name="Toolbars_hidden"/>
+    <folder name="Toolbars">
+        <file name="Clipboard_hidden"/>
+        <file name="File_hidden"/>
+        <file name="Memory_hidden"/>
+        <file name="UndoRedo_hidden"/>
+    </folder>
     <folder name="Windows2">
         <folder name="Modes">
             <file name="center.wsmode" url="centerWsmode.xml"/>
-            <file name="left.wsmode" url="left1Wsmode.xml"/>
+            <file name="left1.wsmode" url="left1Wsmode.xml"/>
             <file name="left2.wsmode" url="left2Wsmode.xml"/>
             <file name="left3.wsmode" url="left3Wsmode.xml"/>
             <file name="left4.wsmode" url="left4Wsmode.xml"/>
