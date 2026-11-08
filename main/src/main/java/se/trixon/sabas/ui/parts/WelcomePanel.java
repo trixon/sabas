@@ -18,6 +18,7 @@ package se.trixon.sabas.ui.parts;
 import javax.swing.JButton;
 import org.openide.DialogDescriptor;
 import org.openide.NotificationLineSupport;
+import org.openide.util.NbBundle;
 import se.trixon.sabas.api.Bridge;
 import se.trixon.sabas.core.PkgManager;
 
@@ -49,7 +50,7 @@ public class WelcomePanel extends javax.swing.JPanel {
         closeButton.setEnabled(false);
         mCloseButton = closeButton;
         mNotificationLineSupport = d.createNotificationLineSupport();
-        mNotificationLineSupport.setInformationMessage("Select a bridge");
+        mNotificationLineSupport.setInformationMessage(NbBundle.getMessage(WelcomePanel.class, "selectBridge"));
     }
 
     /**
