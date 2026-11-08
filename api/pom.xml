@@ -4,7 +4,7 @@
     <parent>
         <groupId>se.trixon.sabas</groupId>
         <artifactId>parent</artifactId>
-        <version>26.11x</version>
+        <version>26.11a</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
